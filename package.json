@@ -1,0 +1,389 @@
+{
+  "name": "web-karuta",
+  "version": "0.1.0",
+  "description": "ジャンルやデータ取得元に依存しないWebかるたシステム",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AkaakuHub/web-karuta.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    "./domain/diagnostics/clientLog": {
+      "types": "./dist/domain/diagnostics/clientLog.d.ts",
+      "default": "./dist/domain/diagnostics/clientLog.js"
+    },
+    "./domain/game/audio/kWeighting": {
+      "types": "./dist/domain/game/audio/kWeighting.d.ts",
+      "default": "./dist/domain/game/audio/kWeighting.js"
+    },
+    "./domain/game/audio/loudness": {
+      "types": "./dist/domain/game/audio/loudness.d.ts",
+      "default": "./dist/domain/game/audio/loudness.js"
+    },
+    "./domain/game/audioLevel": {
+      "types": "./dist/domain/game/audioLevel.d.ts",
+      "default": "./dist/domain/game/audioLevel.js"
+    },
+    "./domain/game/audioSource": {
+      "types": "./dist/domain/game/audioSource.d.ts",
+      "default": "./dist/domain/game/audioSource.js"
+    },
+    "./domain/game/boardLayout": {
+      "types": "./dist/domain/game/boardLayout.d.ts",
+      "default": "./dist/domain/game/boardLayout.js"
+    },
+    "./domain/game/checkpoint": {
+      "types": "./dist/domain/game/checkpoint.d.ts",
+      "default": "./dist/domain/game/checkpoint.js"
+    },
+    "./domain/game/playback": {
+      "types": "./dist/domain/game/playback.d.ts",
+      "default": "./dist/domain/game/playback.js"
+    },
+    "./domain/game/ranking": {
+      "types": "./dist/domain/game/ranking.d.ts",
+      "default": "./dist/domain/game/ranking.js"
+    },
+    "./domain/game/results": {
+      "types": "./dist/domain/game/results.d.ts",
+      "default": "./dist/domain/game/results.js"
+    },
+    "./domain/game/session": {
+      "types": "./dist/domain/game/session.d.ts",
+      "default": "./dist/domain/game/session.js"
+    },
+    "./domain/game/timing": {
+      "types": "./dist/domain/game/timing.d.ts",
+      "default": "./dist/domain/game/timing.js"
+    },
+    "./domain/multiplayer/feedback": {
+      "types": "./dist/domain/multiplayer/feedback.d.ts",
+      "default": "./dist/domain/multiplayer/feedback.js"
+    },
+    "./domain/multiplayer/participants": {
+      "types": "./dist/domain/multiplayer/participants.d.ts",
+      "default": "./dist/domain/multiplayer/participants.js"
+    },
+    "./domain/multiplayer/protocol": {
+      "types": "./dist/domain/multiplayer/protocol.d.ts",
+      "default": "./dist/domain/multiplayer/protocol.js"
+    },
+    "./domain/multiplayer/room": {
+      "types": "./dist/domain/multiplayer/room.d.ts",
+      "default": "./dist/domain/multiplayer/room.js"
+    },
+    "./domain/multiplayer/transport": {
+      "types": "./dist/domain/multiplayer/transport.d.ts",
+      "default": "./dist/domain/multiplayer/transport.js"
+    },
+    "./domain/practice/model": {
+      "types": "./dist/domain/practice/model.d.ts",
+      "default": "./dist/domain/practice/model.js"
+    },
+    "./infrastructure/audio/audioDecodeQueue": {
+      "types": "./dist/infrastructure/audio/audioDecodeQueue.d.ts",
+      "default": "./dist/infrastructure/audio/audioDecodeQueue.js"
+    },
+    "./infrastructure/audio/audioProgress": {
+      "types": "./dist/infrastructure/audio/audioProgress.d.ts",
+      "default": "./dist/infrastructure/audio/audioProgress.js"
+    },
+    "./infrastructure/audio/fetchAudio": {
+      "types": "./dist/infrastructure/audio/fetchAudio.d.ts",
+      "default": "./dist/infrastructure/audio/fetchAudio.js"
+    },
+    "./infrastructure/audio/gameAudio": {
+      "types": "./dist/infrastructure/audio/gameAudio.d.ts",
+      "default": "./dist/infrastructure/audio/gameAudio.js"
+    },
+    "./infrastructure/audio/gameSound": {
+      "types": "./dist/infrastructure/audio/gameSound.d.ts",
+      "default": "./dist/infrastructure/audio/gameSound.js"
+    },
+    "./infrastructure/audio/resumeAudioContext": {
+      "types": "./dist/infrastructure/audio/resumeAudioContext.d.ts",
+      "default": "./dist/infrastructure/audio/resumeAudioContext.js"
+    },
+    "./infrastructure/diagnostics/diagnostics": {
+      "types": "./dist/infrastructure/diagnostics/diagnostics.d.ts",
+      "default": "./dist/infrastructure/diagnostics/diagnostics.js"
+    },
+    "./infrastructure/game/checkpointStore": {
+      "types": "./dist/infrastructure/game/checkpointStore.d.ts",
+      "default": "./dist/infrastructure/game/checkpointStore.js"
+    },
+    "./infrastructure/multiplayer/roomConnection": {
+      "types": "./dist/infrastructure/multiplayer/roomConnection.d.ts",
+      "default": "./dist/infrastructure/multiplayer/roomConnection.js"
+    },
+    "./presentation/audio/audioSeek": {
+      "types": "./dist/presentation/audio/audioSeek.d.ts",
+      "default": "./dist/presentation/audio/audioSeek.js"
+    },
+    "./presentation/audio/playbackButton": {
+      "types": "./dist/presentation/audio/playbackButton.d.ts",
+      "default": "./dist/presentation/audio/playbackButton.js"
+    },
+    "./presentation/audio/useAudioVolume": {
+      "types": "./dist/presentation/audio/useAudioVolume.d.ts",
+      "default": "./dist/presentation/audio/useAudioVolume.js"
+    },
+    "./presentation/audio/useTrackPlayer": {
+      "types": "./dist/presentation/audio/useTrackPlayer.d.ts",
+      "default": "./dist/presentation/audio/useTrackPlayer.js"
+    },
+    "./presentation/audio/volumeControl": {
+      "types": "./dist/presentation/audio/volumeControl.d.ts",
+      "default": "./dist/presentation/audio/volumeControl.js"
+    },
+    "./presentation/cards/useCardLayout": {
+      "types": "./dist/presentation/cards/useCardLayout.d.ts",
+      "default": "./dist/presentation/cards/useCardLayout.js"
+    },
+    "./presentation/config/karutaProvider": {
+      "types": "./dist/presentation/config/karutaProvider.d.ts",
+      "default": "./dist/presentation/config/karutaProvider.js"
+    },
+    "./presentation/game/boardControls": {
+      "types": "./dist/presentation/game/boardControls.d.ts",
+      "default": "./dist/presentation/game/boardControls.js"
+    },
+    "./presentation/game/cardCollection": {
+      "types": "./dist/presentation/game/cardCollection.d.ts",
+      "default": "./dist/presentation/game/cardCollection.js"
+    },
+    "./presentation/game/cardDetail": {
+      "types": "./dist/presentation/game/cardDetail.d.ts",
+      "default": "./dist/presentation/game/cardDetail.js"
+    },
+    "./presentation/game/cardFocus": {
+      "types": "./dist/presentation/game/cardFocus.d.ts",
+      "default": "./dist/presentation/game/cardFocus.js"
+    },
+    "./presentation/game/cardText": {
+      "types": "./dist/presentation/game/cardText.d.ts",
+      "default": "./dist/presentation/game/cardText.js"
+    },
+    "./presentation/game/controlsModel": {
+      "types": "./dist/presentation/game/controlsModel.d.ts",
+      "default": "./dist/presentation/game/controlsModel.js"
+    },
+    "./presentation/game/gameBoard": {
+      "types": "./dist/presentation/game/gameBoard.d.ts",
+      "default": "./dist/presentation/game/gameBoard.js"
+    },
+    "./presentation/game/gameCard": {
+      "types": "./dist/presentation/game/gameCard.d.ts",
+      "default": "./dist/presentation/game/gameCard.js"
+    },
+    "./presentation/game/gameClock": {
+      "types": "./dist/presentation/game/gameClock.d.ts",
+      "default": "./dist/presentation/game/gameClock.js"
+    },
+    "./presentation/game/gameControls": {
+      "types": "./dist/presentation/game/gameControls.d.ts",
+      "default": "./dist/presentation/game/gameControls.js"
+    },
+    "./presentation/game/gameFeedback": {
+      "types": "./dist/presentation/game/gameFeedback.d.ts",
+      "default": "./dist/presentation/game/gameFeedback.js"
+    },
+    "./presentation/game/gameLayout": {
+      "types": "./dist/presentation/game/gameLayout.d.ts",
+      "default": "./dist/presentation/game/gameLayout.js"
+    },
+    "./presentation/game/gameNotice": {
+      "types": "./dist/presentation/game/gameNotice.d.ts",
+      "default": "./dist/presentation/game/gameNotice.js"
+    },
+    "./presentation/game/gameResults": {
+      "types": "./dist/presentation/game/gameResults.d.ts",
+      "default": "./dist/presentation/game/gameResults.js"
+    },
+    "./presentation/game/gameSettingsButton": {
+      "types": "./dist/presentation/game/gameSettingsButton.d.ts",
+      "default": "./dist/presentation/game/gameSettingsButton.js"
+    },
+    "./presentation/game/gameStatus": {
+      "types": "./dist/presentation/game/gameStatus.d.ts",
+      "default": "./dist/presentation/game/gameStatus.js"
+    },
+    "./presentation/game/mobileCardReview": {
+      "types": "./dist/presentation/game/mobileCardReview.d.ts",
+      "default": "./dist/presentation/game/mobileCardReview.js"
+    },
+    "./presentation/game/resultControls": {
+      "types": "./dist/presentation/game/resultControls.d.ts",
+      "default": "./dist/presentation/game/resultControls.js"
+    },
+    "./presentation/game/resultPodium": {
+      "types": "./dist/presentation/game/resultPodium.d.ts",
+      "default": "./dist/presentation/game/resultPodium.js"
+    },
+    "./presentation/game/reviewLinks": {
+      "types": "./dist/presentation/game/reviewLinks.d.ts",
+      "default": "./dist/presentation/game/reviewLinks.js"
+    },
+    "./presentation/game/reviewModel": {
+      "types": "./dist/presentation/game/reviewModel.d.ts",
+      "default": "./dist/presentation/game/reviewModel.js"
+    },
+    "./presentation/game/roundInfo": {
+      "types": "./dist/presentation/game/roundInfo.d.ts",
+      "default": "./dist/presentation/game/roundInfo.js"
+    },
+    "./presentation/game/useGame": {
+      "types": "./dist/presentation/game/useGame.d.ts",
+      "default": "./dist/presentation/game/useGame.js"
+    },
+    "./presentation/game/useGameCheckpoint": {
+      "types": "./dist/presentation/game/useGameCheckpoint.d.ts",
+      "default": "./dist/presentation/game/useGameCheckpoint.js"
+    },
+    "./presentation/game/useGameFeedback": {
+      "types": "./dist/presentation/game/useGameFeedback.d.ts",
+      "default": "./dist/presentation/game/useGameFeedback.js"
+    },
+    "./presentation/game/useGameSettings": {
+      "types": "./dist/presentation/game/useGameSettings.d.ts",
+      "default": "./dist/presentation/game/useGameSettings.js"
+    },
+    "./presentation/game/useRoundAdvance": {
+      "types": "./dist/presentation/game/useRoundAdvance.d.ts",
+      "default": "./dist/presentation/game/useRoundAdvance.js"
+    },
+    "./presentation/game/useRoundShortcut": {
+      "types": "./dist/presentation/game/useRoundShortcut.d.ts",
+      "default": "./dist/presentation/game/useRoundShortcut.js"
+    },
+    "./presentation/multiplayer/preparationWarning": {
+      "types": "./dist/presentation/multiplayer/preparationWarning.d.ts",
+      "default": "./dist/presentation/multiplayer/preparationWarning.js"
+    },
+    "./presentation/multiplayer/roomInvitation": {
+      "types": "./dist/presentation/multiplayer/roomInvitation.d.ts",
+      "default": "./dist/presentation/multiplayer/roomInvitation.js"
+    },
+    "./presentation/multiplayer/roomPlayers": {
+      "types": "./dist/presentation/multiplayer/roomPlayers.d.ts",
+      "default": "./dist/presentation/multiplayer/roomPlayers.js"
+    },
+    "./presentation/multiplayer/useRoom": {
+      "types": "./dist/presentation/multiplayer/useRoom.d.ts",
+      "default": "./dist/presentation/multiplayer/useRoom.js"
+    },
+    "./presentation/multiplayer/useRoomClock": {
+      "types": "./dist/presentation/multiplayer/useRoomClock.d.ts",
+      "default": "./dist/presentation/multiplayer/useRoomClock.js"
+    },
+    "./presentation/multiplayer/useRoomLifecycle": {
+      "types": "./dist/presentation/multiplayer/useRoomLifecycle.d.ts",
+      "default": "./dist/presentation/multiplayer/useRoomLifecycle.js"
+    },
+    "./presentation/practice/practiceOptions": {
+      "types": "./dist/presentation/practice/practiceOptions.d.ts",
+      "default": "./dist/presentation/practice/practiceOptions.js"
+    },
+    "./presentation/practice/practiceResumeButton": {
+      "types": "./dist/presentation/practice/practiceResumeButton.d.ts",
+      "default": "./dist/presentation/practice/practiceResumeButton.js"
+    },
+    "./presentation/practice/usePractice": {
+      "types": "./dist/presentation/practice/usePractice.d.ts",
+      "default": "./dist/presentation/practice/usePractice.js"
+    },
+    "./presentation/shared/appHeaderContent": {
+      "types": "./dist/presentation/shared/appHeaderContent.d.ts",
+      "default": "./dist/presentation/shared/appHeaderContent.js"
+    },
+    "./presentation/shared/confirmDialog": {
+      "types": "./dist/presentation/shared/confirmDialog.d.ts",
+      "default": "./dist/presentation/shared/confirmDialog.js"
+    },
+    "./presentation/shared/duration": {
+      "types": "./dist/presentation/shared/duration.d.ts",
+      "default": "./dist/presentation/shared/duration.js"
+    },
+    "./presentation/shared/errorAlert": {
+      "types": "./dist/presentation/shared/errorAlert.d.ts",
+      "default": "./dist/presentation/shared/errorAlert.js"
+    },
+    "./presentation/shared/errorMessage": {
+      "types": "./dist/presentation/shared/errorMessage.d.ts",
+      "default": "./dist/presentation/shared/errorMessage.js"
+    },
+    "./presentation/shared/loadingIndicator": {
+      "types": "./dist/presentation/shared/loadingIndicator.d.ts",
+      "default": "./dist/presentation/shared/loadingIndicator.js"
+    },
+    "./presentation/shared/playLayout": {
+      "types": "./dist/presentation/shared/playLayout.d.ts",
+      "default": "./dist/presentation/shared/playLayout.js"
+    },
+    "./presentation/shared/usePageVisible": {
+      "types": "./dist/presentation/shared/usePageVisible.d.ts",
+      "default": "./dist/presentation/shared/usePageVisible.js"
+    },
+    "./worker/multiplayer/gameRoom": {
+      "types": "./dist/worker/multiplayer/gameRoom.d.ts",
+      "default": "./dist/worker/multiplayer/gameRoom.js"
+    },
+    "./worker/multiplayer/routes": {
+      "types": "./dist/worker/multiplayer/routes.d.ts",
+      "default": "./dist/worker/multiplayer/routes.js"
+    },
+    "./worker/audio/proxy": {
+      "types": "./dist/worker/audio/proxy.d.ts",
+      "default": "./dist/worker/audio/proxy.js"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vp test run",
+    "lint": "vp lint",
+    "fmt:check": "vp fmt --check",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run fmt:check && pnpm run test && pnpm run build",
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "pnpm run build"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^5.20261004.1",
+    "ts-fsrs": "6.0.0",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@mui/icons-material": "9.4.0",
+    "@mui/material": "9.4.0",
+    "@tanstack/react-virtual": "^3.14.26",
+    "@types/node": "26.6.4",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "7.0.2",
+    "uuid": "^14.0.3",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
+    "vite-plus": "1.0.0"
+  },
+  "peerDependencies": {
+    "@emotion/react": "11.14.0",
+    "@emotion/styled": "11.14.1",
+    "@mui/icons-material": "9.4.0",
+    "@mui/material": "9.4.0",
+    "@tanstack/react-virtual": "^3.14.26",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "uuid": "^14.0.3"
+  },
+  "engines": {
+    "node": ">=24.22.2 <25",
+    "pnpm": ">=12.18.0 <13"
+  },
+  "packageManager": "pnpm@12.18.0"
+}
