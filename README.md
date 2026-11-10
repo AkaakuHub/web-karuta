@@ -14,6 +14,13 @@ Gitリポジトリのコミットを依存先に指定します。インスト�
 }
 ```
 
+pnpmでは依存パッケージのビルドを許可するため、利用側の`pnpm-workspace.yaml`に同じコミットを指定します。
+
+```yaml
+allowBuilds:
+  web-karuta@https://codeload.github.com/AkaakuHub/web-karuta/tar.gz/<commit>: true
+```
+
 ブラウザー側は`KarutaProvider`へ保存キーの接頭辞とJSONを返すHTTPクライアントを渡します。`GameBoard`へ札IDと描画関数を渡し、`useGame`へIDを持つ出題データ・音源URLの解決関数・復習と進行保存の関数を渡します。
 
 ```tsx
