@@ -6,6 +6,7 @@ import type { RoomView } from './protocol.js';
 const initial: RoomView = {
   ...emptyRoom('a'),
   players: [],
+  spectators: [],
   total: 0,
   audio: null,
   answer: null,

@@ -4,6 +4,7 @@ import { roundResultSchema } from '../game/results.js';
 export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ping'), sent: z.number() }),
   z.object({ type: z.literal('sync') }),
+  z.object({ type: z.literal('leave') }),
   z.object({
     type: z.literal('start'),
     deckId: z.string().min(1).max(32),
@@ -32,6 +33,7 @@ const roomViewSchema = z.object({
   host: z.string(),
   deckId: z.string().nullable(),
   players: z.array(playerSchema),
+  spectators: z.array(playerSchema.pick({ id: true, name: true, connected: true })),
   board: z.array(z.string().nullable()),
   phase: z.enum(['lobby', 'loading', 'playing', 'revealed', 'finished']),
   round: z.number(),

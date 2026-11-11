@@ -1,6 +1,16 @@
 import { useKarutaConfig } from '../config/karutaProvider.js';
 import { useRef, useState } from 'react';
-import { Avatar, Box, Button, Divider, Stack, TextField, Typography } from '@mui/material';
+import {
+  Avatar,
+  Box,
+  Button,
+  Divider,
+  FormControlLabel,
+  Stack,
+  Switch,
+  TextField,
+  Typography,
+} from '@mui/material';
 import ContentCopyRounded from '@mui/icons-material/ContentCopyRounded';
 import CheckRounded from '@mui/icons-material/CheckRounded';
 import GroupsRounded from '@mui/icons-material/GroupsRounded';
@@ -15,10 +25,13 @@ export function RoomEntrance({
   roomId: string;
   loaded: boolean;
   reconnect: boolean;
-  onJoin: (name: string, create: boolean, code: string) => Promise<void>;
+  onJoin: (name: string, create: boolean, code: string, spectator: boolean) => Promise<void>;
 }) {
   const { storagePrefix } = useKarutaConfig();
   const [name, setName] = useState(sessionStorage.getItem(`${storagePrefix}-name`) ?? '');
+  const [spectator, setSpectator] = useState(
+    reconnect && sessionStorage.getItem(`${storagePrefix}-spectator`) === 'true',
+  );
   const [invalid, setInvalid] = useState(false);
   const input = useRef<HTMLInputElement>(null);
   const invited = roomId !== '';
@@ -34,7 +47,8 @@ export function RoomEntrance({
           return;
         }
         sessionStorage.setItem(`${storagePrefix}-name`, name.trim());
-        void onJoin(name, !invited, roomId);
+        sessionStorage.setItem(`${storagePrefix}-spectator`, String(spectator));
+        void onJoin(name, !invited, roomId, spectator);
       }}
     >
       <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
@@ -47,23 +61,28 @@ export function RoomEntrance({
       </Stack>
       <Divider />
       <TextField
-        label="プレイヤー名"
+        label="名前"
         required
         fullWidth
         inputRef={input}
         value={name}
         error={invalid}
-        helperText={
-          invalid
-            ? '名前を入力してください。'
-            : `名前を入力して${invited ? '参加' : '部屋を作成'}してください。`
-        }
         autoComplete="nickname"
         onChange={(event) => {
           setName(event.target.value);
           setInvalid(false);
         }}
         slotProps={{ htmlInput: { maxLength: 24 } }}
+      />
+      <FormControlLabel
+        label="閲覧のみ"
+        control={
+          <Switch
+            checked={spectator}
+            disabled={reconnect}
+            onChange={(_, checked) => setSpectator(checked)}
+          />
+        }
       />
       <Button
         type="submit"

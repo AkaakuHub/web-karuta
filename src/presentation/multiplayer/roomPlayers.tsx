@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box, Chip, ListItemIcon, Menu, MenuItem, Tooltip } from '@mui/material';
+import VisibilityRounded from '@mui/icons-material/VisibilityRounded';
 import PersonRounded from '@mui/icons-material/PersonRounded';
 import PersonAddRounded from '@mui/icons-material/PersonAddRounded';
 import PersonRemoveRounded from '@mui/icons-material/PersonRemoveRounded';
@@ -109,6 +110,22 @@ export function RoomPlayers({
             </Tooltip>
           );
         })}
+        {room.spectators
+          .filter((person) => person.connected)
+          .map((person) => (
+            <Chip
+              key={person.id}
+              size="small"
+              icon={<VisibilityRounded />}
+              label={person.name}
+              aria-label={`${person.name} 閲覧のみ`}
+              sx={{
+                flexShrink: 0,
+                height: { xs: 18, sm: 24 },
+                '& .MuiChip-label': { fontSize: { xs: 10, sm: 12 } },
+              }}
+            />
+          ))}
       </Box>
       <RoomArrivalNotice room={room} you={you} />
       <Menu open={host && menu !== null} anchorEl={menu?.element} onClose={() => setMenu(null)}>

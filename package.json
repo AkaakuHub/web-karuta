@@ -268,6 +268,10 @@
       "types": "./dist/presentation/multiplayer/preparationWarning.d.ts",
       "default": "./dist/presentation/multiplayer/preparationWarning.js"
     },
+    "./presentation/multiplayer/roomExitGuard": {
+      "types": "./dist/presentation/multiplayer/roomExitGuard.d.ts",
+      "default": "./dist/presentation/multiplayer/roomExitGuard.js"
+    },
     "./presentation/multiplayer/roomInvitation": {
       "types": "./dist/presentation/multiplayer/roomInvitation.d.ts",
       "default": "./dist/presentation/multiplayer/roomInvitation.js"

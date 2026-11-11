@@ -9,14 +9,23 @@ export function useRoomLifecycle(connection: RefObject<RoomConnection | null>, o
       connection.current.wake(true);
     };
     const suspend = () => connection.current?.suspend();
-    window.addEventListener('pagehide', suspend);
+    const beforeUnload = (event: BeforeUnloadEvent) => {
+      if (connection.current) event.preventDefault();
+    };
+    const pageHide = (event: PageTransitionEvent) => {
+      if (event.persisted) suspend();
+      else connection.current?.leave();
+    };
+    window.addEventListener('beforeunload', beforeUnload);
+    window.addEventListener('pagehide', pageHide);
     document.addEventListener('freeze', suspend);
     document.addEventListener('resume', wake);
     window.addEventListener('online', wake);
     window.addEventListener('pageshow', wake);
     document.addEventListener('visibilitychange', wake);
     return () => {
-      window.removeEventListener('pagehide', suspend);
+      window.removeEventListener('beforeunload', beforeUnload);
+      window.removeEventListener('pagehide', pageHide);
       document.removeEventListener('freeze', suspend);
       document.removeEventListener('resume', wake);
       window.removeEventListener('online', wake);

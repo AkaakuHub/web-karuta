@@ -22,8 +22,8 @@ export async function routeRoom(request: Request, rooms: RoomBinding): Promise<R
     if (!result.ok) return new Response('部屋を作成できません', { status: 503 });
     return Response.json({ id }, { status: 201, headers: { 'Cache-Control': 'no-store' } });
   }
-  const roomId = /^\/api\/rooms\/([a-f\d-]{36})$/u.exec(url.pathname)?.[1];
-  if (roomId && request.method === 'GET')
+  const roomId = /^\/api\/rooms\/([a-f\d-]{36})(?:\/leave)?$/u.exec(url.pathname)?.[1];
+  if (roomId && (request.method === 'GET' || request.method === 'POST'))
     return rooms.get(rooms.idFromName(roomId), { locationHint: 'apac' }).fetch(request);
   return null;
 }

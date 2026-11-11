@@ -10,12 +10,11 @@ export function RoomArrivalNotice({ room, you }: { room: RoomView; you: string }
     const before = previous.current;
     previous.current = room;
     if (!before || before.phase === 'lobby' || before.phase === 'finished') return;
-    const arrivals = room.players.filter(
+    const arrivals = [...room.players, ...room.spectators].filter(
       (player) =>
         player.id !== you &&
         player.connected &&
-        !player.removed &&
-        !before.players.some((existing) => existing.id === player.id),
+        ![...before.players, ...before.spectators].some((existing) => existing.id === player.id),
     );
     if (arrivals.length) {
       setNotice((current) => ({

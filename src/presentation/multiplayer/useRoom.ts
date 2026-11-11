@@ -13,6 +13,8 @@ import type { TrackProgress } from '../../infrastructure/audio/audioProgress.js'
 import { useKarutaConfig } from '../config/karutaProvider.js';
 import { RoomConnection } from '../../infrastructure/multiplayer/roomConnection.js';
 import { useRoomClock } from './useRoomClock.js';
+import { useRoomAudioActions } from './useRoomAudioActions.js';
+import { useRoomExit } from './roomExitGuard.js';
 import { useRoomLifecycle } from './useRoomLifecycle.js';
 
 export function useRoom() {
@@ -56,10 +58,12 @@ export function useRoom() {
     resetClock();
   }, [resetClock]);
   const leave = useCallback(() => {
+    socket.current?.leave();
     disconnect();
     setRoomId('');
     history.replaceState(null, '', location.pathname);
   }, [disconnect]);
+  useRoomExit(leave, room !== null);
   useEffect(() => disconnect, [disconnect]);
   useEffect(() => {
     audio.current?.volume(effectiveVolume);
@@ -69,7 +73,7 @@ export function useRoom() {
     if (preparationFailed.current) setPreparationAttempt((attempt) => attempt + 1);
   }, [resetClock]);
   useRoomLifecycle(socket, recover);
-  async function join(name: string, create: boolean, code: string) {
+  async function join(name: string, create: boolean, code: string, spectator: boolean) {
     if (joining) return;
     disconnect();
     setJoining(true);
@@ -99,6 +103,8 @@ export function useRoom() {
       const endpoint = new URL(`/api/rooms/${id}`, location.href);
       endpoint.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
       endpoint.searchParams.set('token', token);
+      endpoint.searchParams.set('spectator', String(spectator));
+      endpoint.searchParams.set('connectionId', v4());
       endpoint.searchParams.set('name', name.trim());
       let serverError = '';
       let established = false;
@@ -153,7 +159,11 @@ export function useRoom() {
           if (message.type === 'pong') receiveClock(message);
         },
         closed: (code, reason, retrying) => {
-          if (code === 4003) leave();
+          if (code === 4003 || code === 4004) {
+            disconnect();
+            setRoomId('');
+            history.replaceState(null, '', location.pathname);
+          }
           setError(
             serverError ||
               reason ||
@@ -207,11 +217,19 @@ export function useRoom() {
     };
   }, [audioUrl, round, connected, preparationAttempt]);
   useEffect(() => {
-    if (connected && room?.phase === 'loading' && audioReady && clock.ready) {
+    if (
+      connected &&
+      room?.phase === 'loading' &&
+      !room.spectators.some((person) => person.id === you) &&
+      audioReady &&
+      clock.ready
+    ) {
       send({ type: 'ready', round: room.round, sent: Date.now(), rtt: roundTripTime() });
     }
   }, [
     connected,
+    room?.spectators,
+    you,
     room?.phase,
     room?.round,
     room?.audio,
@@ -242,19 +260,13 @@ export function useRoom() {
   const take = useCallback(
     (id: string) => {
       const state = current.current;
-      if (!state) return;
+      if (!state || state.spectators.some((person) => person.id === connectionPlayer.current))
+        return;
       attempted.current = id;
       send({ type: 'take', round: state.round, id });
     },
     [send],
   );
-  async function seek(position: number) {
-    try {
-      await audio.current?.seek(position);
-    } catch (reason) {
-      setError(errorMessage(reason, '再生位置を変更できません'));
-    }
-  }
   return {
     audioReady: clock.ready && audioReady,
     feedback: effects.feedback,
@@ -264,17 +276,10 @@ export function useRoom() {
     playing,
     needsResume,
     take,
-    resume: async () => {
-      try {
-        await audio.current?.resume();
-        setError('');
-      } catch (reason) {
-        setError(errorMessage(reason, '再生できません'));
-      }
-    },
-    seek,
+    ...useRoomAudioActions(audio, setError),
     pause: () => audio.current?.stop(),
     roomId,
+    spectator: room?.spectators.some((person) => person.id === you) ?? false,
     room,
     you,
     connected,

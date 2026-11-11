@@ -147,7 +147,7 @@ it('自分で退出した後は復帰イベントや再接続タイマーで戻�
   expect(vi.getTimerCount()).toBe(0);
 });
 
-it.each([1008, 4000, 4001, 4003])(
+it.each([1008, 4000, 4001, 4003, 4004])(
   '拒否・期限切れ・接続切替・キック（%i）は再接続しない',
   async (code) => {
     const { connection, sockets } = setup();
@@ -171,4 +171,26 @@ it('ページ凍結中は通信せず、復帰後は同じ参加者で再接続�
   expect(sockets[1]!.url).toBe(original.url);
   sockets[1]!.open();
   expect(statuses).toEqual([true, false, false, true]);
+});
+
+it('明示的な退出だけを送信し、送信後は復帰しない', async () => {
+  const beacon = vi.fn(() => true);
+  vi.stubGlobal('navigator', { sendBeacon: beacon });
+  try {
+    const { connection, sockets } = setup();
+    connection.leave();
+    expect(sockets[0]!.sent.filter((command) => command.type === 'leave')).toHaveLength(1);
+    connection.wake(true);
+    await vi.advanceTimersByTimeAsync(120000);
+    expect(sockets).toHaveLength(1);
+    expect(vi.getTimerCount()).toBe(0);
+  } finally {
+    vi.unstubAllGlobals();
+  }
+});
+
+it('スリープの通信停止では退室を送信しない', () => {
+  const { connection, sockets } = setup();
+  connection.suspend();
+  expect(sockets[0]!.sent.some((command) => command.type === 'leave')).toBe(false);
 });

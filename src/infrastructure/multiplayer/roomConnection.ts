@@ -82,7 +82,7 @@ export class RoomConnection {
       if (this.socket !== socket) return;
       this.release();
       this.callbacks.status(false);
-      const retrying = ![1008, 4000, 4001, 4003].includes(event.code);
+      const retrying = ![1008, 4000, 4001, 4003, 4004].includes(event.code);
       if (!retrying) this.close();
       this.callbacks.closed(event.code, event.reason, retrying);
       if (retrying) {
@@ -122,6 +122,21 @@ export class RoomConnection {
     if (this.heartbeat) clearInterval(this.heartbeat);
     this.retry = null;
     this.heartbeat = null;
+  }
+  leave() {
+    const endpoint = new URL(this.url);
+    endpoint.protocol = endpoint.protocol === 'wss:' ? 'https:' : 'http:';
+    endpoint.pathname += '/leave';
+    const token = endpoint.searchParams.get('token');
+    const connectionId = endpoint.searchParams.get('connectionId');
+    endpoint.search = '';
+    if (token && connectionId)
+      navigator.sendBeacon(
+        endpoint.href,
+        new Blob([JSON.stringify({ token, connectionId })], { type: 'application/json' }),
+      );
+    this.send({ type: 'leave' });
+    this.close();
   }
   close() {
     this.stopped = true;

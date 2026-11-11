@@ -10,6 +10,7 @@ export function emptyRoom(host: string): Room {
     host,
     deckId: null,
     players: [],
+    spectators: [],
     board: [],
     phase: 'lobby',
     round: 0,
