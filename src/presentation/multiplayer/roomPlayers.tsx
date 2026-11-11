@@ -10,6 +10,7 @@ import WorkspacePremiumRounded from '@mui/icons-material/WorkspacePremiumRounded
 import { waitingPlayers } from '../../domain/multiplayer/participants.js';
 import type { RoomView } from '../../domain/multiplayer/protocol.js';
 import { ConfirmDialog } from '../shared/confirmDialog.js';
+import { RoomArrivalNotice } from './roomArrivalNotice.js';
 
 export function RoomPlayers({
   room,
@@ -34,80 +35,89 @@ export function RoomPlayers({
         data-game-panel="players"
         aria-label="参加者"
         sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
+          position: 'relative',
+          overflow: 'hidden',
           minWidth: 0,
           height: { xs: 20, sm: 28 },
-          overflowX: 'auto',
           flexShrink: 0,
         }}
       >
-        {room.players.map((player) => {
-          const ready = room.ready.includes(player.id);
-          const waiting = waitingIds.has(player.id);
-          const status = player.removed
-            ? '退出済み'
-            : !player.connected
-              ? '切断中'
-              : waiting
-                ? '準備中'
-                : room.phase === 'loading'
-                  ? '準備完了'
-                  : '接続中';
-          const Icon = !player.connected
-            ? WifiOffRounded
-            : player.id === room.host
-              ? WorkspacePremiumRounded
-              : waiting
-                ? HourglassEmptyRounded
-                : ready
-                  ? CheckCircleRounded
-                  : PersonRounded;
-          return (
-            <Tooltip
-              key={player.id}
-              title={`${player.name}・${player.id === room.host ? 'ホスト・' : ''}${status}・${player.score}枚`}
-              describeChild
-            >
-              <Chip
-                size="small"
-                icon={<Icon />}
-                aria-label={`${player.name} ${status} ${player.score}枚`}
-                color={
-                  player.removed || !player.connected
-                    ? 'default'
-                    : waiting
-                      ? 'warning'
-                      : ready
-                        ? 'success'
-                        : player.id === you
-                          ? 'primary'
-                          : 'default'
-                }
-                variant={player.connected ? 'filled' : 'outlined'}
-                onClick={
-                  host && player.id !== you
-                    ? (event) => setMenu({ element: event.currentTarget, id: player.id })
-                    : undefined
-                }
-                label={
-                  <Box component="span" sx={{ display: 'inline-flex', gap: 0.75 }}>
-                    <span>{player.name}</span>
-                    <strong>{player.score}枚</strong>
-                  </Box>
-                }
-                sx={{
-                  flexShrink: 0,
-                  height: { xs: 18, sm: 24 },
-                  opacity: player.removed ? 0.5 : 1,
-                  '& .MuiChip-label': { px: 0.75, fontSize: { xs: 10, sm: 12 } },
-                  '& .MuiChip-icon': { fontSize: { xs: 13, sm: 18 }, ml: 0.5 },
-                }}
-              />
-            </Tooltip>
-          );
-        })}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 0.5,
+            height: '100%',
+            overflowX: 'auto',
+          }}
+        >
+          {room.players.map((player) => {
+            const ready = room.ready.includes(player.id);
+            const waiting = waitingIds.has(player.id);
+            const status = player.removed
+              ? '退出済み'
+              : !player.connected
+                ? '切断中'
+                : waiting
+                  ? '準備中'
+                  : room.phase === 'loading'
+                    ? '準備完了'
+                    : '接続中';
+            const Icon = !player.connected
+              ? WifiOffRounded
+              : player.id === room.host
+                ? WorkspacePremiumRounded
+                : waiting
+                  ? HourglassEmptyRounded
+                  : ready
+                    ? CheckCircleRounded
+                    : PersonRounded;
+            return (
+              <Tooltip
+                key={player.id}
+                title={`${player.name}・${player.id === room.host ? 'ホスト・' : ''}${status}・${player.score}枚`}
+                describeChild
+              >
+                <Chip
+                  size="small"
+                  icon={<Icon />}
+                  aria-label={`${player.name} ${status} ${player.score}枚`}
+                  color={
+                    player.removed || !player.connected
+                      ? 'default'
+                      : waiting
+                        ? 'warning'
+                        : ready
+                          ? 'success'
+                          : player.id === you
+                            ? 'primary'
+                            : 'default'
+                  }
+                  variant={player.connected ? 'filled' : 'outlined'}
+                  onClick={
+                    host && player.id !== you
+                      ? (event) => setMenu({ element: event.currentTarget, id: player.id })
+                      : undefined
+                  }
+                  label={
+                    <Box component="span" sx={{ display: 'inline-flex', gap: 0.75 }}>
+                      <span>{player.name}</span>
+                      <strong>{player.score}枚</strong>
+                    </Box>
+                  }
+                  sx={{
+                    flexShrink: 0,
+                    height: { xs: 18, sm: 24 },
+                    opacity: player.removed ? 0.5 : 1,
+                    '& .MuiChip-label': { px: 0.75, fontSize: { xs: 10, sm: 12 } },
+                    '& .MuiChip-icon': { fontSize: { xs: 13, sm: 18 }, ml: 0.5 },
+                  }}
+                />
+              </Tooltip>
+            );
+          })}
+        </Box>
+        <RoomArrivalNotice room={room} you={you} />
       </Box>
       <Menu open={host && menu !== null} anchorEl={menu?.element} onClose={() => setMenu(null)}>
         <MenuItem
