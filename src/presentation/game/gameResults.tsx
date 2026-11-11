@@ -50,12 +50,10 @@ export function GameResults({
       {feedback}
       <Box
         sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'minmax(0, 1fr) minmax(0, 1fr)' },
-          gap: 2,
+          minWidth: 0,
         }}
       >
-        <Box>
+        <Box sx={{ maxWidth: 640, mx: 'auto' }}>
           <ResultPodium players={ranked} />
           {durationMs !== undefined && (
             <Typography sx={{ mt: 1, fontWeight: 700 }}>
@@ -92,9 +90,13 @@ export function GameResults({
             未取得 {results.filter((result) => result.owner === null).length}枚
           </Typography>
         </Box>
+        {breakdown}
         <Stack
           spacing={1.5}
           sx={{
+            mt: 3,
+            maxWidth: 560,
+            mx: 'auto',
             '& > .MuiStack-root': { gap: 1 },
             '& > .MuiStack-root > .MuiButton-root': { order: -1 },
           }}
@@ -102,7 +104,6 @@ export function GameResults({
           {children}
         </Stack>
       </Box>
-      {breakdown}
     </Paper>
   );
 }

@@ -20,9 +20,9 @@ export function SeriesBreakdown({ players }: { players: readonly PlayerSeries[] 
             variant="outlined"
             component="article"
             aria-label={`${player.name}のシリーズ割合`}
-            sx={{ p: 1.5, borderRadius: 2, minWidth: 0 }}
+            sx={{ p: { xs: 1, sm: 1.5 }, borderRadius: 2, minWidth: 0 }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <Typography
                 component="h3"
                 sx={{
@@ -40,7 +40,7 @@ export function SeriesBreakdown({ players }: { players: readonly PlayerSeries[] 
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: '112px minmax(0, 1fr)',
+                gridTemplateColumns: { xs: '88px minmax(0, 1fr)', sm: '112px minmax(0, 1fr)' },
                 alignItems: 'center',
                 gap: 1.5,
               }}
@@ -58,7 +58,7 @@ export function SeriesBreakdown({ players }: { players: readonly PlayerSeries[] 
                     : '取得した札は0枚'
                 }
                 sx={{
-                  width: 112,
+                  width: { xs: 88, sm: 112 },
                   aspectRatio: '1',
                   borderRadius: '50%',
                   background: player.slices.length ? seriesGradient(player.slices) : '#e8edf4',
@@ -83,7 +83,16 @@ export function SeriesBreakdown({ players }: { players: readonly PlayerSeries[] 
                       aria-hidden
                       sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: slice.color }}
                     />
-                    <Typography sx={{ fontSize: 11, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
+                    <Typography
+                      title={slice.name}
+                      sx={{
+                        fontSize: 11,
+                        lineHeight: 1.4,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
                       {slice.name}
                     </Typography>
                     <Typography
