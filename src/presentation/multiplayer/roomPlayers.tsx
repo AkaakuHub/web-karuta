@@ -1,3 +1,5 @@
+import { rankPlayers } from '../../domain/game/ranking.js';
+import { usePlayerRankingAnimation } from './usePlayerRankingAnimation.js';
 import { useState } from 'react';
 import { Box, Chip, ListItemIcon, Menu, MenuItem, Tooltip } from '@mui/material';
 import VisibilityRounded from '@mui/icons-material/VisibilityRounded';
@@ -32,12 +34,18 @@ export function RoomPlayers({
   const [renaming, setRenaming] = useState(false);
   const self = [...room.players, ...room.spectators].find((person) => person.id === you);
   const host = room.host === you;
+  const ranked = rankPlayers(room.players, room.results).map(({ id, rank }) => ({
+    ...room.players.find((person) => person.id === id)!,
+    rank,
+  }));
+  const rankingContainer = usePlayerRankingAnimation(ranked.map((person) => person.id).join(','));
   const waitingIds = new Set(waitingPlayers(room).map((player) => player.id));
   const menuPlayer = room.players.find((player) => player.id === menu?.id);
   const selected = room.players.find((player) => player.id === target);
   return (
     <>
       <Box
+        ref={rankingContainer}
         data-game-panel="players"
         aria-label="参加者"
         sx={{
@@ -50,7 +58,7 @@ export function RoomPlayers({
           flexShrink: 0,
         }}
       >
-        {room.players.map((player) => {
+        {ranked.map((player) => {
           const ready = room.ready.includes(player.id);
           const waiting = waitingIds.has(player.id);
           const status = player.removed
@@ -79,6 +87,7 @@ export function RoomPlayers({
             >
               <Chip
                 size="small"
+                data-player-id={player.id}
                 icon={<Icon />}
                 aria-label={
                   player.id === you
@@ -106,7 +115,9 @@ export function RoomPlayers({
                 }
                 label={
                   <Box component="span" sx={{ display: 'inline-flex', gap: 0.75 }}>
-                    <span>{player.name}</span>
+                    <span>
+                      {player.rank}位 {player.name}
+                    </span>
                     <strong>{player.score}枚</strong>
                   </Box>
                 }
