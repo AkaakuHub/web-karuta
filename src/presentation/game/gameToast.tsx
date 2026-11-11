@@ -1,5 +1,4 @@
-import CloseRounded from '@mui/icons-material/CloseRounded';
-import { Box, IconButton, Snackbar } from '@mui/material';
+import { Box, Snackbar } from '@mui/material';
 import { createPortal } from 'react-dom';
 import type { ReactElement } from 'react';
 import { appToolbarHeight } from '../shared/playLayout.js';
@@ -18,7 +17,7 @@ export function GameToast({
   return createPortal(
     <Snackbar
       open={open}
-      autoHideDuration={duration ?? null}
+      autoHideDuration={duration ?? 6000}
       anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       onClose={(_, reason) => {
         if (reason !== 'clickaway') onClose();
@@ -26,34 +25,26 @@ export function GameToast({
       sx={{
         top: { xs: 4, sm: 4 },
         bottom: 'auto',
-        width: 'min(560px, calc(100% - 16px))',
+        left: { xs: '50%', sm: '50%' },
+        right: 'auto',
+        transform: 'translateX(-50%)',
+        width: 'max-content',
+        maxWidth: 'calc(100% - 24px)',
         minWidth: 0,
         pointerEvents: 'none',
         '& > *': {
           pointerEvents: 'none',
-          bgcolor: 'background.paper',
           '& button, & a': { pointerEvents: 'auto' },
-          width: '100%',
+          width: 'auto',
+          maxWidth: '100%',
           maxHeight: { xs: appToolbarHeight.xs - 8, sm: appToolbarHeight.sm - 8 },
           overflowY: 'auto',
-          boxShadow: 8,
-          borderRadius: 2,
+          boxShadow: '0 4px 16px #17202d26',
+          borderRadius: 2.5,
         },
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-        <Box sx={{ flex: 1, minWidth: 0, '& > *': { minWidth: 0, boxShadow: 'none' } }}>
-          {children}
-        </Box>
-        <IconButton
-          aria-label="通知を閉じる"
-          size="small"
-          onClick={onClose}
-          sx={{ flexShrink: 0, mx: 0.25 }}
-        >
-          <CloseRounded fontSize="small" />
-        </IconButton>
-      </Box>
+      <Box>{children}</Box>
     </Snackbar>,
     document.body,
   );
