@@ -1,3 +1,4 @@
+import type { DurableObjectState } from '@cloudflare/workers-types';
 import { z } from 'zod';
 export interface RoomContent {
   deckIds(id: string): string[];
@@ -20,3 +21,13 @@ export const joinSchema = z.object({
 });
 export const unsupportedRoom = '部屋の形式が異なります。新しい部屋を作成してください。';
 export const leaveSchema = z.object({ token: z.uuid(), connectionId: z.uuid() });
+
+export interface RoomContext extends Pick<
+  DurableObjectState,
+  'blockConcurrencyWhile' | 'getWebSockets' | 'acceptWebSocket'
+> {
+  storage: Pick<
+    DurableObjectState['storage'],
+    'get' | 'put' | 'getAlarm' | 'setAlarm' | 'deleteAll'
+  >;
+}

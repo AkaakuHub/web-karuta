@@ -9,13 +9,14 @@ import {
 import { removeMembership, type Memberships } from '../../domain/multiplayer/membership.js';
 import type { RoomView } from '../../domain/multiplayer/protocol.js';
 import { boardCapacity } from '../../domain/game/boardLayout.js';
-import type { DurableObjectState, WebSocket as RoomSocket } from '@cloudflare/workers-types';
+import type { WebSocket as RoomSocket } from '@cloudflare/workers-types';
 import {
   attachmentSchema,
   joinSchema,
   leaveSchema,
   unsupportedRoom,
   type RoomContent,
+  type RoomContext,
 } from './roomIdentity.js';
 import { publicRoom } from './roomView.js';
 export type { RoomContent } from './roomIdentity.js';
@@ -38,7 +39,7 @@ export class GameRoom {
   private kickedTokens: Record<string, string[]> = {};
   private expiresAt = 0;
   constructor(
-    private readonly ctx: DurableObjectState,
+    private readonly ctx: RoomContext,
     private readonly content: RoomContent,
   ) {
     ctx.blockConcurrencyWhile(async () => {
