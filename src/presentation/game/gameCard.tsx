@@ -39,6 +39,7 @@ export const GameCard = memo(function GameCard({
       }}
     >
       <CardActionArea
+        data-help="cards"
         aria-label={label}
         aria-busy={pending}
         disabled={disabled || incorrect || taken}

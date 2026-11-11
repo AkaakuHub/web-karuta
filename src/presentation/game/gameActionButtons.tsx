@@ -13,7 +13,7 @@ export function GameExitButton({
 }) {
   return (
     <Tooltip title={label}>
-      <IconButton aria-label={label} size={size} onClick={onClick}>
+      <IconButton data-help="exit" aria-label={label} size={size} onClick={onClick}>
         <CloseRounded />
       </IconButton>
     </Tooltip>
@@ -34,6 +34,7 @@ export function NextRoundButton({
     <Button
       size="small"
       variant="contained"
+      data-help="next"
       aria-keyshortcuts="Space Enter"
       aria-label={label}
       sx={{

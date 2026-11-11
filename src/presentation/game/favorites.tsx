@@ -68,6 +68,7 @@ export function FavoriteToggle({
   return (
     <Tooltip title={label}>
       <IconButton
+        data-help="favorite"
         aria-label={label}
         aria-pressed={selected}
         onClick={onToggle}

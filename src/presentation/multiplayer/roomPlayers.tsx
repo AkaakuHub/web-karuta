@@ -47,6 +47,7 @@ export function RoomPlayers({
       <Box
         ref={rankingContainer}
         data-game-panel="players"
+        data-help="players"
         aria-label="参加者"
         sx={{
           display: 'flex',

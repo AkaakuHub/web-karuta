@@ -170,7 +170,12 @@ export function GameControls({
           onPause={onPause}
         />
         {!complete && !revealed && onReveal && (
-          <Button size="small" aria-keyshortcuts="Space Enter" onClick={onReveal}>
+          <Button
+            data-help="reveal"
+            size="small"
+            aria-keyshortcuts="Space Enter"
+            onClick={onReveal}
+          >
             <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
               答え
             </Box>

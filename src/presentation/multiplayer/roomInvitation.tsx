@@ -61,6 +61,7 @@ export function RoomEntrance({
       </Stack>
       <Divider />
       <TextField
+        data-help="name"
         label="名前"
         required
         fullWidth
@@ -76,6 +77,7 @@ export function RoomEntrance({
       />
       <RoomSpectatorSwitch checked={spectator} disabled={reconnect} onChange={setSpectator} />
       <Button
+        data-help="join"
         type="submit"
         variant="contained"
         size="large"
@@ -112,6 +114,7 @@ export function RoomInvitation({
   return (
     <Button
       variant="outlined"
+      data-help="invite"
       aria-label={copied ? '招待URLをコピーしました' : '招待URLをコピー'}
       size="small"
       sx={{ whiteSpace: 'nowrap', px: 1 }}
@@ -134,6 +137,7 @@ export function RoomSpectatorSwitch({
 }) {
   return (
     <FormControlLabel
+      data-help="spectator"
       label="閲覧のみ"
       control={
         <Switch checked={checked} disabled={disabled} onChange={(_, value) => onChange(value)} />

@@ -15,6 +15,7 @@ export function VolumeControl({
 }) {
   return (
     <Box
+      data-help="volume"
       sx={{
         display: 'flex',
         alignItems: 'center',

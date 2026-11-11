@@ -38,6 +38,7 @@ function DeckSelector({
       {renderPicker(selectedId, setSelectedId)}
       {renderOptions?.(selectedId)}
       <Button
+        data-help="start"
         variant="contained"
         disabled={disabled || disabledForDeck?.(selectedId)}
         onClick={() => onStart(selectedId)}

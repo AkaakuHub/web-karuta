@@ -50,6 +50,7 @@ export function SeriesPie({ player }: { player: PlayerSeries }) {
           }}
         >
           <IconButton
+            data-help="series"
             aria-label={`${player.name}のシリーズ内訳`}
             aria-expanded={open}
             size="small"

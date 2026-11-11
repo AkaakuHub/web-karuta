@@ -28,7 +28,7 @@ export function RoomLobby({
       <Divider />
       <Stack direction="row" sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
         <RoomInvitation roomId={roomId} onError={onError} />
-        <Button onClick={onLeave} sx={{ ml: 'auto' }}>
+        <Button data-help="exit" onClick={onLeave} sx={{ ml: 'auto' }}>
           退出
         </Button>
       </Stack>

@@ -126,6 +126,7 @@ export function RoundInfo({
             <>
               <Stack direction="row" sx={{ alignItems: 'center', flexShrink: 0, gap: 0.5 }}>
                 <ButtonBase
+                  data-help="collection"
                   aria-label={collectionLabel}
                   disabled={!groupCards.length}
                   onClick={() =>
