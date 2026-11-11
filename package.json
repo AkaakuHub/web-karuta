@@ -367,6 +367,10 @@
     "./worker/audio/proxy": {
       "types": "./dist/worker/audio/proxy.d.ts",
       "default": "./dist/worker/audio/proxy.js"
+    },
+    "./presentation/help/gameHelp": {
+      "types": "./dist/presentation/help/gameHelp.d.ts",
+      "default": "./dist/presentation/help/gameHelp.js"
     }
   },
   "scripts": {

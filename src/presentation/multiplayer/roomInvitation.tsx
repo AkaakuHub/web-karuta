@@ -74,16 +74,7 @@ export function RoomEntrance({
         }}
         slotProps={{ htmlInput: { maxLength: 24 } }}
       />
-      <FormControlLabel
-        label="閲覧のみ"
-        control={
-          <Switch
-            checked={spectator}
-            disabled={reconnect}
-            onChange={(_, checked) => setSpectator(checked)}
-          />
-        }
-      />
+      <RoomSpectatorSwitch checked={spectator} disabled={reconnect} onChange={setSpectator} />
       <Button
         type="submit"
         variant="contained"
@@ -129,5 +120,24 @@ export function RoomInvitation({
     >
       招待URLをコピー
     </Button>
+  );
+}
+
+export function RoomSpectatorSwitch({
+  checked,
+  disabled = false,
+  onChange,
+}: {
+  checked: boolean;
+  disabled?: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <FormControlLabel
+      label="閲覧のみ"
+      control={
+        <Switch checked={checked} disabled={disabled} onChange={(_, value) => onChange(value)} />
+      }
+    />
   );
 }

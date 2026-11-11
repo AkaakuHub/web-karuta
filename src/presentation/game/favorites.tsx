@@ -52,13 +52,25 @@ export function FavoriteButton({ id, title }: { id: string; title: string }) {
   const favorites = useContext(Favorites);
   if (!favorites) return null;
   const selected = favorites.has(id);
+  return <FavoriteToggle title={title} selected={selected} onToggle={() => favorites.toggle(id)} />;
+}
+
+export function FavoriteToggle({
+  title,
+  selected,
+  onToggle,
+}: {
+  title: string;
+  selected: boolean;
+  onToggle: () => void;
+}) {
   const label = selected ? `${title}のスターを解除` : `${title}をスターに保存`;
   return (
     <Tooltip title={label}>
       <IconButton
         aria-label={label}
         aria-pressed={selected}
-        onClick={() => favorites.toggle(id)}
+        onClick={onToggle}
         size="small"
         sx={{ flexShrink: 0, p: 0.5, color: selected ? '#a76500' : 'text.secondary' }}
       >

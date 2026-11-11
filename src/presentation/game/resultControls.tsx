@@ -1,6 +1,6 @@
 import { GameSettingsButton } from './gameSettingsButton.js';
-import { IconButton, Paper, Tooltip } from '@mui/material';
-import CloseRounded from '@mui/icons-material/CloseRounded';
+import { Paper } from '@mui/material';
+import { GameExitButton } from './gameActionButtons.js';
 import { VolumeControl } from '../audio/volumeControl.js';
 import type { GameControlsProps } from './controlsModel.js';
 
@@ -33,11 +33,7 @@ export function ResultControls({
         onToggleMuted={onToggleMuted}
       />
       {onSettings && <GameSettingsButton onClick={onSettings} />}
-      <Tooltip title={resetLabel}>
-        <IconButton aria-label={resetLabel} onClick={onReset}>
-          <CloseRounded />
-        </IconButton>
-      </Tooltip>
+      <GameExitButton size="medium" label={resetLabel} onClick={onReset} />
     </Paper>
   );
 }

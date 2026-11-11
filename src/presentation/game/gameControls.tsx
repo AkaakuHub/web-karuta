@@ -7,14 +7,13 @@ import {
   Button,
   Chip,
   CircularProgress,
-  IconButton,
   LinearProgress,
   Paper,
   Tooltip,
   Typography,
 } from '@mui/material';
+import { NextRoundButton, GameExitButton } from './gameActionButtons.js';
 import SkipNextRounded from '@mui/icons-material/SkipNextRounded';
-import CloseRounded from '@mui/icons-material/CloseRounded';
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
 import CancelRounded from '@mui/icons-material/CancelRounded';
 import EmojiEventsRounded from '@mui/icons-material/EmojiEventsRounded';
@@ -180,25 +179,7 @@ export function GameControls({
             </Box>
           </Button>
         )}
-        {revealed && (
-          <Button
-            size="small"
-            variant="contained"
-            aria-keyshortcuts="Space Enter"
-            aria-label={state.round + 1 === state.total ? '結果を見る' : '次の曲を再生'}
-            sx={{
-              width: { xs: 32, sm: 'auto' },
-              '& .MuiButton-startIcon': { m: { xs: 0, sm: undefined } },
-            }}
-            startIcon={<SkipNextRounded />}
-            disabled={!onNext}
-            onClick={() => void onNext?.()}
-          >
-            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-              {state.round + 1 === state.total ? '結果を見る' : '次の曲を再生'}
-            </Box>
-          </Button>
-        )}
+        {revealed && <NextRoundButton round={state.round} total={state.total} onNext={onNext} />}
         {onSettings && (
           <Box sx={{ ml: 'auto', display: 'flex' }}>
             <GameSettingsButton onClick={onSettings} />
@@ -232,11 +213,7 @@ export function GameControls({
           onToggleMuted={onToggleMuted}
           onChange={onVolume}
         />
-        <Tooltip title={resetLabel}>
-          <IconButton aria-label={resetLabel} size="small" onClick={onReset}>
-            <CloseRounded />
-          </IconButton>
-        </Tooltip>
+        <GameExitButton label={resetLabel} onClick={onReset} />
       </Box>
       <LinearProgress
         variant="determinate"
