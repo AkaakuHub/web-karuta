@@ -1,11 +1,15 @@
-import type { RefObject } from 'react';
+import { useEffect, type RefObject } from 'react';
 import type { GameAudio } from '../../infrastructure/audio/gameAudio.js';
 import { errorMessage } from '../shared/errorMessage.js';
 
 export function useRoomAudioActions(
   audio: RefObject<GameAudio | null>,
   setError: (message: string) => void,
+  volume: number,
 ) {
+  useEffect(() => {
+    audio.current?.volume(volume);
+  }, [audio, volume]);
   return {
     seek: async (position: number) => {
       try {

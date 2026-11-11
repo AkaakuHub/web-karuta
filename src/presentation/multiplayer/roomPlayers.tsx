@@ -11,6 +11,7 @@ import WorkspacePremiumRounded from '@mui/icons-material/WorkspacePremiumRounded
 import { waitingPlayers } from '../../domain/multiplayer/participants.js';
 import type { RoomView } from '../../domain/multiplayer/protocol.js';
 import { ConfirmDialog } from '../shared/confirmDialog.js';
+import { RoomNameDialog } from './roomNameDialog.js';
 import { RoomArrivalNotice } from './roomArrivalNotice.js';
 
 export function RoomPlayers({
@@ -18,14 +19,18 @@ export function RoomPlayers({
   you,
   onKick,
   onUnkick,
+  onRename,
 }: {
   room: RoomView;
   you: string;
   onKick: (id: string) => void;
   onUnkick: (id: string) => void;
+  onRename: (name: string) => void;
 }) {
   const [menu, setMenu] = useState<{ element: HTMLElement; id: string } | null>(null);
   const [target, setTarget] = useState<string | null>(null);
+  const [renaming, setRenaming] = useState(false);
+  const self = [...room.players, ...room.spectators].find((person) => person.id === you);
   const host = room.host === you;
   const waitingIds = new Set(waitingPlayers(room).map((player) => player.id));
   const menuPlayer = room.players.find((player) => player.id === menu?.id);
@@ -75,7 +80,11 @@ export function RoomPlayers({
               <Chip
                 size="small"
                 icon={<Icon />}
-                aria-label={`${player.name} ${status} ${player.score}枚`}
+                aria-label={
+                  player.id === you
+                    ? `名前を変更：${player.name}`
+                    : `${player.name} ${status} ${player.score}枚`
+                }
                 color={
                   player.removed || !player.connected
                     ? 'default'
@@ -89,9 +98,11 @@ export function RoomPlayers({
                 }
                 variant={player.connected ? 'filled' : 'outlined'}
                 onClick={
-                  host && player.id !== you
-                    ? (event) => setMenu({ element: event.currentTarget, id: player.id })
-                    : undefined
+                  player.id === you
+                    ? () => setRenaming(true)
+                    : host
+                      ? (event) => setMenu({ element: event.currentTarget, id: player.id })
+                      : undefined
                 }
                 label={
                   <Box component="span" sx={{ display: 'inline-flex', gap: 0.75 }}>
@@ -118,7 +129,10 @@ export function RoomPlayers({
               size="small"
               icon={<VisibilityRounded />}
               label={person.name}
-              aria-label={`${person.name} 閲覧のみ`}
+              aria-label={
+                person.id === you ? `名前を変更：${person.name}` : `${person.name} 閲覧のみ`
+              }
+              onClick={person.id === you ? () => setRenaming(true) : undefined}
               sx={{
                 flexShrink: 0,
                 height: { xs: 18, sm: 24 },
@@ -128,6 +142,9 @@ export function RoomPlayers({
           ))}
       </Box>
       <RoomArrivalNotice room={room} you={you} />
+      {renaming && self && (
+        <RoomNameDialog name={self.name} onClose={() => setRenaming(false)} onRename={onRename} />
+      )}
       <Menu open={host && menu !== null} anchorEl={menu?.element} onClose={() => setMenu(null)}>
         <MenuItem
           sx={{

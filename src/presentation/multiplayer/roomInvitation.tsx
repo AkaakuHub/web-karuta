@@ -28,7 +28,7 @@ export function RoomEntrance({
   onJoin: (name: string, create: boolean, code: string, spectator: boolean) => Promise<void>;
 }) {
   const { storagePrefix } = useKarutaConfig();
-  const [name, setName] = useState(sessionStorage.getItem(`${storagePrefix}-name`) ?? '');
+  const [name, setName] = useState(localStorage.getItem(`${storagePrefix}-name`) ?? '');
   const [spectator, setSpectator] = useState(
     reconnect && sessionStorage.getItem(`${storagePrefix}-spectator`) === 'true',
   );
@@ -46,7 +46,7 @@ export function RoomEntrance({
           input.current?.focus();
           return;
         }
-        sessionStorage.setItem(`${storagePrefix}-name`, name.trim());
+        localStorage.setItem(`${storagePrefix}-name`, name.trim());
         sessionStorage.setItem(`${storagePrefix}-spectator`, String(spectator));
         void onJoin(name, !invited, roomId, spectator);
       }}

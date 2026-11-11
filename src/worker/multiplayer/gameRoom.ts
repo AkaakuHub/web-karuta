@@ -4,6 +4,7 @@ import {
   joinParticipant,
   kickPlayer,
   leaveParticipant,
+  renameParticipant,
 } from '../../domain/multiplayer/participants.js';
 import { removeMembership, type Memberships } from '../../domain/multiplayer/membership.js';
 import type { RoomView } from '../../domain/multiplayer/protocol.js';
@@ -151,6 +152,8 @@ export class GameRoom {
     try {
       const previous = this.room;
       const previousView = this.view(previous);
+      if (command.type === 'rename')
+        this.room = renameParticipant(this.room, identity.id, command.name);
       if (command.type === 'start') {
         this.room = beginGame(
           this.room,

@@ -65,9 +65,6 @@ export function useRoom() {
   }, [disconnect]);
   useRoomExit(leave, room !== null);
   useEffect(() => disconnect, [disconnect]);
-  useEffect(() => {
-    audio.current?.volume(effectiveVolume);
-  }, [effectiveVolume]);
   const recover = useCallback(() => {
     resetClock();
     if (preparationFailed.current) setPreparationAttempt((attempt) => attempt + 1);
@@ -152,6 +149,10 @@ export function useRoom() {
             if (kind === 'incorrect' && attempted.current) setIncorrect([attempted.current]);
             current.current = next;
             connectionPlayer.current = playerId;
+            const person = [...next.players, ...next.spectators].find(
+              (person) => person.id === playerId,
+            );
+            if (person) localStorage.setItem(`${storagePrefix}-name`, person.name);
             setYou(playerId);
             setRoom(next);
             setError('');
@@ -276,7 +277,7 @@ export function useRoom() {
     playing,
     needsResume,
     take,
-    ...useRoomAudioActions(audio, setError),
+    ...useRoomAudioActions(audio, setError, effectiveVolume),
     pause: () => audio.current?.stop(),
     roomId,
     spectator: room?.spectators.some((person) => person.id === you) ?? false,
@@ -288,6 +289,7 @@ export function useRoom() {
     latency: clock.latency,
     now: clock.now,
     send,
+    rename: (name: string) => send({ type: 'rename', name }),
     join,
     volume,
     muted,

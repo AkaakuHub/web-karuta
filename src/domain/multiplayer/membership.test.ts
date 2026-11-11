@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
 import { removeMembership, type Memberships } from './membership.js';
-import { canCommand, disconnectPlayer, joinParticipant, leaveParticipant } from './participants.js';
+import {
+  canCommand,
+  disconnectPlayer,
+  joinParticipant,
+  leaveParticipant,
+  renameParticipant,
+} from './participants.js';
 import { beginGame, claimCard, emptyRoom, readyPlayer } from './room.js';
 
 function populated() {
@@ -78,4 +84,18 @@ describe('退室通知の接続識別', () => {
     expect(removeMembership(members, 'token', 'current')).toEqual({});
     expect(members.token?.id).toBe('a');
   });
+});
+
+it('プレイ中に自分の名前だけを変え、役割・得点・進行を保つ', () => {
+  const room = populated();
+  room.phase = 'playing';
+  room.players[0]!.score = 3;
+  const next = renameParticipant(room, 'a', '新しい名前');
+  expect(next.players).toEqual([{ ...room.players[0]!, name: '新しい名前' }, room.players[1]]);
+  expect(next.host).toBe(room.host);
+  expect(next.phase).toBe(room.phase);
+  const viewer = renameParticipant(next, 'watch', '閲覧名');
+  expect(viewer.spectators).toEqual([{ ...room.spectators[0]!, name: '閲覧名' }]);
+  expect(viewer.players).toEqual(next.players);
+  expect(canCommand(room, 'watch', 'rename')).toBe(true);
 });
