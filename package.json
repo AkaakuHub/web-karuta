@@ -371,6 +371,14 @@
     "./presentation/help/gameHelp": {
       "types": "./dist/presentation/help/gameHelp.d.ts",
       "default": "./dist/presentation/help/gameHelp.js"
+    },
+    "./presentation/catalog/catalogSongDialog": {
+      "types": "./dist/presentation/catalog/catalogSongDialog.d.ts",
+      "default": "./dist/presentation/catalog/catalogSongDialog.js"
+    },
+    "./presentation/catalog/catalogImages": {
+      "types": "./dist/presentation/catalog/catalogImages.d.ts",
+      "default": "./dist/presentation/catalog/catalogImages.js"
     }
   },
   "scripts": {
