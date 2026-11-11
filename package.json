@@ -172,6 +172,10 @@
       "types": "./dist/presentation/game/controlsModel.d.ts",
       "default": "./dist/presentation/game/controlsModel.js"
     },
+    "./presentation/game/deckSettings": {
+      "types": "./dist/presentation/game/deckSettings.d.ts",
+      "default": "./dist/presentation/game/deckSettings.js"
+    },
     "./presentation/game/gameBoard": {
       "types": "./dist/presentation/game/gameBoard.d.ts",
       "default": "./dist/presentation/game/gameBoard.js"
