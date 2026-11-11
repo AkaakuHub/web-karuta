@@ -1,4 +1,4 @@
-import { Snackbar } from '@mui/material';
+import { Box, Snackbar } from '@mui/material';
 import { createPortal } from 'react-dom';
 import type { ReactElement } from 'react';
 import { appToolbarHeight } from '../shared/playLayout.js';
@@ -38,7 +38,7 @@ export function GameToast({
         },
       }}
     >
-      {children}
+      <Box>{children}</Box>
     </Snackbar>,
     document.body,
   );
