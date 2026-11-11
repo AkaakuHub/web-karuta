@@ -134,6 +134,7 @@ function SongContent({
 }) {
   const [tab, setTab] = useState('card');
   const [back, setBack] = useState(false);
+  const [metadataOpen, setMetadataOpen] = useState<boolean | null>(null);
   const desktop = useMediaQuery(useTheme().breakpoints.up('sm'));
   return (
     <>
@@ -144,6 +145,9 @@ function SongContent({
         scrollButtons="auto"
         allowScrollButtonsMobile
         aria-label="楽曲の詳細"
+        sx={{
+          '& .MuiTab-root': { minWidth: 0, px: { xs: 1, sm: 2 }, fontSize: { xs: 12, sm: 14 } },
+        }}
       >
         <Tab value="card" label="カード" />
         {song.releases.length > 0 && <Tab value="releases" label="収録・別バージョン" />}
@@ -182,7 +186,8 @@ function SongContent({
               </Box>
             </Box>
             <Accordion
-              defaultExpanded={desktop}
+              expanded={metadataOpen ?? desktop}
+              onChange={(_, expanded) => setMetadataOpen(expanded)}
               disableGutters
               elevation={0}
               sx={{
