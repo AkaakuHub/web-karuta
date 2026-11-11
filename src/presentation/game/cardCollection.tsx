@@ -94,7 +94,7 @@ export function CardCollection({
                   top: 0,
                   left: 0,
                   width: item.size,
-                  height: '100%',
+                  maxHeight: '100%',
                   transform: `translateX(${item.start}px)`,
                   pr: 1,
                   display: 'flex',
@@ -105,7 +105,7 @@ export function CardCollection({
                   aria-label={`${card.title}に注目`}
                   onClick={() => onSelect(card.id)}
                   sx={{
-                    flex: 1,
+                    flex: '0 1 auto',
                     minHeight: 0,
                     width: '100%',
                     display: 'flex',
@@ -121,12 +121,17 @@ export function CardCollection({
                 >
                   <Box
                     sx={{
-                      flex: 1,
+                      flex: '0 1 auto',
                       minHeight: 0,
                       width: '100%',
                       display: 'flex',
                       justifyContent: 'center',
-                      '& > svg': { height: '100%', width: 'auto', maxWidth: '100%' },
+                      '& > svg': {
+                        height: 'auto',
+                        width: '100%',
+                        maxHeight: '100%',
+                        display: 'block',
+                      },
                     }}
                   >
                     {renderCard(card.id, false)}
@@ -135,6 +140,7 @@ export function CardCollection({
                     sx={{
                       fontSize: 12,
                       lineHeight: '18px',
+                      flexShrink: 0,
                       width: '100%',
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
