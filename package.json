@@ -284,6 +284,10 @@
       "types": "./dist/presentation/multiplayer/roomWaiting.d.ts",
       "default": "./dist/presentation/multiplayer/roomWaiting.js"
     },
+    "./presentation/multiplayer/roomLobby": {
+      "types": "./dist/presentation/multiplayer/roomLobby.d.ts",
+      "default": "./dist/presentation/multiplayer/roomLobby.js"
+    },
     "./presentation/multiplayer/roomPlayers": {
       "types": "./dist/presentation/multiplayer/roomPlayers.d.ts",
       "default": "./dist/presentation/multiplayer/roomPlayers.js"
