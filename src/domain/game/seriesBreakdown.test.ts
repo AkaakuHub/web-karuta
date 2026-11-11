@@ -29,5 +29,6 @@ it('プレイヤーごとに取得した札だけを分類し横断曲の割合�
   expect(charts[1]?.slices.map(({ id, value }) => ({ id, value }))).toEqual([
     { id: 'b', value: 1 },
   ]);
+  expect(charts[0]?.slices.map(({ count }) => count)).toEqual([2, 1]);
   expect(charts[2]?.slices).toEqual([]);
 });

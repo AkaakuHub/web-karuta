@@ -1,5 +1,7 @@
 import { Box, Stack, Typography } from '@mui/material';
 import EmojiEventsRounded from '@mui/icons-material/EmojiEventsRounded';
+import { SeriesPie } from './seriesBreakdown.js';
+import type { PlayerSeries } from '../../domain/game/seriesBreakdown.js';
 import type { rankPlayers } from '../../domain/game/ranking.js';
 
 const places = [
@@ -8,7 +10,13 @@ const places = [
   { rank: 3, column: 3, height: 28, color: '#98532c', background: '#f2d2bc' },
 ];
 
-export function ResultPodium({ players }: { players: ReturnType<typeof rankPlayers> }) {
+export function ResultPodium({
+  players,
+  series,
+}: {
+  players: ReturnType<typeof rankPlayers>;
+  series: readonly PlayerSeries[];
+}) {
   const groups = places
     .map((place) => ({
       ...place,
@@ -41,16 +49,26 @@ export function ResultPodium({ players }: { players: ReturnType<typeof rankPlaye
           <Stack spacing={0.75} sx={{ pb: 1 }}>
             {place.players.map((player) => (
               <Box key={player.id}>
-                <Typography
+                <Box
                   sx={{
-                    fontWeight: 800,
-                    fontSize: { xs: 13, sm: 15 },
-                    lineHeight: 1.35,
-                    overflowWrap: 'anywhere',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 0.25,
                   }}
                 >
-                  {player.name}
-                </Typography>
+                  <SeriesPie player={series.find((item) => item.id === player.id)!} />
+                  <Typography
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: { xs: 13, sm: 15 },
+                      lineHeight: 1.35,
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
+                    {player.name}
+                  </Typography>
+                </Box>
                 <Typography sx={{ fontWeight: 700, fontSize: 13 }}>{player.count}枚</Typography>
               </Box>
             ))}

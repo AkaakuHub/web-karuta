@@ -1,112 +1,74 @@
-import { Box, Chip, Paper, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Box, ClickAwayListener, IconButton, Tooltip, Typography } from '@mui/material';
 import { seriesGradient, type PlayerSeries } from '../../domain/game/seriesBreakdown.js';
 
-export function SeriesBreakdown({ players }: { players: readonly PlayerSeries[] }) {
-  return (
-    <Box component="section" aria-label="プレイヤー別のシリーズ割合" sx={{ mt: 3, minWidth: 0 }}>
-      <Typography component="h2" sx={{ fontSize: 16, fontWeight: 800, mb: 1.5 }}>
-        取得札のシリーズ割合
+export function SeriesPie({ player }: { player: PlayerSeries }) {
+  const [open, setOpen] = useState(false);
+  const title = (
+    <Box sx={{ p: 0.5, minWidth: 160, maxWidth: 300 }}>
+      <Typography sx={{ fontSize: 12, fontWeight: 800, mb: 0.75 }}>
+        {player.name}・{player.total}枚
       </Typography>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
-          gap: 1.5,
-        }}
-      >
-        {players.map((player) => (
-          <Paper
-            key={player.id}
-            variant="outlined"
-            component="article"
-            aria-label={`${player.name}のシリーズ割合`}
-            sx={{ p: { xs: 1, sm: 1.5 }, borderRadius: 2, minWidth: 0 }}
+      {player.slices.map((slice) => (
+        <Box
+          key={slice.id}
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: '8px minmax(0, 1fr) auto',
+            gap: 0.75,
+            alignItems: 'center',
+            mb: 0.5,
+          }}
+        >
+          <Box
+            aria-hidden
+            sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: slice.color }}
+          />
+          <Typography sx={{ fontSize: 11, lineHeight: 1.4 }}>{slice.name}</Typography>
+          <Typography
+            sx={{ fontSize: 11, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <Typography
-                component="h3"
-                sx={{
-                  fontSize: 14,
-                  fontWeight: 800,
-                  minWidth: 0,
-                  overflowWrap: 'anywhere',
-                  flex: 1,
-                }}
-              >
-                {player.name}
-              </Typography>
-              <Chip size="small" label={`${player.total}枚`} sx={{ flexShrink: 0 }} />
-            </Box>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '88px minmax(0, 1fr)', sm: '112px minmax(0, 1fr)' },
-                alignItems: 'center',
-                gap: 1.5,
-              }}
-            >
-              <Box
-                role="img"
-                aria-label={
-                  player.slices.length
-                    ? player.slices
-                        .map(
-                          (slice) =>
-                            `${slice.name} ${((slice.value / player.total) * 100).toFixed(1)}%`,
-                        )
-                        .join('、')
-                    : '取得した札は0枚'
-                }
-                sx={{
-                  width: { xs: 88, sm: 112 },
-                  aspectRatio: '1',
-                  borderRadius: '50%',
-                  background: player.slices.length ? seriesGradient(player.slices) : '#e8edf4',
-                }}
-              />
-              <Box
-                component="ul"
-                sx={{ listStyle: 'none', m: 0, p: 0, display: 'grid', gap: 0.75, minWidth: 0 }}
-              >
-                {player.slices.map((slice) => (
-                  <Box
-                    key={slice.id}
-                    component="li"
-                    sx={{
-                      display: 'grid',
-                      gridTemplateColumns: '8px minmax(0, 1fr) auto',
-                      alignItems: 'center',
-                      columnGap: 0.5,
-                    }}
-                  >
-                    <Box
-                      aria-hidden
-                      sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: slice.color }}
-                    />
-                    <Typography
-                      title={slice.name}
-                      sx={{
-                        fontSize: 11,
-                        lineHeight: 1.4,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {slice.name}
-                    </Typography>
-                    <Typography
-                      sx={{ fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
-                    >
-                      {Math.round((slice.value / player.total) * 100)}%
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          </Paper>
-        ))}
-      </Box>
+            {slice.count}枚・{Math.round((slice.value / player.total) * 100)}%
+          </Typography>
+        </Box>
+      ))}
     </Box>
+  );
+  return (
+    <ClickAwayListener onClickAway={() => setOpen(false)}>
+      <Box component="span" sx={{ display: 'inline-flex', flexShrink: 0 }}>
+        <Tooltip
+          title={title}
+          open={open}
+          onOpen={() => setOpen(true)}
+          onClose={() => setOpen(false)}
+          disableTouchListener
+          arrow
+          slotProps={{
+            tooltip: { sx: { bgcolor: '#243247', boxShadow: 3 } },
+            arrow: { sx: { color: '#243247' } },
+          }}
+        >
+          <IconButton
+            aria-label={`${player.name}のシリーズ内訳`}
+            aria-expanded={open}
+            size="small"
+            onClick={() => setOpen(true)}
+            sx={{ p: 0.5 }}
+          >
+            <Box
+              component="span"
+              aria-hidden
+              sx={{
+                width: 24,
+                height: 24,
+                borderRadius: '50%',
+                background: player.slices.length ? seriesGradient(player.slices) : '#dce3ed',
+              }}
+            />
+          </IconButton>
+        </Tooltip>
+      </Box>
+    </ClickAwayListener>
   );
 }

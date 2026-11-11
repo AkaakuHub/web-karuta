@@ -11,6 +11,8 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import type { PlayerSeries } from '../../domain/game/seriesBreakdown.js';
+import { SeriesPie } from './seriesBreakdown.js';
 import { ResultPodium } from './resultPodium.js';
 import { rankPlayers } from '../../domain/game/ranking.js';
 import type { RoundResult } from '../../domain/game/results.js';
@@ -21,14 +23,14 @@ export function GameResults({
   children,
   feedback,
   durationMs,
-  breakdown,
+  series,
 }: {
   players: readonly { id: string; name: string }[];
   results: readonly RoundResult[];
   children: ReactNode;
   feedback: ReactNode;
   durationMs?: number;
-  breakdown?: ReactNode;
+  series: readonly PlayerSeries[];
 }) {
   const ranked = rankPlayers(players, results);
   const remaining = ranked.filter((player) => player.rank > 3);
@@ -54,7 +56,7 @@ export function GameResults({
         }}
       >
         <Box sx={{ maxWidth: 640, mx: 'auto' }}>
-          <ResultPodium players={ranked} />
+          <ResultPodium players={ranked} series={series} />
           {durationMs !== undefined && (
             <Typography sx={{ mt: 1, fontWeight: 700 }}>
               出題時間 {formatDuration(durationMs)}
@@ -77,7 +79,12 @@ export function GameResults({
                 {remaining.map((player) => (
                   <TableRow key={player.id}>
                     <TableCell sx={{ fontWeight: 800 }}>{player.rank}位</TableCell>
-                    <TableCell sx={{ overflowWrap: 'anywhere' }}>{player.name}</TableCell>
+                    <TableCell sx={{ overflowWrap: 'anywhere' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <SeriesPie player={series.find((item) => item.id === player.id)!} />
+                        {player.name}
+                      </Box>
+                    </TableCell>
                     <TableCell align="right" sx={{ whiteSpace: 'nowrap', fontWeight: 800 }}>
                       {player.count}枚
                     </TableCell>
@@ -90,7 +97,6 @@ export function GameResults({
             未取得 {results.filter((result) => result.owner === null).length}枚
           </Typography>
         </Box>
-        {breakdown}
         <Stack
           spacing={1.5}
           sx={{

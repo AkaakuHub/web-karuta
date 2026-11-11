@@ -7,6 +7,7 @@ interface Series {
 }
 export interface SeriesSlice extends Series {
   value: number;
+  count: number;
 }
 export interface PlayerSeries {
   id: string;
@@ -23,12 +24,14 @@ export function seriesBreakdown(
   return players.map((player) => {
     const owned = results.filter((result) => result.owner === player.id);
     const counts = new Map<string, number>();
+    const cards = new Map<string, number>();
     for (const result of owned) {
       const ids = [...new Set(result.seriesIds)];
       if (!ids.length) throw new Error('曲のシリーズがありません');
       for (const id of ids) {
         if (!series.some((item) => item.id === id)) throw new Error('シリーズの情報がありません');
         counts.set(id, (counts.get(id) ?? 0) + 1 / ids.length);
+        cards.set(id, (cards.get(id) ?? 0) + 1);
       }
     }
     return {
@@ -36,7 +39,7 @@ export function seriesBreakdown(
       total: owned.length,
       slices: series
         .filter((item) => counts.has(item.id))
-        .map((item) => ({ ...item, value: counts.get(item.id)! }))
+        .map((item) => ({ ...item, value: counts.get(item.id)!, count: cards.get(item.id)! }))
         .sort((a, b) => b.value - a.value),
     };
   });
