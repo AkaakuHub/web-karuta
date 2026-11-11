@@ -1,7 +1,6 @@
 import { errorMessage } from '../shared/errorMessage.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
-import { v4 } from 'uuid';
 import { applyRoomPatch } from '../../domain/multiplayer/transport.js';
 import { eventSchema } from '../../domain/multiplayer/protocol.js';
 import type { Command, RoomView } from '../../domain/multiplayer/protocol.js';
@@ -12,6 +11,8 @@ import { roomClaimant, roomFeedback } from '../../domain/multiplayer/feedback.js
 import type { TrackProgress } from '../../infrastructure/audio/audioProgress.js';
 import { useKarutaConfig } from '../config/karutaProvider.js';
 import { RoomConnection } from '../../infrastructure/multiplayer/roomConnection.js';
+import { useRoomPreparation } from './useRoomPreparation.js';
+import { connectRoom } from './connectRoom.js';
 import { useRoomClock } from './useRoomClock.js';
 import { useRoomAudioActions } from './useRoomAudioActions.js';
 import { useRoomExit } from './roomExitGuard.js';
@@ -23,22 +24,28 @@ export function useRoom() {
   const [room, setRoom] = useState<RoomView | null>(null);
   const [you, setYou] = useState('');
   const [connected, setConnected] = useState(false);
+  const [timingReady, setTimingReady] = useState(false);
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState('');
-  const clock = useRoomClock(room?.startsAt ?? null);
-  const { reset: resetClock, receive: receiveClock, rtt: roundTripTime } = clock;
+  const clock = useRoomClock();
+  const { reset: resetClock, receive: receiveClock } = clock;
   const socket = useRef<RoomConnection | null>(null);
   const audio = useRef<GameAudio | null>(null);
-  const preparationFailed = useRef(false);
-  const [preparationAttempt, setPreparationAttempt] = useState(0);
-  const [prepared, setPrepared] = useState<{ url: string; round: number; attempt: number } | null>(
-    null,
+  const preparation = useRoomPreparation(
+    audio,
+    connected,
+    room?.audio ?? null,
+    room?.round ?? 0,
+    setError,
   );
+  const { reset: resetPreparation, retry: retryPreparation } = preparation;
+  const [pendingTake, setPendingTake] = useState<string | null>(null);
   const { volume, muted, effectiveVolume, setVolume, toggleMuted } = useAudioVolume();
   const effects = useGameFeedback(effectiveVolume, setError);
   const current = useRef<RoomView | null>(null);
   const connectionPlayer = useRef('');
   const attempted = useRef<string | null>(null);
+  const submittedRound = useRef<number | null>(null);
   const [incorrect, setIncorrect] = useState<string[]>([]);
   const [progress, setProgress] = useState<TrackProgress>({ position: 0, duration: 0 });
   const [playing, setPlaying] = useState(false);
@@ -52,11 +59,12 @@ export function useRoom() {
     void audio.current?.dispose();
     audio.current = null;
     setConnected(false);
+    setTimingReady(false);
     current.current = null;
     setRoom(null);
-    setPrepared(null);
+    resetPreparation();
     resetClock();
-  }, [resetClock]);
+  }, [resetClock, resetPreparation]);
   const leave = useCallback(() => {
     socket.current?.leave();
     disconnect();
@@ -67,8 +75,8 @@ export function useRoom() {
   useEffect(() => disconnect, [disconnect]);
   const recover = useCallback(() => {
     resetClock();
-    if (preparationFailed.current) setPreparationAttempt((attempt) => attempt + 1);
-  }, [resetClock]);
+    retryPreparation();
+  }, [resetClock, retryPreparation]);
   useRoomLifecycle(socket, recover);
   async function join(name: string, create: boolean, code: string, spectator: boolean) {
     if (joining) return;
@@ -94,22 +102,14 @@ export function useRoom() {
       const url = new URL(location.href);
       url.searchParams.set('room', id);
       history.replaceState(null, '', url);
-      const key = `${storagePrefix}-room:${id}`;
-      const token = sessionStorage.getItem(key) ?? v4();
-      sessionStorage.setItem(key, token);
-      const endpoint = new URL(`/api/rooms/${id}`, location.href);
-      endpoint.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-      endpoint.searchParams.set('token', token);
-      endpoint.searchParams.set('spectator', String(spectator));
-      endpoint.searchParams.set('connectionId', v4());
-      endpoint.searchParams.set('name', name.trim());
       let serverError = '';
       let established = false;
-      const connection = new RoomConnection(endpoint.href, {
+      const connection = connectRoom(id, name, spectator, storagePrefix, {
         status: (connected) => {
           setConnected(connected);
+          setTimingReady(false);
           setJoining(false);
-          setPrepared(null);
+          resetPreparation();
           resetClock();
           if (!connected) player.clear();
         },
@@ -127,9 +127,12 @@ export function useRoom() {
             return;
           }
           const message = parsed.data;
+          if (message.type === 'timingReady') setTimingReady(true);
+          if (message.type === 'probe') send({ type: 'probeAck', id: message.id });
           if (message.type === 'error') {
             serverError = message.message;
             setError(message.message);
+            setPendingTake(null);
           }
           if (message.type === 'state' || message.type === 'update') {
             established = true;
@@ -144,8 +147,13 @@ export function useRoom() {
             if (previous?.round !== next.round || next.phase === 'loading') {
               effects.clear(next.round > 0);
               setIncorrect([]);
+              setPendingTake(null);
+              submittedRound.current = null;
             }
-            if (kind) effects.notify(kind, null, roomClaimant(next, playerId));
+            if (kind) {
+              setPendingTake(null);
+              effects.notify(kind, null, roomClaimant(next, playerId));
+            }
             if (kind === 'incorrect' && attempted.current) setIncorrect([attempted.current]);
             current.current = next;
             connectionPlayer.current = playerId;
@@ -181,54 +189,21 @@ export function useRoom() {
       setError(errorMessage(reason, '参加できません'));
     }
   }
-  const audioUrl = room?.audio ?? null;
-  const round = room?.round ?? 0;
-  const audioReady =
-    connected &&
-    prepared?.url === audioUrl &&
-    prepared?.round === round &&
-    prepared?.attempt === preparationAttempt;
-  useEffect(() => {
-    if (!audioUrl || !connected) {
-      audio.current?.stop();
-      return;
-    }
-    let active = true;
-    let retry: ReturnType<typeof setTimeout>;
-    preparationFailed.current = false;
-    void audio.current
-      ?.prepare(audioUrl)
-      .then((ready) => {
-        if (active && ready) {
-          setPrepared({ url: audioUrl, round, attempt: preparationAttempt });
-          setError('');
-        }
-      })
-      .catch((reason: unknown) => {
-        if (active) {
-          preparationFailed.current = true;
-          setError(errorMessage(reason, '音声を準備できません'));
-          retry = setTimeout(() => setPreparationAttempt((attempt) => attempt + 1), 5000);
-        }
-      });
-    return () => {
-      active = false;
-      clearTimeout(retry);
-      audio.current?.clear();
-    };
-  }, [audioUrl, round, connected, preparationAttempt]);
+  const audioReady = preparation.ready;
   useEffect(() => {
     if (
       connected &&
+      timingReady &&
       room?.phase === 'loading' &&
       !room.spectators.some((person) => person.id === you) &&
       audioReady &&
       clock.ready
     ) {
-      send({ type: 'ready', round: room.round, sent: Date.now(), rtt: roundTripTime() });
+      send({ type: 'ready', round: room.round, sent: performance.timeOrigin + performance.now() });
     }
   }, [
     connected,
+    timingReady,
     room?.spectators,
     you,
     room?.phase,
@@ -236,7 +211,6 @@ export function useRoom() {
     room?.audio,
     audioReady,
     clock.ready,
-    roundTripTime,
     send,
   ]);
   useEffect(() => {
@@ -259,12 +233,26 @@ export function useRoom() {
     clock.read,
   ]);
   const take = useCallback(
-    (id: string) => {
+    (id: string, at: number) => {
       const state = current.current;
-      if (!state || state.spectators.some((person) => person.id === connectionPlayer.current))
+      if (
+        !state ||
+        state.phase !== 'playing' ||
+        !state.ready.includes(connectionPlayer.current) ||
+        submittedRound.current === state.round ||
+        state.spectators.some((person) => person.id === connectionPlayer.current)
+      )
         return;
       attempted.current = id;
-      send({ type: 'take', round: state.round, id });
+      try {
+        const elapsedMs = audio.current?.reactionTime(at);
+        if (elapsedMs === undefined || elapsedMs < 0) return;
+        submittedRound.current = state.round;
+        setPendingTake(id);
+        send({ type: 'take', round: state.round, id, elapsedMs });
+      } catch (reason) {
+        setError(errorMessage(reason, '入力時刻を確認できません'));
+      }
     },
     [send],
   );
@@ -273,6 +261,7 @@ export function useRoom() {
     feedback: effects.feedback,
     revision: effects.revision,
     incorrect,
+    pendingTake,
     progress,
     playing,
     needsResume,
@@ -287,7 +276,6 @@ export function useRoom() {
     joining,
     error,
     latency: clock.latency,
-    now: clock.now,
     send,
     rename: (name: string) => send({ type: 'rename', name }),
     join,

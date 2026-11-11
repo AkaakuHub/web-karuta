@@ -56,6 +56,9 @@ class Context extends EventTarget {
     this.sources.push(source);
     return source;
   }
+  getOutputTimestamp() {
+    return { contextTime: this.currentTime, performanceTime: performance.now() || 1 };
+  }
   decodeAudioData(data: ArrayBuffer) {
     return this.decode(data);
   }

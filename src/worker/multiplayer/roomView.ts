@@ -3,7 +3,8 @@ import type { Memberships } from '../../domain/multiplayer/membership.js';
 import type { RoomContent } from './roomIdentity.js';
 
 export function publicRoom(value: Room, tokens: Memberships, content: RoomContent) {
-  const { order, ...room } = value;
+  const { order, settling, ...room } = value;
+  if (settling && room.phase !== 'playing') throw new Error('判定中の進行が一致しません');
   const answer = order[room.round] ?? null;
   const active = new Set(Object.values(tokens).map((person) => person?.id));
   return {

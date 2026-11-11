@@ -74,7 +74,7 @@ export function leaveParticipant(room: Room, id: string, now: number): Room {
 }
 
 export function canCommand(room: Room, id: string, type: string): boolean {
-  if (['ping', 'sync', 'leave', 'rename'].includes(type)) return true;
+  if (['ping', 'sync', 'leave', 'rename', 'probeAck'].includes(type)) return true;
   if (!room.players.some((player) => player.id === id && player.connected)) return false;
   return !['start', 'next', 'skip', 'kick', 'unkick'].includes(type) || room.host === id;
 }

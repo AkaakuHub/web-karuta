@@ -8,13 +8,15 @@ export const GameCard = memo(function GameCard({
   incorrect,
   disabled,
   onTake,
+  pending = false,
 }: {
   children: ReactNode;
   label: string;
   taken: boolean;
   incorrect: boolean;
   disabled: boolean;
-  onTake?: () => void;
+  pending?: boolean;
+  onTake?: (at: number) => void;
 }) {
   return (
     <Box
@@ -23,7 +25,7 @@ export const GameCard = memo(function GameCard({
         height: '100%',
         opacity: incorrect ? 0.4 : 1,
         filter: incorrect ? 'grayscale(1)' : undefined,
-        outline: taken ? '3px solid #16854c' : undefined,
+        outline: taken ? '3px solid #16854c' : pending ? '2px solid #2449bb' : undefined,
         outlineOffset: 2,
         animation: incorrect ? 'card-shake 360ms ease-in-out' : undefined,
         '@keyframes card-shake': {
@@ -38,8 +40,14 @@ export const GameCard = memo(function GameCard({
     >
       <CardActionArea
         aria-label={label}
+        aria-busy={pending}
         disabled={disabled || incorrect || taken}
-        onClick={onTake}
+        onPointerDown={(event) => {
+          if (event.isPrimary && event.button === 0) onTake?.(event.timeStamp);
+        }}
+        onClick={(event) => {
+          if (event.detail === 0) onTake?.(event.timeStamp);
+        }}
         sx={{ height: '100%', borderRadius: 0, '&.Mui-disabled': { opacity: 1 } }}
       >
         {children}

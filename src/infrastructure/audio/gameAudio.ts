@@ -1,3 +1,5 @@
+import { audibleReactionMs } from '../../domain/game/audioTiming.js';
+import { outputContextTime, waitForAudioOutput } from './outputClock.js';
 import type { TrackProgress } from './audioProgress.js';
 import { playbackPosition } from '../../domain/game/playback.js';
 import { normalizationGain } from '../../domain/game/audioLevel.js';
@@ -157,15 +159,19 @@ export class GameAudio {
     diagnostic('audio.fetch.done', { bytes: data.byteLength });
     const buffer = await this.decoder.run(data, controller.signal);
     if (!buffer) return false;
+    diagnostic('audio.normalization.start');
     this.normalization.gain.value = normalizationGain(
       Array.from({ length: buffer.numberOfChannels }, (_, channel) =>
         buffer.getChannelData(channel),
       ),
       buffer.sampleRate,
     );
+    diagnostic('audio.normalization.done');
     this.buffer = buffer;
     this.progress();
-    return true;
+    if (!(await this.unlock()) || !(await waitForAudioOutput(this.context, controller.signal)))
+      return false;
+    return !controller.signal.aborted;
   }
   private start(delay: number, position: number) {
     this.stop();
@@ -213,8 +219,19 @@ export class GameAudio {
       throw reason;
     }
     if (signal.aborted || revision !== this.playbackRevision) return;
-    const delay = (startsAt - serverNow()) / 1000;
-    this.start(Math.max(0, delay), Math.max(0, -delay));
+    const targetTime = performance.now() + startsAt - serverNow();
+    const delay =
+      outputContextTime(this.context.getOutputTimestamp(), targetTime) - this.context.currentTime;
+    this.start(Math.max(0, delay), 0);
+  }
+  reactionTime(at: number): number {
+    if (this.startedAt === null || !this.source || this.interrupted)
+      throw new Error('音声の再生を確認してください');
+    return audibleReactionMs(
+      outputContextTime(this.context.getOutputTimestamp(), at),
+      this.startedAt,
+      this.offset,
+    );
   }
   async seek(position: number) {
     if (!this.buffer || !Number.isFinite(position)) return;

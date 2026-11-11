@@ -11,7 +11,9 @@ export const attachmentSchema = z.object({
   spectator: z.boolean(),
   last: z.number(),
   ping: z.number(),
-  rtt: z.number(),
+  samples: z.array(z.number().nonnegative()),
+  probe: z.object({ id: z.uuid(), sent: z.number() }).nullable(),
+  lastProbe: z.number(),
 });
 export const joinSchema = z.object({
   token: z.uuid(),

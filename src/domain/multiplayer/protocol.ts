@@ -4,6 +4,7 @@ import { roundResultSchema } from '../game/results.js';
 export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('ping'), sent: z.number() }),
   z.object({ type: z.literal('sync') }),
+  z.object({ type: z.literal('probeAck'), id: z.uuid() }),
   z.object({ type: z.literal('leave') }),
   z.object({ type: z.literal('rename'), name: z.string().trim().min(1).max(24) }),
   z.object({
@@ -14,9 +15,13 @@ export const commandSchema = z.discriminatedUnion('type', [
     type: z.literal('ready'),
     round: z.number().int(),
     sent: z.number(),
-    rtt: z.number().min(0).max(10000),
   }),
-  z.object({ type: z.literal('take'), round: z.number().int(), id: z.string().max(150) }),
+  z.object({
+    type: z.literal('take'),
+    round: z.number().int(),
+    id: z.string().max(150),
+    elapsedMs: z.number().nonnegative().finite(),
+  }),
   z.object({ type: z.literal('next'), round: z.number().int().nonnegative() }),
   z.object({ type: z.literal('skip'), round: z.number().int().nonnegative() }),
   z.object({ type: z.literal('kick'), playerId: z.uuid() }),
@@ -59,5 +64,8 @@ export const eventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('state'), you: z.string(), room: roomViewSchema }),
   z.object({ type: z.literal('update'), room: roomPatchSchema }),
   z.object({ type: z.literal('pong'), sent: z.number(), now: z.number() }),
+  z.object({ type: z.literal('probe'), id: z.uuid() }),
+  z.object({ type: z.literal('timingReady') }),
+  z.object({ type: z.literal('takeAccepted'), round: z.number().int() }),
   z.object({ type: z.literal('error'), message: z.string() }),
 ]);

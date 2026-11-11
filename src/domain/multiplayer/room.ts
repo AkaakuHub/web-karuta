@@ -3,6 +3,7 @@ import type { RoomView } from './protocol.js';
 
 export interface Room extends Omit<RoomView, 'total' | 'audio' | 'answer' | 'players'> {
   order: string[];
+  settling: boolean;
   players: Omit<RoomView['players'][number], 'removed'>[];
 }
 export function emptyRoom(host: string): Room {
@@ -19,6 +20,7 @@ export function emptyRoom(host: string): Room {
     blocked: [],
     ready: [],
     order: [],
+    settling: false,
     results: [],
   };
 }
@@ -50,6 +52,7 @@ export function beginGame(
     order,
     results: [],
     phase: 'loading',
+    settling: false,
     round: 0,
     startsAt: null,
     blocked: [],
@@ -74,7 +77,10 @@ export function prepareRound(room: Room): Room {
   };
 }
 export function skipRound(room: Room, now: number): Room {
-  if (room.phase !== 'loading' && (room.phase !== 'playing' || now < (room.startsAt ?? Infinity)))
+  if (
+    room.settling ||
+    (room.phase !== 'loading' && (room.phase !== 'playing' || now < (room.startsAt ?? Infinity)))
+  )
     return room;
   return {
     ...room,
@@ -111,23 +117,27 @@ export function claimCard(room: Room, playerId: string, cardId: string, now: num
   )
     return room;
   const correct = room.order[room.round] === cardId;
-  const blocked = correct ? room.blocked : [...room.blocked, playerId];
-  const results = correct ? [...room.results, { id: cardId, owner: playerId }] : room.results;
-  return revealBlockedRound({
+  if (correct) return awardCard(room, playerId);
+  return revealBlockedRound({ ...room, blocked: [...room.blocked, playerId] });
+}
+
+export function awardCard(room: Room, owner: string): Room {
+  if (room.phase !== 'playing') return room;
+  const results = [...room.results, { id: room.order[room.round]!, owner }];
+  return {
     ...room,
-    players: room.players.map((player) =>
-      player.id === playerId ? { ...player, score: scoreTotal(results, playerId) } : player,
-    ),
-    blocked,
+    settling: false,
     results,
-    phase: correct ? 'revealed' : room.phase,
-    winner: correct ? playerId : null,
-  });
+    phase: 'revealed',
+    winner: owner,
+    players: room.players.map((player) => ({ ...player, score: scoreTotal(results, player.id) })),
+  };
 }
 
 export function revealBlockedRound(room: Room): Room {
   const connected = room.players.filter((player) => player.connected);
-  return room.phase === 'playing' &&
+  return !room.settling &&
+    room.phase === 'playing' &&
     connected.length > 0 &&
     connected.every((player) => room.blocked.includes(player.id))
     ? {

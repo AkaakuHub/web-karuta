@@ -1,47 +1,33 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
-export function useRoomClock(startsAt: number | null) {
+export function useRoomClock() {
   const [latency, setLatency] = useState<number | null>(null);
   const [ready, setReady] = useState(false);
   const [revision, setRevision] = useState(0);
-  const [now, setNow] = useState(() => Date.now());
   const offset = useRef(0);
-  const bestRtt = useRef(Infinity);
-  const latestRtt = useRef(0);
+  const samples = useRef<{ rtt: number; offset: number }[]>([]);
   const pending = useRef(true);
-  const read = useCallback(() => Date.now() + offset.current, []);
-  const rtt = useCallback(() => latestRtt.current, []);
+  const read = useCallback(() => performance.timeOrigin + performance.now() + offset.current, []);
   const reset = useCallback(() => {
-    bestRtt.current = Infinity;
+    samples.current = [];
     pending.current = true;
     setReady(false);
   }, []);
   const receive = useCallback((message: { sent: number; now: number }) => {
-    const received = Date.now();
+    const received = performance.timeOrigin + performance.now();
     const elapsed = Math.max(0, received - message.sent);
-    latestRtt.current = Math.min(10000, elapsed);
-    setLatency(elapsed);
-    if (elapsed < bestRtt.current) {
-      bestRtt.current = elapsed;
-      offset.current = message.now - (message.sent + received) / 2;
-    }
-    setNow(received + offset.current);
+    setLatency(Math.round(elapsed));
+    samples.current = [
+      ...samples.current,
+      { rtt: elapsed, offset: message.now - (message.sent + received) / 2 },
+    ].slice(-12);
+    offset.current = samples.current.toSorted((a, b) => a.rtt - b.rtt)[0]!.offset;
+    if (samples.current.length < 3) return;
     setReady(true);
     if (pending.current) {
       pending.current = false;
       setRevision((revision) => revision + 1);
     }
   }, []);
-  useEffect(() => {
-    if (startsAt === null) return;
-    let timer: ReturnType<typeof setTimeout>;
-    const tick = () => {
-      const time = read();
-      setNow(time);
-      if (time < startsAt) timer = setTimeout(tick, Math.min(100, startsAt - time));
-    };
-    timer = setTimeout(tick, 0);
-    return () => clearTimeout(timer);
-  }, [startsAt, read]);
-  return { latency, now, ready, revision, read, rtt, reset, receive };
+  return { latency, ready, revision, read, reset, receive };
 }

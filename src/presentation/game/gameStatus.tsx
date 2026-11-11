@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import type { GameFeedback as Feedback } from '../../domain/game/session.js';
 import { GameNotice } from './gameNotice.js';
 import { GameFeedback } from './gameFeedback.js';
@@ -9,12 +9,16 @@ export function GameStatus({
   mistake = false,
   feedback,
   winner,
+  pending = false,
+  waiting = false,
 }: {
   active: boolean;
   error: string;
   mistake?: boolean;
   feedback: Feedback | null;
   winner?: string;
+  pending?: boolean;
+  waiting?: boolean;
 }) {
   if (!active) return <GameNotice error={error} reserve={false} />;
   return (
@@ -32,6 +36,13 @@ export function GameStatus({
     >
       {error || mistake ? (
         <GameNotice error={error} mistake={mistake} />
+      ) : pending || waiting ? (
+        <Typography
+          role="status"
+          sx={{ textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'primary.main' }}
+        >
+          {pending ? '判定中…' : '次の曲から参加'}
+        </Typography>
       ) : (
         <GameFeedback feedback={feedback} winner={winner} />
       )}

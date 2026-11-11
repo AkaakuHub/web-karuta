@@ -9,7 +9,7 @@ export interface ConnectionSocket {
   onclose: ((event: CloseEvent) => void) | null;
   onerror: ((event: Event) => void) | null;
 }
-interface Callbacks {
+export interface RoomCallbacks {
   status(connected: boolean): void;
   message(data: string): void;
   closed(code: number, reason: string, retrying: boolean): void;
@@ -26,19 +26,19 @@ export class RoomConnection {
   private stopped = false;
   constructor(
     private readonly url: string,
-    private readonly callbacks: Callbacks,
+    private readonly callbacks: RoomCallbacks,
     private readonly createSocket: (url: string) => ConnectionSocket = (url) => new WebSocket(url),
   ) {}
   start() {
     this.open();
-    this.heartbeat = setInterval(() => this.wake(), 15000);
+    this.heartbeat = setInterval(() => this.wake(), 1000);
   }
   send(command: Command) {
     if (this.socket?.readyState === 1) this.socket.send(JSON.stringify(command));
   }
   wake(resync = false) {
-    if (this.stopped) return;
-    if (!this.heartbeat) this.heartbeat = setInterval(() => this.wake(), 15000);
+    if (this.stopped || this.retry) return;
+    if (!this.heartbeat) this.heartbeat = setInterval(() => this.wake(), 1000);
     if (Date.now() - this.lastReceived >= 45000 || !this.socket || this.socket.readyState >= 2) {
       if (this.retry) clearTimeout(this.retry);
       this.retry = null;
@@ -54,7 +54,7 @@ export class RoomConnection {
             this.open();
           }, 10000);
       }
-      this.send({ type: 'ping', sent: Date.now() });
+      this.send({ type: 'ping', sent: performance.timeOrigin + performance.now() });
     }
   }
   private open() {
@@ -65,9 +65,10 @@ export class RoomConnection {
     socket.onopen = () => {
       if (this.socket !== socket) return;
       this.callbacks.status(true);
-      const ping = () => this.send({ type: 'ping', sent: Date.now() });
+      const ping = () =>
+        this.send({ type: 'ping', sent: performance.timeOrigin + performance.now() });
       ping();
-      this.burst = [150, 300].map((delay) => setTimeout(ping, delay));
+      this.burst = [100, 200, 350, 500].map((delay) => setTimeout(ping, delay));
     };
     socket.onmessage = (event) => {
       if (this.socket !== socket || typeof event.data !== 'string') return;

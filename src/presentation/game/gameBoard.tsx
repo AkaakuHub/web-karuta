@@ -5,6 +5,16 @@ import { useCardLayout } from '../cards/useCardLayout.js';
 import { boardGap, boardPadding } from '../shared/playLayout.js';
 import { GameCard } from './gameCard.js';
 
+const CardFace = memo(function CardFace({
+  id,
+  renderCard,
+}: {
+  id: string;
+  renderCard: (id: string, back: boolean) => ReactNode;
+}) {
+  return renderCard(id, false);
+});
+
 export const GameBoard = memo(function GameBoard({
   slots,
   retired,
@@ -12,13 +22,15 @@ export const GameBoard = memo(function GameBoard({
   disabled,
   renderCard,
   onTake,
+  pendingId,
 }: {
   slots: readonly (string | null)[];
   retired: { id: string; slot: number } | null;
   incorrect: readonly string[];
   disabled: boolean;
+  pendingId?: string | null;
   renderCard: (id: string, back: boolean) => ReactNode;
-  onTake: (id: string) => void;
+  onTake: (id: string, at: number) => void;
 }) {
   const board = slots;
   const controls = useContext(BoardControls);
@@ -70,11 +82,12 @@ export const GameBoard = memo(function GameBoard({
                       key={displayed}
                       label={`${slot + 1}番の札を取る`}
                       taken={taken}
+                      pending={pendingId === displayed}
                       incorrect={incorrect.includes(displayed)}
                       disabled={disabled || taken}
-                      onTake={() => onTake(displayed)}
+                      onTake={(at) => onTake(displayed, at)}
                     >
-                      {renderCard(displayed, false)}
+                      <CardFace id={displayed} renderCard={renderCard} />
                     </GameCard>
                   )}
                 </Box>
