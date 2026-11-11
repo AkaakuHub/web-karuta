@@ -52,6 +52,10 @@
       "types": "./dist/domain/game/results.d.ts",
       "default": "./dist/domain/game/results.js"
     },
+    "./domain/game/seriesBreakdown": {
+      "types": "./dist/domain/game/seriesBreakdown.d.ts",
+      "default": "./dist/domain/game/seriesBreakdown.js"
+    },
     "./domain/game/session": {
       "types": "./dist/domain/game/session.d.ts",
       "default": "./dist/domain/game/session.js"
@@ -215,6 +219,10 @@
     "./presentation/game/gameSettingsButton": {
       "types": "./dist/presentation/game/gameSettingsButton.d.ts",
       "default": "./dist/presentation/game/gameSettingsButton.js"
+    },
+    "./presentation/game/seriesBreakdown": {
+      "types": "./dist/presentation/game/seriesBreakdown.d.ts",
+      "default": "./dist/presentation/game/seriesBreakdown.js"
     },
     "./presentation/game/gameStatus": {
       "types": "./dist/presentation/game/gameStatus.d.ts",

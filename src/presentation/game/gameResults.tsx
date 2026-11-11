@@ -21,12 +21,14 @@ export function GameResults({
   children,
   feedback,
   durationMs,
+  breakdown,
 }: {
   players: readonly { id: string; name: string }[];
   results: readonly RoundResult[];
   children: ReactNode;
   feedback: ReactNode;
   durationMs?: number;
+  breakdown?: ReactNode;
 }) {
   const ranked = rankPlayers(players, results);
   const remaining = ranked.filter((player) => player.rank > 3);
@@ -55,6 +57,7 @@ export function GameResults({
       >
         <Box>
           <ResultPodium players={ranked} />
+          {breakdown}
           {durationMs !== undefined && (
             <Typography sx={{ mt: 1, fontWeight: 700 }}>
               出題時間 {formatDuration(durationMs)}
