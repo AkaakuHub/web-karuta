@@ -30,6 +30,7 @@ function visibleAnchors(source: HTMLElement, role: HelpRole): HelpAnchor[] {
       ).find((element) => {
         const rect = element.getBoundingClientRect();
         return (
+          (topic.id !== 'cards' || role === 'spectator' || !element.matches(':disabled')) &&
           rect.width > 0 &&
           rect.height > 0 &&
           rect.top >= screen.top &&
