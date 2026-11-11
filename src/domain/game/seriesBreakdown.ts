@@ -5,45 +5,51 @@ interface Series {
   name: string;
   color: string;
 }
-export interface SeriesGroup {
+export interface SeriesSlice extends Series {
+  value: number;
+}
+export interface PlayerSeries {
   id: string;
   name: string;
-  colors: string[];
-  mine: number;
-  opponent: number;
-  unclaimed: number;
   total: number;
+  slices: SeriesSlice[];
 }
 
 export function seriesBreakdown(
   results: readonly (RoundResult & { seriesIds: readonly string[] })[],
   series: readonly Series[],
-  you: string,
-): SeriesGroup[] {
-  const groups = new Map<string, SeriesGroup>();
-  for (const result of results) {
-    const ids = [...new Set(result.seriesIds)].sort();
-    if (!ids.length) throw new Error('曲のシリーズがありません');
-    const definitions = ids.map((id) => {
-      const definition = series.find((item) => item.id === id);
-      if (!definition) throw new Error('シリーズの情報がありません');
-      return definition;
-    });
-    const id = ids.join(':');
-    const group = groups.get(id) ?? {
-      id,
-      name: definitions.map((item) => item.name).join('・'),
-      colors: definitions.map((item) => item.color),
-      mine: 0,
-      opponent: 0,
-      unclaimed: 0,
-      total: 0,
+  players: readonly { id: string; name: string }[],
+): PlayerSeries[] {
+  return players.map((player) => {
+    const owned = results.filter((result) => result.owner === player.id);
+    const counts = new Map<string, number>();
+    for (const result of owned) {
+      const ids = [...new Set(result.seriesIds)];
+      if (!ids.length) throw new Error('曲のシリーズがありません');
+      for (const id of ids) {
+        if (!series.some((item) => item.id === id)) throw new Error('シリーズの情報がありません');
+        counts.set(id, (counts.get(id) ?? 0) + 1 / ids.length);
+      }
+    }
+    return {
+      ...player,
+      total: owned.length,
+      slices: series
+        .filter((item) => counts.has(item.id))
+        .map((item) => ({ ...item, value: counts.get(item.id)! }))
+        .sort((a, b) => b.value - a.value),
     };
-    group.total++;
-    if (result.owner === null) group.unclaimed++;
-    else if (result.owner === you) group.mine++;
-    else group.opponent++;
-    groups.set(id, group);
-  }
-  return [...groups.values()].sort((a, b) => b.total - a.total);
+  });
+}
+
+export function seriesGradient(slices: readonly SeriesSlice[]): string {
+  const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+  let position = 0;
+  return `conic-gradient(${slices
+    .map((slice) => {
+      const start = position;
+      position += (slice.value / total) * 100;
+      return `${slice.color} ${start}% ${position}%`;
+    })
+    .join(', ')})`;
 }

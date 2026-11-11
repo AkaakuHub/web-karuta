@@ -1,86 +1,103 @@
-import { Box, Table, TableBody, TableCell, TableHead, TableRow, Typography } from '@mui/material';
-import type { SeriesGroup } from '../../domain/game/seriesBreakdown.js';
+import { Box, Chip, Paper, Typography } from '@mui/material';
+import { seriesGradient, type PlayerSeries } from '../../domain/game/seriesBreakdown.js';
 
-export function SeriesBreakdown({
-  groups,
-  opponents = true,
-}: {
-  groups: readonly SeriesGroup[];
-  opponents?: boolean;
-}) {
-  const total = groups.reduce((sum, group) => sum + group.total, 0);
-  if (!total) return null;
-  const background = (colors: readonly string[]) =>
-    colors.length === 1
-      ? colors[0]
-      : `linear-gradient(90deg, ${colors.map((color, index) => `${color} ${(index / colors.length) * 100}% ${((index + 1) / colors.length) * 100}%`).join(', ')})`;
+export function SeriesBreakdown({ players }: { players: readonly PlayerSeries[] }) {
   return (
-    <Box component="section" aria-label="シリーズ別の結果" sx={{ mt: 2, minWidth: 0 }}>
-      <Typography component="h2" sx={{ fontSize: 16, fontWeight: 800, mb: 1 }}>
-        シリーズ別
+    <Box component="section" aria-label="プレイヤー別のシリーズ割合" sx={{ mt: 3, minWidth: 0 }}>
+      <Typography component="h2" sx={{ fontSize: 16, fontWeight: 800, mb: 1.5 }}>
+        取得札のシリーズ割合
       </Typography>
       <Box
-        role="img"
-        aria-label={groups.map((group) => `${group.name} ${group.total}枚`).join('、')}
-        sx={{ display: 'flex', height: 12, borderRadius: 2, overflow: 'hidden', mb: 1 }}
-      >
-        {groups.map((group) => (
-          <Box
-            key={group.id}
-            sx={{ flex: group.total, minWidth: 2, background: background(group.colors) }}
-          />
-        ))}
-      </Box>
-      <Table
-        size="small"
-        aria-label="シリーズごとの取得枚数"
         sx={{
-          tableLayout: 'fixed',
-          '& .MuiTableCell-root': { px: 0.5, py: 0.75, fontSize: 12 },
-          '& .MuiTableCell-root:not(:first-of-type)': {
-            width: 48,
-            whiteSpace: 'nowrap',
-            fontVariantNumeric: 'tabular-nums',
-          },
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
+          gap: 1.5,
         }}
       >
-        <TableHead>
-          <TableRow>
-            <TableCell>シリーズ</TableCell>
-            <TableCell align="right">自分</TableCell>
-            {opponents && <TableCell align="right">相手</TableCell>}
-            <TableCell align="right">未取得</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {groups.map((group) => (
-            <TableRow key={group.id}>
-              <TableCell>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+        {players.map((player) => (
+          <Paper
+            key={player.id}
+            variant="outlined"
+            component="article"
+            aria-label={`${player.name}のシリーズ割合`}
+            sx={{ p: 1.5, borderRadius: 2, minWidth: 0 }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+              <Typography
+                component="h3"
+                sx={{
+                  fontSize: 14,
+                  fontWeight: 800,
+                  minWidth: 0,
+                  overflowWrap: 'anywhere',
+                  flex: 1,
+                }}
+              >
+                {player.name}
+              </Typography>
+              <Chip size="small" label={`${player.total}枚`} sx={{ flexShrink: 0 }} />
+            </Box>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: '112px minmax(0, 1fr)',
+                alignItems: 'center',
+                gap: 1.5,
+              }}
+            >
+              <Box
+                role="img"
+                aria-label={
+                  player.slices.length
+                    ? player.slices
+                        .map(
+                          (slice) =>
+                            `${slice.name} ${((slice.value / player.total) * 100).toFixed(1)}%`,
+                        )
+                        .join('、')
+                    : '取得した札は0枚'
+                }
+                sx={{
+                  width: 112,
+                  aspectRatio: '1',
+                  borderRadius: '50%',
+                  background: player.slices.length ? seriesGradient(player.slices) : '#e8edf4',
+                }}
+              />
+              <Box
+                component="ul"
+                sx={{ listStyle: 'none', m: 0, p: 0, display: 'grid', gap: 0.75, minWidth: 0 }}
+              >
+                {player.slices.map((slice) => (
                   <Box
-                    aria-hidden
+                    key={slice.id}
+                    component="li"
                     sx={{
-                      width: 6,
-                      alignSelf: 'stretch',
-                      flexShrink: 0,
-                      borderRadius: 1,
-                      background: background(group.colors),
+                      display: 'grid',
+                      gridTemplateColumns: '8px minmax(0, 1fr) auto',
+                      alignItems: 'center',
+                      columnGap: 0.5,
                     }}
-                  />
-                  <Box component="span" sx={{ overflowWrap: 'anywhere' }}>
-                    {group.name}
+                  >
+                    <Box
+                      aria-hidden
+                      sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: slice.color }}
+                    />
+                    <Typography sx={{ fontSize: 11, lineHeight: 1.4, overflowWrap: 'anywhere' }}>
+                      {slice.name}
+                    </Typography>
+                    <Typography
+                      sx={{ fontSize: 11, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
+                    >
+                      {Math.round((slice.value / player.total) * 100)}%
+                    </Typography>
                   </Box>
-                </Box>
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: group.mine ? 800 : 400 }}>
-                {group.mine}枚
-              </TableCell>
-              {opponents && <TableCell align="right">{group.opponent}枚</TableCell>}
-              <TableCell align="right">{group.unclaimed}枚</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                ))}
+              </Box>
+            </Box>
+          </Paper>
+        ))}
+      </Box>
     </Box>
   );
 }

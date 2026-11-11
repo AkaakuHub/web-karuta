@@ -57,7 +57,6 @@ export function GameResults({
       >
         <Box>
           <ResultPodium players={ranked} />
-          {breakdown}
           {durationMs !== undefined && (
             <Typography sx={{ mt: 1, fontWeight: 700 }}>
               出題時間 {formatDuration(durationMs)}
@@ -103,6 +102,7 @@ export function GameResults({
           {children}
         </Stack>
       </Box>
+      {breakdown}
     </Paper>
   );
 }
