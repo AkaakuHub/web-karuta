@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Snackbar } from '@mui/material';
+import { SnackbarContent } from '@mui/material';
+import { GameToast } from '../game/gameToast.js';
 import type { RoomView } from '../../domain/multiplayer/protocol.js';
 
 export function RoomArrivalNotice({ room, you }: { room: RoomView; you: string }) {
@@ -24,43 +25,18 @@ export function RoomArrivalNotice({ room, you }: { room: RoomView; you: string }
     }
   }, [room, you]);
   return (
-    <Snackbar
+    <GameToast
       key={notice?.revision}
       open={notice !== null && room.phase !== 'lobby' && room.phase !== 'finished'}
-      autoHideDuration={4000}
-      onClose={(_, reason) => {
-        if (reason !== 'clickaway') setNotice(null);
-      }}
-      message={notice?.message}
-      slotProps={{ content: { role: 'status', 'aria-live': 'polite' } }}
-      sx={{
-        position: 'absolute',
-        top: { xs: 0, sm: 0 },
-        bottom: { xs: 0, sm: 0 },
-        left: { xs: 0, sm: 0 },
-        right: { xs: 0, sm: 0 },
-        transform: { xs: 'none', sm: 'none' },
-        pointerEvents: 'none',
-        minWidth: 0,
-        '& .MuiSnackbarContent-root': {
-          width: '100%',
-          minWidth: 0,
-          height: '100%',
-          minHeight: 0,
-          boxSizing: 'border-box',
-          px: 0.75,
-          py: 0,
-          flexWrap: 'nowrap',
-          borderRadius: 1,
-        },
-        '& .MuiSnackbarContent-message': {
-          p: 0,
-          fontSize: { xs: 11, sm: 12 },
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        },
-      }}
-    />
+      duration={4000}
+      onClose={() => setNotice(null)}
+    >
+      <SnackbarContent
+        role="status"
+        aria-live="polite"
+        message={notice?.message}
+        sx={{ minWidth: 0, py: 0, '& .MuiSnackbarContent-message': { py: 0.75, fontSize: 12 } }}
+      />
+    </GameToast>
   );
 }

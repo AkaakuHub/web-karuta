@@ -1,4 +1,6 @@
 import { Alert, Box } from '@mui/material';
+import { useState } from 'react';
+import { GameToast } from './gameToast.js';
 import { ErrorAlert } from '../shared/errorAlert.js';
 
 export function GameNotice({
@@ -10,7 +12,13 @@ export function GameNotice({
   mistake?: boolean;
   reserve?: boolean;
 }) {
-  if (error) return <ErrorAlert message={error} />;
+  const [dismissed, setDismissed] = useState('');
+  if (error)
+    return (
+      <GameToast open={error !== dismissed} onClose={() => setDismissed(error)}>
+        <ErrorAlert message={error} />
+      </GameToast>
+    );
   if (!reserve && !mistake) return null;
   return (
     <Box aria-live="polite" sx={{ minHeight: 40, flexShrink: 0 }}>

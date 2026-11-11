@@ -20,9 +20,11 @@ export function CardCollection({
   const area = useRef<HTMLDivElement>(null);
   const visible = useMemo(
     () =>
-      cards.filter((card) =>
-        card.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
-      ),
+      cards
+        .toReversed()
+        .filter((card) =>
+          card.title.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()),
+        ),
     [cards, query],
   );
   const key = useCallback((index: number) => visible[index]!.id, [visible]);

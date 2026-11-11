@@ -20,9 +20,8 @@ export function GameStatus({
   return (
     <Box
       data-game-panel="status"
-      data-game-error={!!error}
       sx={{
-        height: error ? 'auto' : 40,
+        height: 40,
         minHeight: 40,
         minWidth: 0,
         flexShrink: 0,

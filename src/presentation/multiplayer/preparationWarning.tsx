@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Snackbar } from '@mui/material';
+import { GameToast } from '../game/gameToast.js';
+import { Alert } from '@mui/material';
 import type { RoomView } from '../../domain/multiplayer/protocol.js';
 import { waitingPlayers } from '../../domain/multiplayer/participants.js';
 
@@ -17,9 +18,9 @@ export function PreparationWarning({ room, you }: { room: RoomView | null; you: 
   }, [loading, preparation]);
   const waiting = room ? waitingPlayers(room).filter((player) => player.id !== you) : [];
   return (
-    <Snackbar
+    <GameToast
       open={loading && delayed === preparation && waiting.length > 0}
-      autoHideDuration={8000}
+      duration={8000}
       onClose={() => setDelayed(null)}
     >
       <Alert
@@ -31,6 +32,6 @@ export function PreparationWarning({ room, you }: { room: RoomView | null; you: 
         準備に10秒以上かかっています。{waiting.map((player) => player.name).join('、')}
         さんがスリープ中、または通信が途切れている可能性があります。
       </Alert>
-    </Snackbar>
+    </GameToast>
   );
 }
