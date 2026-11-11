@@ -176,6 +176,10 @@
       "types": "./dist/presentation/game/deckSettings.d.ts",
       "default": "./dist/presentation/game/deckSettings.js"
     },
+    "./presentation/game/favorites": {
+      "types": "./dist/presentation/game/favorites.d.ts",
+      "default": "./dist/presentation/game/favorites.js"
+    },
     "./presentation/game/gameBoard": {
       "types": "./dist/presentation/game/gameBoard.d.ts",
       "default": "./dist/presentation/game/gameBoard.js"

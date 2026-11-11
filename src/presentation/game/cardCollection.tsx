@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { Box, ButtonBase, TextField, Typography } from '@mui/material';
+import { FavoriteButton } from './favorites.js';
 import type { ReviewCard } from './reviewModel.js';
 
 export function CardCollection({
@@ -96,20 +97,22 @@ export function CardCollection({
                   height: '100%',
                   transform: `translateX(${item.start}px)`,
                   pr: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
                 }}
               >
                 <ButtonBase
                   aria-label={`${card.title}に注目`}
                   onClick={() => onSelect(card.id)}
                   sx={{
-                    height: '100%',
+                    flex: 1,
+                    minHeight: 0,
                     width: '100%',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 0.5,
                     p: 0.5,
                     minWidth: 0,
-                    minHeight: 0,
                     border: '2px solid',
                     borderColor: selectedId === card.id ? 'primary.main' : 'transparent',
                     borderRadius: 0.5,
@@ -141,6 +144,9 @@ export function CardCollection({
                     {card.title}
                   </Typography>
                 </ButtonBase>
+                <Box sx={{ alignSelf: 'flex-end' }}>
+                  <FavoriteButton id={card.id} title={card.title} />
+                </Box>
               </Box>
             );
           })}

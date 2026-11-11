@@ -1,10 +1,24 @@
+import type { ReactNode } from 'react';
+import { FavoriteButton } from './favorites.js';
 import { Box, Stack, Typography } from '@mui/material';
 import type { ReviewCard } from './reviewModel.js';
 import { ReviewLinks } from './reviewLinks.js';
 
-export function CardText({ card, large = false }: { card: ReviewCard; large?: boolean }) {
+export function CardText({
+  card,
+  large = false,
+  actions,
+}: {
+  card: ReviewCard;
+  large?: boolean;
+  actions?: ReactNode;
+}) {
   return (
     <Stack aria-label="札の裏面" spacing={0.5} sx={{ minWidth: 0, minHeight: 0, height: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+        <FavoriteButton id={card.id} title={card.title} />
+        {actions}
+      </Box>
       <Box
         sx={{
           minHeight: 0,

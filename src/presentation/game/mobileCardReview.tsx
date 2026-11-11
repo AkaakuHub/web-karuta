@@ -10,18 +10,20 @@ export function MobileCardReview({
   card?: ReviewCard;
   onCollection: () => void;
 }) {
+  const collection = (
+    <IconButton
+      aria-label="取得済みの札を一覧表示"
+      disabled={!card}
+      onClick={onCollection}
+      size="small"
+      sx={{ p: 0.5 }}
+    >
+      <CollectionsBookmarkRounded sx={{ fontSize: 20 }} />
+    </IconButton>
+  );
   return (
-    <Box sx={{ position: 'relative', height: '100%', minHeight: 0, '& h3': { pr: 3.5 } }}>
-      {card && <CardText card={card} />}
-      <IconButton
-        aria-label="取得済みの札を一覧表示"
-        disabled={!card}
-        onClick={onCollection}
-        size="small"
-        sx={{ position: 'absolute', right: 0, top: 0, p: 0.5 }}
-      >
-        <CollectionsBookmarkRounded sx={{ fontSize: 20 }} />
-      </IconButton>
+    <Box sx={{ height: '100%', minHeight: 0 }}>
+      {card ? <CardText card={card} actions={collection} /> : collection}
     </Box>
   );
 }
