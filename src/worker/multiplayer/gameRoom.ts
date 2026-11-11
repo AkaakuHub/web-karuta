@@ -84,7 +84,7 @@ export class GameRoom {
       const count = Object.values(this.tokens).filter(
         (person) => person?.spectator === spectator,
       ).length;
-      if (count >= (spectator ? 32 : 8)) return this.rejectJoin('部屋が満員です');
+      if (count >= (spectator ? 32 : 20)) return this.rejectJoin('部屋が満員です');
     }
     const id = member?.id ?? crypto.randomUUID();
     this.tokens[token] = { id, spectator, connectionId };
