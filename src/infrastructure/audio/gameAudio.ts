@@ -1,8 +1,13 @@
+import { audioNormalization, decodeAudio } from './decodeAudio.js';
 import { audibleReactionMs } from '../../domain/game/audioTiming.js';
-import { outputContextTime, waitForAudioOutput } from './outputClock.js';
+import {
+  AudioOutputMonitor,
+  audioOutputAdvancing,
+  outputContextTime,
+  waitForAudioOutput,
+} from './outputClock.js';
 import type { TrackProgress } from './audioProgress.js';
 import { playbackPosition } from '../../domain/game/playback.js';
-import { normalizationGain } from '../../domain/game/audioLevel.js';
 import { fetchAudio } from './fetchAudio.js';
 import { AudioDecodeQueue } from './audioDecodeQueue.js';
 import { diagnostic } from '../diagnostics/diagnostics.js';
@@ -10,19 +15,7 @@ import { resumeAudioContext } from './resumeAudioContext.js';
 
 export class GameAudio {
   private context = new AudioContext();
-  private decoder = new AudioDecodeQueue(async (data) => {
-    diagnostic('audio.decode.start', { bytes: data.byteLength });
-    const started = performance.now();
-    const buffer = await this.context.decodeAudioData(data);
-    diagnostic('audio.decode.done', {
-      duration: buffer.duration,
-      channels: buffer.numberOfChannels,
-      sampleRate: buffer.sampleRate,
-      pcmBytes: buffer.length * buffer.numberOfChannels * 4,
-      decodeMs: Math.round(performance.now() - started),
-    });
-    return buffer;
-  });
+  private decoder = new AudioDecodeQueue((data) => decodeAudio(this.context, data));
   private generation = 0;
   private gain = this.context.createGain();
   private normalization = this.context.createGain();
@@ -38,9 +31,14 @@ export class GameAudio {
   private unlocking = 0;
   private unlockAttempt = 0;
   private playbackRevision = 0;
+  private recoveryPending = false;
+  private outputStartedAt = 0;
+  private outputMonitor = new AudioOutputMonitor();
+  private scheduled: (() => Promise<void>) | null = null;
   private readonly visibilityChanged = () => {
-    if (document.hidden) this.interrupt();
-    else this.recover();
+    if (document.hidden) {
+      if (!this.onRecover) this.interrupt();
+    } else this.recover();
   };
   private readonly pageHidden = () => this.interrupt();
   private readonly pageShown = () => this.recover();
@@ -58,7 +56,6 @@ export class GameAudio {
     ) => void,
     private readonly onRecover: (() => void) | null = null,
   ) {
-    diagnostic('audio.context.created');
     this.normalization.connect(this.gain);
     this.gain.connect(this.context.destination);
     this.gain.gain.value = 0.7;
@@ -76,6 +73,14 @@ export class GameAudio {
     );
   }
   private progress() {
+    if (
+      this.source &&
+      !this.outputMonitor.check(this.context.getOutputTimestamp(), performance.now())
+    ) {
+      this.interrupt();
+      this.recover();
+      return;
+    }
     this.report(
       { position: this.position, duration: this.buffer?.duration ?? 0 },
       this.source !== null && this.context.state === 'running',
@@ -138,6 +143,7 @@ export class GameAudio {
     }
   }
   clear() {
+    this.scheduled = null;
     this.generation++;
     this.controller?.abort();
     this.controller = null;
@@ -147,6 +153,7 @@ export class GameAudio {
     this.progress();
   }
   async prepare(url: string): Promise<boolean> {
+    this.scheduled = null;
     this.stop();
     this.controller?.abort();
     const controller = new AbortController();
@@ -154,19 +161,10 @@ export class GameAudio {
     this.buffer = null;
     this.offset = 0;
     this.progress();
-    diagnostic('audio.fetch.start', { url });
     const data = await fetchAudio(url, controller.signal);
-    diagnostic('audio.fetch.done', { bytes: data.byteLength });
     const buffer = await this.decoder.run(data, controller.signal);
     if (!buffer) return false;
-    diagnostic('audio.normalization.start');
-    this.normalization.gain.value = normalizationGain(
-      Array.from({ length: buffer.numberOfChannels }, (_, channel) =>
-        buffer.getChannelData(channel),
-      ),
-      buffer.sampleRate,
-    );
-    diagnostic('audio.normalization.done');
+    this.normalization.gain.value = audioNormalization(buffer);
     this.buffer = buffer;
     this.progress();
     if (!(await this.unlock()) || !(await waitForAudioOutput(this.context, controller.signal)))
@@ -176,7 +174,7 @@ export class GameAudio {
   private start(delay: number, position: number) {
     this.stop();
     if (!this.buffer || position >= this.buffer.duration) return;
-    if (document.hidden) {
+    if (document.hidden && !this.onRecover) {
       this.offset = position;
       this.interrupted = true;
       this.progress();
@@ -187,7 +185,11 @@ export class GameAudio {
     source.connect(this.normalization);
     this.offset = position;
     this.startedAt = this.context.currentTime + delay;
+    this.outputMonitor = new AudioOutputMonitor();
     this.source = source;
+    this.recoveryPending = false;
+    this.outputStartedAt =
+      this.context.getOutputTimestamp().contextTime ?? this.context.currentTime;
     source.onended = () => {
       if (this.source !== source) return;
       this.offset = this.buffer?.duration ?? 0;
@@ -198,16 +200,12 @@ export class GameAudio {
       this.timer = null;
       this.progress();
     };
-    diagnostic('audio.source.start', {
-      position,
-      duration: this.buffer.duration,
-      contextState: this.context.state,
-    });
     source.start(this.startedAt, position);
     this.timer = setInterval(() => this.progress(), 200);
     this.progress();
   }
   async schedule(startsAt: number, serverNow: () => number, signal: AbortSignal) {
+    this.scheduled = () => this.schedule(startsAt, serverNow, new AbortController().signal);
     const revision = this.playbackRevision;
     try {
       if (!(await this.unlock())) return;
@@ -225,15 +223,19 @@ export class GameAudio {
     this.start(Math.max(0, delay), Math.max(0, -delay));
   }
   reactionTime(at: number): number {
-    if (this.startedAt === null || !this.source || this.interrupted)
+    const output = this.context.getOutputTimestamp();
+    if (
+      this.context.state !== 'running' ||
+      !audioOutputAdvancing(output, this.outputStartedAt, performance.now()) ||
+      this.startedAt === null ||
+      !this.source ||
+      this.interrupted
+    )
       throw new Error('音声の再生を確認してください');
-    return audibleReactionMs(
-      outputContextTime(this.context.getOutputTimestamp(), at),
-      this.startedAt,
-      this.offset,
-    );
+    return audibleReactionMs(outputContextTime(output, at), this.startedAt, this.offset);
   }
   async seek(position: number) {
+    this.scheduled = null;
     if (!this.buffer || !Number.isFinite(position)) return;
     const revision = this.playbackRevision;
     if (!(await this.unlock())) return;
@@ -241,11 +243,8 @@ export class GameAudio {
     this.start(0, Math.min(this.buffer.duration, Math.max(0, position)));
   }
   async resume() {
-    diagnostic('audio.resume.request', {
-      position: this.position,
-      contextState: this.context.state,
-    });
     if (!this.buffer) return;
+    if (this.scheduled) return this.scheduled();
     if (this.source) {
       await this.unlock();
       this.progress();
@@ -279,6 +278,8 @@ export class GameAudio {
   private recover() {
     if (document.hidden || !this.interrupted || this.unlocking > 0) return;
     if (this.onRecover) {
+      if (this.recoveryPending) return;
+      this.recoveryPending = true;
       this.onRecover();
       return;
     }
@@ -288,7 +289,6 @@ export class GameAudio {
     source.onended = null;
     source.disconnect();
     source.buffer = null;
-    diagnostic('audio.source.released');
   }
   async dispose() {
     document.removeEventListener('visibilitychange', this.visibilityChanged);

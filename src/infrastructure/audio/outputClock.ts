@@ -23,3 +23,30 @@ export async function waitForAudioOutput(
   }
   return false;
 }
+
+export function audioOutputAdvancing(
+  output: AudioTimestamp,
+  startedAt: number,
+  now: number,
+): boolean {
+  return (
+    typeof output.contextTime === 'number' &&
+    Number.isFinite(output.contextTime) &&
+    output.contextTime > startedAt &&
+    typeof output.performanceTime === 'number' &&
+    Number.isFinite(output.performanceTime) &&
+    now - output.performanceTime <= 250
+  );
+}
+
+export class AudioOutputMonitor {
+  private time: number | undefined;
+  private advancedAt = 0;
+  check(output: AudioTimestamp, now: number): boolean {
+    if (output.contextTime !== this.time) {
+      this.time = output.contextTime ?? 0;
+      this.advancedAt = now;
+    }
+    return now - this.advancedAt <= 500;
+  }
+}

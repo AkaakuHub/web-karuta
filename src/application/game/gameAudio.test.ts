@@ -76,7 +76,7 @@ it('自分で停止した音声は画面に戻っても自動再開しない', a
   }
 });
 
-it('対戦の復帰は停止位置の再生を始めず、サーバー時計との再同期に任せる', async () => {
+it('対戦中はタブ移動だけで再生を停止しない', async () => {
   const recover = vi.fn();
   const { audio, context, page } = setup(recover);
   try {
@@ -85,7 +85,7 @@ it('対戦の復帰は停止位置の再生を始めず、サーバー時計と�
     page.dispatchEvent(new Event('visibilitychange'));
     page.hidden = false;
     page.dispatchEvent(new Event('visibilitychange'));
-    expect(recover).toHaveBeenCalledTimes(1);
+    expect(recover).not.toHaveBeenCalled();
     expect(context.sources).toHaveLength(1);
   } finally {
     await audio.dispose();

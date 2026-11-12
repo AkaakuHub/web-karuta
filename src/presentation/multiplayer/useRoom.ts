@@ -77,7 +77,7 @@ export function useRoom() {
     resetClock();
     retryPreparation();
   }, [resetClock, retryPreparation]);
-  useRoomLifecycle(socket, recover);
+  useRoomLifecycle(socket, retryPreparation);
   async function join(name: string, create: boolean, code: string, spectator: boolean) {
     if (joining) return;
     disconnect();
@@ -194,7 +194,7 @@ export function useRoom() {
     if (
       connected &&
       timingReady &&
-      room?.phase === 'loading' &&
+      (room?.phase === 'loading' || room?.phase === 'playing') &&
       !room.spectators.some((person) => person.id === you) &&
       audioReady &&
       clock.ready

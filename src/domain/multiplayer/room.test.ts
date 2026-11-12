@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { beginGame, claimCard, emptyRoom, prepareRound, readyPlayer, skipRound } from './room.js';
+import {
+  beginGame,
+  finishPreparation,
+  claimCard,
+  emptyRoom,
+  prepareRound,
+  readyPlayer,
+  skipRound,
+} from './room.js';
 
 function playing() {
   const room = emptyRoom('a');
@@ -111,4 +119,31 @@ describe('オンライン対戦の取得判定', () => {
     expect(next.phase).toBe('loading');
     expect(next.round).toBe(1);
   });
+});
+
+it('準備期限後は準備できた参加者だけで開始し、遅れた参加者も後から合流する', () => {
+  const base = emptyRoom('a');
+  base.players = ['a', 'b'].map((id) => ({ id, name: id, score: 0, connected: true }));
+  const loading = readyPlayer(
+    beginGame(base, ['one', 'two'], 2, () => 0.4),
+    'a',
+    0,
+  );
+  const started = finishPreparation(loading, 15000);
+  expect(started.phase).toBe('playing');
+  expect(started.ready).toEqual(['a']);
+  const joined = readyPlayer(started, 'b', 18000);
+  expect(joined.ready).toEqual(['a', 'b']);
+  expect(joined.startsAt).toBe(15000);
+});
+
+it('準備期限まで誰も準備できなければ無限に待たず曲を終了する', () => {
+  const base = emptyRoom('a');
+  base.players = ['a', 'b'].map((id) => ({ id, name: id, score: 0, connected: true }));
+  const finished = finishPreparation(
+    beginGame(base, ['one', 'two'], 2, () => 0.4),
+    15000,
+  );
+  expect(finished.phase).toBe('revealed');
+  expect(finished.results).toHaveLength(1);
 });

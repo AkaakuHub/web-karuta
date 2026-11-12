@@ -2,22 +2,6 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import type { GameAudio } from '../../infrastructure/audio/gameAudio.js';
 import { errorMessage } from '../shared/errorMessage.js';
 
-async function afterPaint(signal: AbortSignal) {
-  for (let frame = 0; frame < 2 && !signal.aborted; frame++) {
-    await new Promise<void>((resolve) => {
-      const pending = requestAnimationFrame(() => {
-        signal.removeEventListener('abort', cancel);
-        resolve();
-      });
-      const cancel = () => {
-        cancelAnimationFrame(pending);
-        resolve();
-      };
-      signal.addEventListener('abort', cancel, { once: true });
-    });
-  }
-}
-
 export function useRoomPreparation(
   audio: RefObject<GameAudio | null>,
   connected: boolean,
@@ -44,9 +28,8 @@ export function useRoomPreparation(
     failed.current = false;
     void audio.current
       ?.prepare(url)
-      .then(async (ready) => {
+      .then((ready) => {
         if (!ready || controller.signal.aborted) return;
-        await afterPaint(controller.signal);
         if (!controller.signal.aborted) {
           setPrepared({ url, round, attempt });
           setError('');

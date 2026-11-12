@@ -17,7 +17,7 @@ import {
   type RoomContent,
   type RoomContext,
 } from './roomIdentity.js';
-import { loadRoomState } from './roomPersistence.js';
+import { loadRoomState, saveRoomState } from './roomPersistence.js';
 import { publicRoom } from './roomView.js';
 export type { RoomContent } from './roomIdentity.js';
 import { broadcastRoom, readRoomMessage, rejectJoin } from './roomMessages.js';
@@ -26,12 +26,13 @@ import { acknowledgeProbe, probeSocket, roomClaimWindow, roundStartTime } from '
 import { submitClaim, settleClaims, type ClaimRound } from '../../domain/multiplayer/claims.js';
 import {
   beginGame,
+  finishPreparation,
   emptyRoom,
   prepareRound,
   readyPlayer,
   skipRound,
+  type Room,
 } from '../../domain/multiplayer/room.js';
-import type { Room } from '../../domain/multiplayer/room.js';
 declare const WebSocketPair: typeof import('@cloudflare/workers-types').WebSocketPair;
 const lifetime = 24 * 60 * 60 * 1000;
 export class GameRoom {
@@ -40,17 +41,14 @@ export class GameRoom {
   private kickedTokens: Record<string, string[]> = {};
   private expiresAt = 0;
   private claims: ClaimRound | null = null;
+  private loadingDeadline = 0;
   constructor(
     private readonly ctx: RoomContext,
     private readonly content: RoomContent,
   ) {
     ctx.blockConcurrencyWhile(async () => {
       const saved = await loadRoomState(ctx.storage);
-      this.room = saved.room;
-      this.tokens = saved.tokens;
-      this.kickedTokens = saved.kickedTokens;
-      this.expiresAt = saved.expiresAt;
-      this.claims = saved.claims;
+      Object.assign(this, saved);
     });
   }
   async fetch(request: Request): Promise<Response> {
@@ -236,6 +234,11 @@ export class GameRoom {
       this.kickedTokens = {};
       this.claims = null;
       await this.ctx.storage.deleteAll();
+    } else if (this.room?.phase === 'loading' && now >= this.loadingDeadline) {
+      const previous = this.view(this.room);
+      this.room = finishPreparation(this.room, this.startTime(now));
+      await this.save();
+      this.broadcast(previous);
     } else if (this.claims && now >= this.claims.deadline) await this.settleClaims();
     else await this.save();
   }
@@ -278,15 +281,14 @@ export class GameRoom {
   private async save(includeTokens = false) {
     const now = Date.now();
     if (this.expiresAt - now < lifetime / 2) this.expiresAt = now + lifetime;
-    await this.ctx.storage.put({
+    this.loadingDeadline = this.room?.phase === 'loading' ? this.loadingDeadline || now + 15000 : 0;
+    await saveRoomState(this.ctx.storage, {
       room: this.room,
       claims: this.claims,
+      loadingDeadline: this.loadingDeadline,
       expiresAt: this.expiresAt,
       ...(includeTokens ? { tokens: this.tokens, kickedTokens: this.kickedTokens } : {}),
     });
-    await this.ctx.storage.setAlarm(
-      Math.min(this.expiresAt, this.claims?.deadline ?? this.expiresAt),
-    );
   }
 
   private view(value: Room) {

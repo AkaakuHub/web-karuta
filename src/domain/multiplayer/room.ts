@@ -91,11 +91,12 @@ export function skipRound(room: Room, now: number): Room {
 }
 export function readyPlayer(room: Room, id: string, now: number): Room {
   if (
-    room.phase !== 'loading' ||
+    !['loading', 'playing'].includes(room.phase) ||
     !room.players.some((player) => player.id === id && player.connected)
   )
     return room;
   const ready = [...new Set([...room.ready, id])];
+  if (room.phase === 'playing') return room.ready.includes(id) ? room : { ...room, ready };
   const connected = room.players.filter((player) => player.connected);
   const start = connected.length >= 2 && connected.every((player) => ready.includes(player.id));
   if (!start && room.ready.includes(id)) return room;
@@ -147,4 +148,12 @@ export function revealBlockedRound(room: Room): Room {
         results: [...room.results, { id: room.order[room.round]!, owner: null }],
       }
     : room;
+}
+
+export function finishPreparation(room: Room, startsAt: number): Room {
+  if (room.phase !== 'loading') return room;
+  const ready = room.ready.filter((id) =>
+    room.players.some((player) => player.id === id && player.connected),
+  );
+  return ready.length ? { ...room, ready, phase: 'playing', startsAt } : skipRound(room, startsAt);
 }
