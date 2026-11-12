@@ -222,7 +222,7 @@ export class GameAudio {
     const targetTime = performance.now() + startsAt - serverNow();
     const delay =
       outputContextTime(this.context.getOutputTimestamp(), targetTime) - this.context.currentTime;
-    this.start(Math.max(0, delay), 0);
+    this.start(Math.max(0, delay), Math.max(0, -delay));
   }
   reactionTime(at: number): number {
     if (this.startedAt === null || !this.source || this.interrupted)

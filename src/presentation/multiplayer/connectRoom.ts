@@ -12,8 +12,8 @@ export function connectRoom(
   callbacks: RoomCallbacks,
 ) {
   const key = `${storagePrefix}-room:${id}`;
-  const token = sessionStorage.getItem(key) ?? v4();
-  sessionStorage.setItem(key, token);
+  const token = localStorage.getItem(key) ?? v4();
+  localStorage.setItem(key, token);
   const endpoint = new URL(`/api/rooms/${id}`, location.href);
   endpoint.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   endpoint.searchParams.set('token', token);

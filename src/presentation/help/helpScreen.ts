@@ -24,8 +24,8 @@ function sceneOf(source: HTMLElement): HelpStage {
   if (entrance === 'create' || entrance === 'join' || entrance === 'reconnect') return entrance;
   if (source.querySelector('[aria-label="対戦結果"]')) return 'results';
   const stage = source.querySelector('[data-help-stage]')?.getAttribute('data-help-stage');
-  if (stage === 'playing' || stage === 'revealed') return stage;
-  if (stage === 'loading' || stage === 'ready') return 'loading';
+  if (stage === 'playing' || stage === 'revealed' || stage === 'loading' || stage === 'ready')
+    return 'playing';
   return 'lobby';
 }
 
