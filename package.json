@@ -379,6 +379,10 @@
     "./presentation/catalog/catalogImages": {
       "types": "./dist/presentation/catalog/catalogImages.d.ts",
       "default": "./dist/presentation/catalog/catalogImages.js"
+    },
+    "./presentation/shared/appToolbar": {
+      "types": "./dist/presentation/shared/appToolbar.d.ts",
+      "default": "./dist/presentation/shared/appToolbar.js"
     }
   },
   "scripts": {

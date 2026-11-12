@@ -12,7 +12,10 @@ export const GameClock = memo(function GameClock({ session }: { session: GameSes
     const timer = window.setInterval(() => setNow(performance.now()), 1000);
     return () => window.clearInterval(timer);
   }, [active]);
-  const seconds = elapsedTime(session, now) / 1000;
+  return <GameClockDisplay seconds={elapsedTime(session, now) / 1000} />;
+});
+
+export function GameClockDisplay({ seconds }: { seconds: number }) {
   return (
     <Typography
       component="time"
@@ -29,4 +32,4 @@ export const GameClock = memo(function GameClock({ session }: { session: GameSes
       {formatClock(seconds, 2)}
     </Typography>
   );
-});
+}

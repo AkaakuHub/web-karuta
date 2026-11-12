@@ -1,20 +1,9 @@
 import { useKarutaConfig } from '../config/karutaProvider.js';
 import { useRef, useState } from 'react';
-import {
-  Avatar,
-  Box,
-  Button,
-  Divider,
-  FormControlLabel,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Button } from '@mui/material';
+import { RoomEntranceForm } from './roomEntranceForm.js';
 import ContentCopyRounded from '@mui/icons-material/ContentCopyRounded';
 import CheckRounded from '@mui/icons-material/CheckRounded';
-import GroupsRounded from '@mui/icons-material/GroupsRounded';
-import ArrowForwardRounded from '@mui/icons-material/ArrowForwardRounded';
 
 export function RoomEntrance({
   roomId,
@@ -36,9 +25,19 @@ export function RoomEntrance({
   const input = useRef<HTMLInputElement>(null);
   const invited = roomId !== '';
   return (
-    <Stack
-      spacing={2.5}
-      component="form"
+    <RoomEntranceForm
+      name={name}
+      spectator={spectator}
+      invalid={invalid}
+      loaded={loaded}
+      reconnect={reconnect}
+      invited={invited}
+      inputRef={input}
+      onName={(value) => {
+        setName(value);
+        setInvalid(false);
+      }}
+      onSpectator={setSpectator}
       onSubmit={(event) => {
         event.preventDefault();
         if (!name.trim()) {
@@ -50,50 +49,7 @@ export function RoomEntrance({
         sessionStorage.setItem(`${storagePrefix}-spectator`, String(spectator));
         void onJoin(name, !invited, roomId, spectator);
       }}
-    >
-      <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-        <Avatar variant="rounded" sx={{ bgcolor: 'primary.main', width: 44, height: 44 }}>
-          <GroupsRounded />
-        </Avatar>
-        <Typography variant="h5" component="h2" sx={{ fontWeight: 800 }}>
-          {reconnect ? '部屋に戻る' : invited ? '招待された部屋に参加' : '部屋を作る'}
-        </Typography>
-      </Stack>
-      <Divider />
-      <TextField
-        data-help="name"
-        label="名前"
-        required
-        fullWidth
-        inputRef={input}
-        value={name}
-        error={invalid}
-        autoComplete="nickname"
-        onChange={(event) => {
-          setName(event.target.value);
-          setInvalid(false);
-        }}
-        slotProps={{ htmlInput: { maxLength: 24 } }}
-      />
-      <RoomSpectatorSwitch checked={spectator} disabled={reconnect} onChange={setSpectator} />
-      <Button
-        data-help="join"
-        type="submit"
-        variant="contained"
-        size="large"
-        loading={!loaded}
-        endIcon={<ArrowForwardRounded />}
-      >
-        {reconnect ? '再接続' : invited ? '部屋に参加' : '部屋を作る'}
-      </Button>
-      {invited && (
-        <Box sx={{ textAlign: 'right' }}>
-          <Button href="/" size="small">
-            新しい部屋を作る
-          </Button>
-        </Box>
-      )}
-    </Stack>
+    />
   );
 }
 
@@ -123,25 +79,5 @@ export function RoomInvitation({
     >
       招待URLをコピー
     </Button>
-  );
-}
-
-export function RoomSpectatorSwitch({
-  checked,
-  disabled = false,
-  onChange,
-}: {
-  checked: boolean;
-  disabled?: boolean;
-  onChange: (checked: boolean) => void;
-}) {
-  return (
-    <FormControlLabel
-      data-help="spectator"
-      label="閲覧のみ"
-      control={
-        <Switch checked={checked} disabled={disabled} onChange={(_, value) => onChange(value)} />
-      }
-    />
   );
 }

@@ -84,3 +84,7 @@ export function FavoriteToggle({
     </Tooltip>
   );
 }
+
+export function FavoritePreview({ children }: { children: ReactNode }) {
+  return <Favorites value={{ ids: [], has: () => false, toggle: () => {} }}>{children}</Favorites>;
+}

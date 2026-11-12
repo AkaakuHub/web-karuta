@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogTitle, IconButton, Tooltip } from '@mui/ma
 import { helpRoleNames, type HelpRole } from './helpTopics.js';
 import { HelpScene } from './helpScene.js';
 export { HelpScreenSource } from './helpScreen.js';
+export { HelpExamplesProvider } from './helpExamples.js';
 
 export function GameHelp({
   role,

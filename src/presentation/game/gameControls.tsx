@@ -54,6 +54,7 @@ export function GameControls({
   return (
     <Paper
       data-game-panel="controls"
+      data-help-stage={state.loading ? 'loading' : state.phase}
       sx={{
         p: { xs: 0.25, sm: 1 },
         border: '1px solid',
