@@ -39,20 +39,24 @@ async function restore(storage: Storage) {
   await initializing;
   return room;
 }
-it('無人の期限切れ部屋を削除し、アラームやタイマーを繰り返さない', async () => {
-  const storage = new Storage();
-  storage.values.set('room', emptyRoom('host'));
-  storage.values.set('expiresAt', 99999);
-  storage.alarm = 99999;
-  const room = await restore(storage);
-  await room.alarm();
-  await vi.advanceTimersByTimeAsync(86400000);
-  expect(storage.values.size).toBe(0);
-  expect(storage.deletions).toBe(1);
-  expect(storage.alarms).toEqual([]);
-  expect(vi.getTimerCount()).toBe(0);
-});
-it('準備前の古いアラームが届いても出題を進めず保存期限まで起動を予約しない', async () => {
+it.each(['lobby', 'loading'] as const)(
+  '無人の期限切れ部屋（%s）を再保存せず削除する',
+  async (phase) => {
+    const storage = new Storage();
+    storage.values.set('room', { ...emptyRoom('host'), phase });
+    storage.values.set('expiresAt', 99999);
+    storage.alarm = 99999;
+    const room = await restore(storage);
+    await room.alarm();
+    await vi.advanceTimersByTimeAsync(86400000);
+    expect(storage.values.size).toBe(0);
+    expect(storage.deletions).toBe(1);
+    expect(storage.writes).toEqual([]);
+    expect(storage.alarms).toEqual([]);
+    expect(vi.getTimerCount()).toBe(0);
+  },
+);
+it('準備期限を過ぎた曲を一度だけ見送り次の曲の自動取得を始めない', async () => {
   const storage = new Storage();
   storage.values.set('room', {
     ...emptyRoom('host'),
@@ -66,8 +70,8 @@ it('準備前の古いアラームが届いても出題を進めず保存期限�
   const room = await restore(storage);
   await room.alarm();
   expect(storage.values.get('room')).toMatchObject({
-    phase: 'loading',
-    results: [],
+    phase: 'revealed',
+    results: [{ id: 'one', owner: null }],
   });
   expect(storage.alarms).toEqual([86400000]);
   const writes = storage.writes.length;

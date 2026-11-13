@@ -165,7 +165,7 @@ export function finishPreparation(room: Room, startsAt: number): Room {
   const ready = room.ready.filter((id) =>
     room.players.some((player) => player.id === id && player.connected),
   );
-  return ready.length ? { ...room, ready, phase: 'playing', startsAt } : room;
+  return ready.length ? { ...room, ready, phase: 'playing', startsAt } : skipRound(room, startsAt);
 }
 
 export function giveUp(room: Room, id: string): Room {

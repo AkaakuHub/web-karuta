@@ -73,3 +73,25 @@ it('保存だけでは常設タイマーを作らない', async () => {
     vi.useRealTimers();
   }
 });
+
+it('期限が未設定だった準備中の部屋にも一度だけ60秒の上限を設定する', async () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(100000);
+  try {
+    const { storage } = setup();
+    storage.values.set('room', { ...emptyRoom('host'), phase: 'loading' });
+    storage.values.set('expiresAt', 1000000);
+    storage.values.set('loadingDeadline', 0);
+    const first = await new RoomPersistence(storage).load();
+    expect(first.loadingDeadline).toBe(160000);
+    expect(storage.alarms).toEqual([160000]);
+    const writes = storage.writes.length;
+    await vi.advanceTimersByTimeAsync(10000);
+    const second = await new RoomPersistence(storage).load();
+    expect(second.loadingDeadline).toBe(160000);
+    expect(storage.alarms).toEqual([160000]);
+    expect(storage.writes).toHaveLength(writes);
+  } finally {
+    vi.useRealTimers();
+  }
+});

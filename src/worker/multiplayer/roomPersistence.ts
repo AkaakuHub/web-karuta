@@ -46,10 +46,17 @@ export class RoomPersistence {
     };
     for (const [key, value] of Object.entries(state)) this.previous.set(key, JSON.stringify(value));
     this.alarm = await storage.getAlarm();
-    return {
+    const normalized = {
       ...state,
       loadingDeadline: preparationDeadline(state.room, state.loadingDeadline, Date.now()),
     };
+    if (
+      state.room &&
+      state.expiresAt > Date.now() &&
+      normalized.loadingDeadline !== state.loadingDeadline
+    )
+      await this.save(normalized);
+    return normalized;
   }
 
   async save(state: RoomSavedState) {

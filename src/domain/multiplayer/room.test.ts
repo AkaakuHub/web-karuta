@@ -143,15 +143,15 @@ it('準備期限後は準備できた参加者だけで開始し、遅れた参�
   expect(joined.startsAt).toBe(15000);
 });
 
-it('低速取得で誰も準備できていないときは出題を勝手に終了しない', () => {
+it('準備期限まで誰も準備できなければその曲を見送り次へ進める', () => {
   const base = emptyRoom('a');
   base.players = ['a', 'b'].map((id) => ({ id, name: id, score: 0, connected: true }));
   const finished = finishPreparation(
     beginGame(base, ['one', 'two'], 2, () => 0.4),
     15000,
   );
-  expect(finished.phase).toBe('loading');
-  expect(finished.results).toHaveLength(0);
+  expect(finished.phase).toBe('revealed');
+  expect(finished.results).toHaveLength(1);
 });
 
 describe('お手上げ', () => {
