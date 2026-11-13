@@ -60,7 +60,7 @@ export function CardText({
         <FavoriteButton id={card.id} title={card.title} />
         {actions}
       </Box>
-      <ReviewLinks links={card.links} />
+      {large && <ReviewLinks links={card.links} />}
     </Stack>
   );
 }
