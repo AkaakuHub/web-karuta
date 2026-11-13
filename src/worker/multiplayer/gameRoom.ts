@@ -68,7 +68,7 @@ export class GameRoom {
     if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket')
       return new Response('WebSocketが必要です', { status: 426 });
     if (!this.room) return rejectJoin('部屋が存在しないか期限切れです');
-    if (!Object.hasOwn(this.room, 'givenUp')) return rejectJoin(unsupportedRoom);
+    if (!Object.hasOwn(this.room, 'settling')) return rejectJoin(unsupportedRoom);
     const parsed = joinSchema.safeParse(Object.fromEntries(url.searchParams));
     if (!parsed.success) return rejectJoin('参加情報が不正です');
     const { token, name, spectator, connectionId } = parsed.data;

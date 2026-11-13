@@ -5,15 +5,17 @@ import type { ClaimRound } from '../../domain/multiplayer/claims.js';
 
 export async function loadRoomState(storage: RoomContext['storage']) {
   const [room, tokens, kickedTokens, expiresAt, claims, loadingDeadline] = await Promise.all([
-    storage.get<Room>('room'),
+    storage.get<Omit<Room, 'givenUp'> & { givenUp?: string[] }>('room'),
     storage.get<Memberships>('tokens'),
     storage.get<Record<string, string[]>>('kickedTokens'),
     storage.get<number>('expiresAt'),
     storage.get<ClaimRound>('claims'),
     storage.get<number>('loadingDeadline'),
   ]);
+  const restored = room ? { ...room, givenUp: room.givenUp ?? [] } : null;
+  if (room && room.givenUp === undefined) await storage.put({ room: restored });
   return {
-    room: room ?? null,
+    room: restored,
     tokens: tokens ?? {},
     kickedTokens: kickedTokens ?? {},
     expiresAt: expiresAt ?? 0,
