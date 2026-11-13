@@ -6,23 +6,21 @@ import { ErrorAlert } from '../shared/errorAlert.js';
 export function GameNotice({
   error,
   mistake = false,
-  reserve = true,
 }: {
   error: string;
   mistake?: boolean;
   reserve?: boolean;
 }) {
+  const message = error || (mistake ? 'お手つき。この曲の札は取れません。' : '');
   const [dismissed, setDismissed] = useState('');
-  if (error)
-    return (
-      <GameToast open={error !== dismissed} onClose={() => setDismissed(error)}>
-        <ErrorAlert message={error} />
-      </GameToast>
-    );
-  if (!reserve && !mistake) return null;
+  const [previous, setPrevious] = useState(message);
+  if (previous !== message) {
+    setPrevious(message);
+    setDismissed('');
+  }
   return (
-    <GameToast open={mistake} onClose={() => {}}>
-      <Alert severity="warning">お手つき。この曲の札は取れません。</Alert>
+    <GameToast open={!!message && message !== dismissed} onClose={() => setDismissed(message)}>
+      {error ? <ErrorAlert message={error} /> : <Alert severity="warning">{message}</Alert>}
     </GameToast>
   );
 }
