@@ -49,8 +49,6 @@ export const GameBoard = memo(function GameBoard({
         p: `${boardPadding}px`,
         borderRadius: 1,
         bgcolor: '#e5eaf3',
-        filter: blocked ? 'grayscale(1)' : undefined,
-        opacity: blocked ? 0.4 : 1,
         overflow: 'hidden',
       }}
     >
@@ -75,6 +73,8 @@ export const GameBoard = memo(function GameBoard({
                   key={slot}
                   data-slot={slot}
                   sx={{
+                    filter: blocked ? 'grayscale(1)' : undefined,
+                    opacity: blocked ? 0.4 : 1,
                     position: 'relative',
                     minHeight: 0,
                     borderRadius: 1,
