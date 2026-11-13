@@ -4,6 +4,8 @@ import type { Room } from '../../domain/multiplayer/room.js';
 import type { Memberships } from '../../domain/multiplayer/membership.js';
 import type { ClaimRound } from '../../domain/multiplayer/claims.js';
 
+export const roomLifetime = 24 * 60 * 60 * 1000;
+
 interface RoomSavedState {
   room: Room | null;
   claims: ClaimRound | null;

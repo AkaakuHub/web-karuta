@@ -1,3 +1,4 @@
+import { ClaimTimer } from './claimTimer.js';
 import { preparationDeadline } from '../../domain/multiplayer/preparation.js';
 import { configureHeartbeat } from './roomHeartbeat.js';
 import {
@@ -19,11 +20,11 @@ import {
   type RoomContent,
   type RoomContext,
 } from './roomIdentity.js';
-import { RoomPersistence } from './roomPersistence.js';
+import { RoomPersistence, roomLifetime } from './roomPersistence.js';
 import { progressRoom } from './roomProgress.js';
 import { publicRoom } from './roomView.js';
 export type { RoomContent } from './roomIdentity.js';
-import { broadcastRoom, readRoomMessage, rejectJoin } from './roomMessages.js';
+import { broadcastRoom, readRoomMessage, rejectJoin, sendRoomError } from './roomMessages.js';
 import { moderateRoom } from './roomModeration.js';
 import { acknowledgeProbe, probeSocket, roomClaimWindow, roundStartTime } from './roomTiming.js';
 import { submitClaim, settleClaims, type ClaimRound } from '../../domain/multiplayer/claims.js';
@@ -36,8 +37,8 @@ import {
   type Room,
 } from '../../domain/multiplayer/room.js';
 declare const WebSocketPair: typeof import('@cloudflare/workers-types').WebSocketPair;
-const lifetime = 24 * 60 * 60 * 1000;
 export class GameRoom {
+  private readonly claimTimer: ClaimTimer;
   private room: Room | null = null;
   private tokens: Memberships = {};
   private kickedTokens: Record<string, string[]> = {};
@@ -49,10 +50,12 @@ export class GameRoom {
     private readonly ctx: RoomContext,
     private readonly content: RoomContent,
   ) {
+    this.claimTimer = new ClaimTimer(() => ctx.blockConcurrencyWhile(() => this.settleClaims()));
     this.persistence = new RoomPersistence(ctx.storage);
     configureHeartbeat(ctx);
     ctx.blockConcurrencyWhile(async () => {
       Object.assign(this, await this.persistence.load());
+      this.claimTimer.schedule(this.claims?.deadline ?? null);
     });
   }
   async fetch(request: Request): Promise<Response> {
@@ -202,12 +205,7 @@ export class GameRoom {
       await this.save(command.type === 'kick' || command.type === 'unkick');
       this.broadcast(previousView);
     } catch (error) {
-      socket.send(
-        JSON.stringify({
-          type: 'error',
-          message: error instanceof Error ? error.message : '操作できません',
-        }),
-      );
+      sendRoomError(socket, error);
     }
   }
   async webSocketClose(socket: RoomSocket) {
@@ -236,6 +234,7 @@ export class GameRoom {
       this.tokens = {};
       this.kickedTokens = {};
       this.claims = null;
+      this.claimTimer.schedule(null);
       await this.persistence.clear();
     } else if (this.room && this.loadingDeadline > 0 && now >= this.loadingDeadline) {
       const previous = this.view(this.room);
@@ -282,8 +281,9 @@ export class GameRoom {
   }
 
   private async save(includeTokens = false) {
+    this.claimTimer.schedule(this.claims?.deadline ?? null);
     const now = Date.now();
-    if (this.expiresAt - now < lifetime / 2) this.expiresAt = now + lifetime;
+    if (this.expiresAt - now < roomLifetime / 2) this.expiresAt = now + roomLifetime;
     this.loadingDeadline = preparationDeadline(this.room, this.loadingDeadline, now);
     await this.persistence.save({
       room: this.room,

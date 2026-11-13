@@ -67,3 +67,12 @@ export function rejectJoin(message: string) {
   const init: ResponseInit & { webSocket: RoomSocket } = { status: 101, webSocket: pair[0] };
   return new Response(null, init);
 }
+
+export function sendRoomError(socket: RoomSocket, error: unknown) {
+  socket.send(
+    JSON.stringify({
+      type: 'error',
+      message: error instanceof Error ? error.message : '操作できません',
+    }),
+  );
+}

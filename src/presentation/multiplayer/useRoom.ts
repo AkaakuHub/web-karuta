@@ -43,7 +43,8 @@ export function useRoom() {
     setError,
   );
   const { reset: resetPreparation, retry: retryPreparation } = preparation;
-  const [pendingTake, setPendingTake] = useState<string | null>(null);
+  const [pendingTake, setPendingTake] = useState<{ id: string; accepted: boolean } | null>(null);
+  const acceptedRound = useRef<number | null>(null);
   const { volume, muted, effectiveVolume, setVolume, toggleMuted } = useAudioVolume();
   const effects = useGameFeedback(effectiveVolume, setError);
   const current = useRef<RoomView | null>(null);
@@ -131,6 +132,16 @@ export function useRoom() {
             return;
           }
           const message = parsed.data;
+          if (
+            message.type === 'takeAccepted' &&
+            message.round === current.current?.round &&
+            submittedRound.current === message.round &&
+            acceptedRound.current !== message.round
+          ) {
+            acceptedRound.current = message.round;
+            setPendingTake((pending) => (pending ? { ...pending, accepted: true } : null));
+            effects.notify('correct');
+          }
           if (message.type === 'timingReady') setTimingReady(true);
           if (message.type === 'probe') send({ type: 'probeAck', id: message.id });
           if (message.type === 'error') {
@@ -153,10 +164,16 @@ export function useRoom() {
               setIncorrect([]);
               setPendingTake(null);
               submittedRound.current = null;
+              acceptedRound.current = null;
             }
             if (kind) {
               setPendingTake(null);
-              effects.notify(kind, null, roomClaimant(next, playerId));
+              if (
+                kind !== 'correct' ||
+                next.winner !== playerId ||
+                acceptedRound.current !== next.round
+              )
+                effects.notify(kind, null, roomClaimant(next, playerId));
             }
             setIncorrect(next.incorrect[playerId] ?? []);
             current.current = next;
@@ -232,7 +249,7 @@ export function useRoom() {
         const elapsedMs = audio.current?.reactionTime(at);
         if (elapsedMs === undefined || elapsedMs < 0) return;
         submittedRound.current = state.round;
-        setPendingTake(id);
+        setPendingTake({ id, accepted: false });
         send({ type: 'take', round: state.round, id, elapsedMs });
       } catch (reason) {
         setError(errorMessage(reason, '入力時刻を確認できません'));
@@ -245,7 +262,8 @@ export function useRoom() {
     feedback: effects.feedback,
     revision: effects.revision,
     incorrect,
-    pendingTake,
+    pendingTake: pendingTake?.id ?? null,
+    takeAccepted: pendingTake?.accepted ?? false,
     progress,
     playing,
     needsResume: needsResume || preparation.failed,

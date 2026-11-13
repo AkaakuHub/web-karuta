@@ -79,3 +79,36 @@ it('準備期限を過ぎた曲を一度だけ見送り次の曲の自動取得�
   expect(storage.writes).toHaveLength(writes);
   expect(vi.getTimerCount()).toBe(0);
 });
+
+it('受付済みの正解は次の通信もアラームも待たずに確定する', async () => {
+  const storage = new Storage();
+  storage.values.set('room', {
+    ...emptyRoom('host'),
+    phase: 'playing',
+    startsAt: 90000,
+    settling: true,
+    players: [{ id: 'host', name: 'host', score: 0, connected: true }],
+    ready: ['host'],
+    board: ['one'],
+    order: ['one'],
+  });
+  storage.values.set('claims', {
+    round: 0,
+    deadline: 100150,
+    entries: [{ playerId: 'host', elapsedMs: 10000 }],
+  });
+  storage.values.set('expiresAt', 86400000);
+  storage.alarm = 100150;
+  await restore(storage);
+  await vi.advanceTimersByTimeAsync(150);
+  expect(storage.values.get('room')).toMatchObject({
+    phase: 'revealed',
+    winner: 'host',
+    results: [{ id: 'one', owner: 'host' }],
+  });
+  expect(storage.values.get('claims')).toBeNull();
+  expect(vi.getTimerCount()).toBe(0);
+  const writes = storage.writes.length;
+  await vi.advanceTimersByTimeAsync(30000);
+  expect(storage.writes).toHaveLength(writes);
+});
