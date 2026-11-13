@@ -1,3 +1,4 @@
+import { preparationDeadline } from '../../domain/multiplayer/preparation.js';
 import { configureHeartbeat } from './roomHeartbeat.js';
 import {
   canCommand,
@@ -18,7 +19,7 @@ import {
   type RoomContent,
   type RoomContext,
 } from './roomIdentity.js';
-import { loadRoomState, saveRoomState } from './roomPersistence.js';
+import { RoomPersistence } from './roomPersistence.js';
 import { progressRoom } from './roomProgress.js';
 import { publicRoom } from './roomView.js';
 export type { RoomContent } from './roomIdentity.js';
@@ -43,14 +44,15 @@ export class GameRoom {
   private expiresAt = 0;
   private claims: ClaimRound | null = null;
   private loadingDeadline = 0;
+  private persistence: RoomPersistence;
   constructor(
     private readonly ctx: RoomContext,
     private readonly content: RoomContent,
   ) {
+    this.persistence = new RoomPersistence(ctx.storage);
     configureHeartbeat(ctx);
     ctx.blockConcurrencyWhile(async () => {
-      const saved = await loadRoomState(ctx.storage);
-      Object.assign(this, saved);
+      Object.assign(this, await this.persistence.load());
     });
   }
   async fetch(request: Request): Promise<Response> {
@@ -226,6 +228,7 @@ export class GameRoom {
     await this.webSocketClose(socket);
   }
   async alarm() {
+    this.persistence.alarmFired();
     const now = Date.now();
     if (now >= this.expiresAt) {
       for (const socket of this.ctx.getWebSockets()) socket.close(4000, '部屋の期限が切れました');
@@ -233,8 +236,8 @@ export class GameRoom {
       this.tokens = {};
       this.kickedTokens = {};
       this.claims = null;
-      await this.ctx.storage.deleteAll();
-    } else if (this.room?.phase === 'loading' && now >= this.loadingDeadline) {
+      await this.persistence.clear();
+    } else if (this.room && this.loadingDeadline > 0 && now >= this.loadingDeadline) {
       const previous = this.view(this.room);
       this.room = finishPreparation(this.room, this.startTime(now));
       await this.save();
@@ -281,8 +284,8 @@ export class GameRoom {
   private async save(includeTokens = false) {
     const now = Date.now();
     if (this.expiresAt - now < lifetime / 2) this.expiresAt = now + lifetime;
-    this.loadingDeadline = this.room?.phase === 'loading' ? this.loadingDeadline || now + 15000 : 0;
-    await saveRoomState(this.ctx.storage, {
+    this.loadingDeadline = preparationDeadline(this.room, this.loadingDeadline, now);
+    await this.persistence.save({
       room: this.room,
       claims: this.claims,
       loadingDeadline: this.loadingDeadline,

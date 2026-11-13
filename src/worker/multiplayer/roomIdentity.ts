@@ -1,4 +1,5 @@
 import type { DurableObjectState } from '@cloudflare/workers-types';
+import type { RoomStorage } from './roomPersistence.js';
 import { z } from 'zod';
 export interface RoomContent {
   deckIds(id: string): string[];
@@ -28,8 +29,5 @@ export interface RoomContext extends Pick<
   DurableObjectState,
   'blockConcurrencyWhile' | 'getWebSockets' | 'acceptWebSocket' | 'setWebSocketAutoResponse'
 > {
-  storage: Pick<
-    DurableObjectState['storage'],
-    'get' | 'put' | 'getAlarm' | 'setAlarm' | 'deleteAll'
-  >;
+  storage: RoomStorage;
 }

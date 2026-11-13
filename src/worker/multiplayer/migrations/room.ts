@@ -6,10 +6,9 @@ export type StoredRoom = Omit<Room, 'givenUp' | 'incorrect'> & {
 };
 
 export function migrateRoom(room: StoredRoom): Room {
-  const { givenUp, incorrect, ...state } = room;
   return {
-    ...state,
-    givenUp: givenUp === undefined ? [] : givenUp,
-    incorrect: incorrect === undefined ? {} : incorrect,
+    ...room,
+    givenUp: room.givenUp === undefined ? [] : room.givenUp,
+    incorrect: room.incorrect === undefined ? {} : room.incorrect,
   };
 }
