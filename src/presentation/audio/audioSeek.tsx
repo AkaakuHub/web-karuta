@@ -14,9 +14,12 @@ export function AudioSeek({
   hideDuration?: boolean;
   onSeek: (position: number) => void | Promise<void>;
 }) {
+  const clockWidth = `${Math.max(4, formatClock(progress.duration, 1).length)}ch`;
   const [position, setPosition] = useState<number | null>(null);
   return (
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', gridColumn: '1 / -1', minWidth: 0 }}>
+    <Box
+      sx={{ display: 'flex', gap: 0.5, alignItems: 'center', gridColumn: '1 / -1', minWidth: 0 }}
+    >
       <Slider
         disabled={disabled || progress.duration <= 0}
         aria-label="再生位置"
@@ -43,8 +46,7 @@ export function AudioSeek({
           whiteSpace: 'nowrap',
           flexShrink: 0,
           display: 'flex',
-          fontFamily: 'monospace',
-          '& > span': { width: '6ch', textAlign: 'right' },
+          '& > span': { width: clockWidth, textAlign: 'right' },
           fontVariantNumeric: 'tabular-nums',
           fontSize: { xs: 10, sm: 12 },
         }}
