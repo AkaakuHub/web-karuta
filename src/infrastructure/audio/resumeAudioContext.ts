@@ -6,16 +6,15 @@ export async function resumeAudioContext(context: AudioContext, verifyClock: boo
   const startedAt = context.currentTime;
   diagnostic('audio.context.resume', { state: context.state, contextTime: startedAt, verifyClock });
   const resume = async () => {
+    const prime =
+      context.state !== 'running' || verifyClock || !context.getOutputTimestamp().performanceTime;
     const resumed = context.resume();
-    if (
-      context.state !== 'running' ||
-      verifyClock ||
-      !context.getOutputTimestamp().performanceTime
-    ) {
+    if (prime) {
       const source = context.createBufferSource();
       source.buffer = context.createBuffer(1, 1, context.sampleRate);
       source.connect(context.destination);
       source.onended = () => {
+        source.onended = null;
         source.disconnect();
         source.buffer = null;
       };

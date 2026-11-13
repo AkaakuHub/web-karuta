@@ -2,6 +2,7 @@ import { vi } from 'vite-plus/test';
 import { GameAudio } from '../../infrastructure/audio/gameAudio.js';
 
 class Source {
+  priming = false;
   offset = 0;
   when = 0;
   buffer: AudioBuffer | null = null;
@@ -13,22 +14,26 @@ class Source {
   disconnect() {
     this.connected = false;
   }
-  start(when: number, offset: number) {
+  start(when = 0, offset = 0) {
     this.when = when;
     this.offset = offset;
+    if (this.buffer?.length === 1) {
+      this.priming = true;
+      queueMicrotask(() => this.finish());
+    }
   }
   stop() {}
   finish() {
     this.onended?.(new Event('ended'));
   }
 }
-export function buffer(): AudioBuffer {
-  const data = new Float32Array(4800);
+export function buffer(length = 4800, sampleRate = 48000): AudioBuffer {
+  const data = new Float32Array(length);
   return {
-    duration: 0.1,
+    duration: length / sampleRate,
     length: data.length,
     numberOfChannels: 1,
-    sampleRate: 48000,
+    sampleRate,
     getChannelData: () => data,
     copyFromChannel: (target) => target.set(data),
     copyToChannel: (source) => data.set(source),
@@ -40,7 +45,17 @@ class Context extends EventTarget {
   currentTime = 0;
   state = 'suspended';
   destination = {};
-  sources: Source[] = [];
+  sampleRate = 48000;
+  private nodes: Source[] = [];
+  get sources() {
+    return this.nodes.filter((source) => !source.priming);
+  }
+  get primingSources() {
+    return this.nodes.filter((source) => source.priming);
+  }
+  createBuffer(channels: number, length: number, sampleRate: number) {
+    return { ...buffer(length, sampleRate), numberOfChannels: channels };
+  }
   gains: { gain: { value: number } }[] = [];
   private clock: ReturnType<typeof setInterval> | null = null;
   decode: (data: ArrayBuffer) => Promise<AudioBuffer> = async () => buffer();
@@ -55,7 +70,7 @@ class Context extends EventTarget {
   }
   createBufferSource() {
     const source = new Source();
-    this.sources.push(source);
+    this.nodes.push(source);
     return source;
   }
   getOutputTimestamp() {

@@ -273,3 +273,21 @@ it('中止した音声の展開が終わるまで次の展開を重ねず、古�
     await audio.dispose();
   }
 });
+
+it('参加操作と同じ呼び出しで無音出力を開始し、音声取得前に出力を初期化する', async () => {
+  const { audio, context } = setup();
+  try {
+    const playing = audio.play('/track/one');
+    expect(context.primingSources).toHaveLength(1);
+    expect(fetch).not.toHaveBeenCalled();
+    await playing;
+    expect(context.sources).toHaveLength(1);
+    expect(
+      context.primingSources.every(
+        (source) => source.buffer === null && source.onended === null && !source.connected,
+      ),
+    ).toBe(true);
+  } finally {
+    await audio.dispose();
+  }
+});
