@@ -26,7 +26,7 @@ export const leaveSchema = z.object({ token: z.uuid(), connectionId: z.uuid() })
 
 export interface RoomContext extends Pick<
   DurableObjectState,
-  'blockConcurrencyWhile' | 'getWebSockets' | 'acceptWebSocket'
+  'blockConcurrencyWhile' | 'getWebSockets' | 'acceptWebSocket' | 'setWebSocketAutoResponse'
 > {
   storage: Pick<
     DurableObjectState['storage'],

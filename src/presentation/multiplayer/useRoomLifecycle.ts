@@ -4,7 +4,7 @@ import type { RoomConnection } from '../../infrastructure/multiplayer/roomConnec
 export function useRoomLifecycle(connection: RefObject<RoomConnection | null>, onWake: () => void) {
   useEffect(() => {
     const wake = () => {
-      if (document.hidden || !connection.current) return;
+      if (document.hidden || navigator.onLine === false || !connection.current) return;
       onWake();
       connection.current.wake(true);
     };
@@ -18,6 +18,7 @@ export function useRoomLifecycle(connection: RefObject<RoomConnection | null>, o
     document.addEventListener('freeze', suspend);
     document.addEventListener('resume', wake);
     window.addEventListener('online', wake);
+    window.addEventListener('offline', suspend);
     window.addEventListener('pageshow', wake);
     document.addEventListener('visibilitychange', wake);
     return () => {
@@ -26,6 +27,7 @@ export function useRoomLifecycle(connection: RefObject<RoomConnection | null>, o
       document.removeEventListener('freeze', suspend);
       document.removeEventListener('resume', wake);
       window.removeEventListener('online', wake);
+      window.removeEventListener('offline', suspend);
       window.removeEventListener('pageshow', wake);
       document.removeEventListener('visibilitychange', wake);
     };

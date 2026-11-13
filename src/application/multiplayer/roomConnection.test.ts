@@ -3,6 +3,7 @@ import {
   RoomConnection,
   type ConnectionSocket,
 } from '../../infrastructure/multiplayer/roomConnection.js';
+import { heartbeat } from '../../domain/multiplayer/heartbeat.js';
 import { commandSchema, type Command } from '../../domain/multiplayer/protocol.js';
 
 class SocketCloseEvent extends Event {
@@ -19,8 +20,15 @@ class Socket implements ConnectionSocket {
   onclose: ConnectionSocket['onclose'] = null;
   onerror: ConnectionSocket['onerror'] = null;
   sent: Command[] = [];
+  heartbeats = 0;
+  autoReply = false;
   constructor(readonly url: string) {}
   send(data: string) {
+    if (data === heartbeat.request) {
+      this.heartbeats++;
+      if (this.autoReply) this.receive(heartbeat.response);
+      return;
+    }
     this.sent.push(commandSchema.parse(JSON.parse(data)));
   }
   close() {
@@ -30,10 +38,10 @@ class Socket implements ConnectionSocket {
     this.readyState = 1;
     this.onopen?.(new Event('open'));
   }
-  receive() {
+  receive(data = JSON.stringify({ type: 'pong', sent: Date.now(), now: Date.now() })) {
     this.onmessage?.(
       new MessageEvent('message', {
-        data: JSON.stringify({ type: 'pong', sent: Date.now(), now: Date.now() }),
+        data,
       }),
     );
   }
@@ -44,7 +52,7 @@ class Socket implements ConnectionSocket {
 }
 
 const active: RoomConnection[] = [];
-function setup() {
+function setup(available = () => true) {
   const sockets: Socket[] = [];
   const statuses: boolean[] = [];
   const messages: string[] = [];
@@ -60,6 +68,7 @@ function setup() {
       sockets.push(socket);
       return socket;
     },
+    available,
   );
   active.push(connection);
   connection.start();
@@ -73,6 +82,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   active.splice(0).forEach((connection) => connection.close());
+  vi.restoreAllMocks();
   vi.useRealTimers();
 });
 
@@ -112,20 +122,22 @@ it('応答のある低速接続は定期確認で維持し、復帰時は全状�
   connection.wake(true);
   expect(sockets).toHaveLength(1);
   expect(sockets[0]!.sent.some((command) => command.type === 'sync')).toBe(true);
-  expect(sockets[0]!.sent.filter((command) => command.type === 'ping').length).toBeGreaterThan(5);
+  await vi.advanceTimersByTimeAsync(500);
+  expect(sockets[0]!.sent.filter((command) => command.type === 'ping')).toHaveLength(6);
 });
 
 it('見かけ上OPENでも応答が途絶えた接続を交換する', async () => {
   const { sockets } = setup();
-  await vi.advanceTimersByTimeAsync(45000);
+  await vi.advanceTimersByTimeAsync(90000);
   expect(sockets).toHaveLength(2);
   expect(sockets[0]!.readyState).toBe(3);
 });
 
 it('復帰時の同期要求に応答がなければ、定期確認を待たず接続を交換する', async () => {
   const { connection, sockets } = setup();
+  await vi.advanceTimersByTimeAsync(1000);
   connection.wake(true);
-  await vi.advanceTimersByTimeAsync(10000);
+  await vi.advanceTimersByTimeAsync(30000);
   expect(sockets).toHaveLength(2);
   expect(sockets[0]!.readyState).toBe(3);
 });
@@ -179,6 +191,7 @@ it('明示的な退出だけを送信し、送信後は復帰しない', async (
   try {
     const { connection, sockets } = setup();
     connection.leave();
+    expect(beacon).not.toHaveBeenCalled();
     expect(sockets[0]!.sent.filter((command) => command.type === 'leave')).toHaveLength(1);
     connection.wake(true);
     await vi.advanceTimersByTimeAsync(120000);
@@ -193,4 +206,62 @@ it('スリープの通信停止では退室を送信しない', () => {
   const { connection, sockets } = setup();
   connection.suspend();
   expect(sockets[0]!.sent.some((command) => command.type === 'leave')).toBe(false);
+});
+
+it('1時間の待機は120回の自動応答確認だけにし、追加の時刻測定をしない', async () => {
+  const { sockets, messages } = setup();
+  sockets[0]!.autoReply = true;
+  await vi.advanceTimersByTimeAsync(3600000);
+  expect(sockets).toHaveLength(1);
+  expect(sockets[0]!.heartbeats).toBe(120);
+  expect(sockets[0]!.sent.filter((command) => command.type === 'ping')).toHaveLength(3);
+  expect(messages).toHaveLength(1);
+});
+it('復帰通知が重なっても全状態の取得と時刻測定を重複させない', async () => {
+  const { connection, sockets } = setup();
+  await vi.advanceTimersByTimeAsync(1000);
+  connection.wake(true);
+  connection.wake(true);
+  connection.wake(true);
+  await vi.advanceTimersByTimeAsync(500);
+  expect(sockets[0]!.sent.filter((command) => command.type === 'sync')).toHaveLength(1);
+  expect(sockets[0]!.sent.filter((command) => command.type === 'ping')).toHaveLength(6);
+});
+it('接続が短時間で切れ続けても再接続の待ち時間を増やす', async () => {
+  vi.spyOn(Math, 'random').mockReturnValue(1);
+  const { sockets } = setup();
+  sockets[0]!.drop();
+  await vi.advanceTimersByTimeAsync(1000);
+  sockets[1]!.open();
+  sockets[1]!.receive();
+  sockets[1]!.drop();
+  await vi.advanceTimersByTimeAsync(1999);
+  expect(sockets).toHaveLength(2);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(sockets).toHaveLength(3);
+  sockets[2]!.open();
+  sockets[2]!.receive();
+  sockets[2]!.drop();
+  await vi.advanceTimersByTimeAsync(3999);
+  expect(sockets).toHaveLength(3);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(sockets).toHaveLength(4);
+});
+
+it('オフライン中は復帰通知が来ても通信せず、オンライン後に同じ参加者で戻る', async () => {
+  let online = true;
+  const { connection, sockets } = setup(() => online);
+  const first = sockets[0]!;
+  online = false;
+  connection.wake(true);
+  const count = first.sent.length;
+  await vi.advanceTimersByTimeAsync(3600000);
+  connection.wake(true);
+  expect(sockets).toHaveLength(1);
+  expect(first.sent).toHaveLength(count);
+  expect(vi.getTimerCount()).toBe(0);
+  online = true;
+  connection.wake(true);
+  expect(sockets).toHaveLength(2);
+  expect(sockets[1]!.url).toBe(first.url);
 });

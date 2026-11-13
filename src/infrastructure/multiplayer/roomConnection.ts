@@ -1,3 +1,5 @@
+import { heartbeat } from '../../domain/multiplayer/heartbeat.js';
+import { retryDelay } from '../../domain/network/retry.js';
 import type { Command } from '../../domain/multiplayer/protocol.js';
 
 export interface ConnectionSocket {
@@ -24,38 +26,57 @@ export class RoomConnection {
   private lastReceived = 0;
   private retries = 0;
   private stopped = false;
+  private openedAt = 0;
+  private syncedAt = -Infinity;
   constructor(
     private readonly url: string,
     private readonly callbacks: RoomCallbacks,
     private readonly createSocket: (url: string) => ConnectionSocket = (url) => new WebSocket(url),
+    private readonly available = () => navigator.onLine !== false,
   ) {}
   start() {
+    if (!this.available()) return;
     this.open();
-    this.heartbeat = setInterval(() => this.wake(), 1000);
+    this.heartbeat = setInterval(() => this.wake(), heartbeat.intervalMs);
   }
   send(command: Command) {
     if (this.socket?.readyState === 1) this.socket.send(JSON.stringify(command));
   }
   wake(resync = false) {
-    if (this.stopped || this.retry) return;
-    if (!this.heartbeat) this.heartbeat = setInterval(() => this.wake(), 1000);
-    if (Date.now() - this.lastReceived >= 45000 || !this.socket || this.socket.readyState >= 2) {
+    if (this.stopped) return;
+    if (!this.available()) {
+      this.suspend();
+      return;
+    }
+    if (this.retry) return;
+    if (!this.heartbeat) this.heartbeat = setInterval(() => this.wake(), heartbeat.intervalMs);
+    if (Date.now() - this.lastReceived >= 90000 || !this.socket || this.socket.readyState >= 2) {
       if (this.retry) clearTimeout(this.retry);
       this.retry = null;
       this.callbacks.status(false);
       this.open();
     } else {
-      if (resync) {
+      if (resync && Date.now() - this.syncedAt >= 1000) {
         this.send({ type: 'sync' });
+        this.synchronize();
         if (!this.probe)
           this.probe = setTimeout(() => {
             this.probe = null;
             this.callbacks.status(false);
             this.open();
-          }, 10000);
+          }, 30000);
       }
-      this.send({ type: 'ping', sent: performance.timeOrigin + performance.now() });
+      if (!resync && this.socket?.readyState === 1) this.socket.send(heartbeat.request);
     }
+  }
+  synchronize() {
+    if (this.socket?.readyState !== 1 || Date.now() - this.syncedAt < 1000) return;
+    this.syncedAt = Date.now();
+    this.burst.forEach(clearTimeout);
+    const ping = () =>
+      this.send({ type: 'ping', sent: performance.timeOrigin + performance.now() });
+    ping();
+    this.burst = [200, 500].map((delay) => setTimeout(ping, delay));
   }
   private open() {
     this.release();
@@ -65,18 +86,17 @@ export class RoomConnection {
     socket.onopen = () => {
       if (this.socket !== socket) return;
       this.callbacks.status(true);
-      const ping = () =>
-        this.send({ type: 'ping', sent: performance.timeOrigin + performance.now() });
-      ping();
-      this.burst = [100, 200, 350, 500].map((delay) => setTimeout(ping, delay));
+      this.openedAt = Date.now();
+      this.syncedAt = -Infinity;
+      this.synchronize();
     };
     socket.onmessage = (event) => {
       if (this.socket !== socket || typeof event.data !== 'string') return;
       this.lastReceived = Date.now();
       if (this.probe) clearTimeout(this.probe);
       this.probe = null;
-      this.retries = 0;
-      this.callbacks.message(event.data);
+      if (Date.now() - this.openedAt >= 30000) this.retries = 0;
+      if (event.data !== heartbeat.response) this.callbacks.message(event.data);
     };
     socket.onerror = () => socket.close();
     socket.onclose = (event) => {
@@ -86,13 +106,18 @@ export class RoomConnection {
       const retrying = ![1008, 4000, 4001, 4003, 4004].includes(event.code);
       if (!retrying) this.close();
       this.callbacks.closed(event.code, event.reason, retrying);
-      if (retrying) {
+      if (retrying && !this.available()) this.clearTimers();
+      if (retrying && this.available()) {
         this.retry = setTimeout(
           () => {
             this.retry = null;
+            if (!this.available()) {
+              this.suspend();
+              return;
+            }
             this.open();
           },
-          Math.min(15000, 1000 * 2 ** this.retries++),
+          retryDelay(this.retries++, 1000),
         );
       }
     };
@@ -131,7 +156,7 @@ export class RoomConnection {
     const token = endpoint.searchParams.get('token');
     const connectionId = endpoint.searchParams.get('connectionId');
     endpoint.search = '';
-    if (token && connectionId)
+    if (this.socket?.readyState !== 1 && token && connectionId)
       navigator.sendBeacon(
         endpoint.href,
         new Blob([JSON.stringify({ token, connectionId })], { type: 'application/json' }),

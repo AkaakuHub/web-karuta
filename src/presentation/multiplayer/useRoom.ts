@@ -1,5 +1,6 @@
 import { Alert } from '@mui/material';
 import { useGameToast } from '../game/gameToast.js';
+import { useRoomSynchronization } from './useRoomSynchronization.js';
 import { errorMessage } from '../shared/errorMessage.js';
 import { createElement, useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
@@ -77,6 +78,7 @@ export function useRoom() {
   useEffect(() => disconnect, [disconnect]);
   const recover = useCallback(() => {
     resetClock();
+    socket.current?.wake(true);
     retryPreparation();
   }, [resetClock, retryPreparation]);
   useRoomLifecycle(socket, retryPreparation);
@@ -192,48 +194,17 @@ export function useRoom() {
     }
   }
   const audioReady = preparation.ready;
-  useEffect(() => {
-    if (
-      connected &&
-      timingReady &&
-      (room?.phase === 'loading' || room?.phase === 'playing') &&
-      !room.spectators.some((person) => person.id === you) &&
-      audioReady &&
-      clock.ready
-    ) {
-      send({ type: 'ready', round: room.round, sent: performance.timeOrigin + performance.now() });
-    }
-  }, [
+  useRoomSynchronization({
+    room,
+    you,
     connected,
     timingReady,
-    room?.spectators,
-    you,
-    room?.phase,
-    room?.round,
-    room?.audio,
     audioReady,
-    clock.ready,
-    send,
-  ]);
-  useEffect(() => {
-    if (room?.phase !== 'playing' || room.startsAt === null || !audioReady || !clock.ready) return;
-    const controller = new AbortController();
-    void audio.current
-      ?.schedule(room.startsAt, clock.read, controller.signal)
-      .catch((reason: unknown) => {
-        if (!controller.signal.aborted) setError(errorMessage(reason, '音声を開始できません'));
-      });
-    return () => controller.abort();
-  }, [
-    room?.phase,
-    room?.startsAt,
-    room?.audio,
-    room?.round,
-    audioReady,
-    clock.ready,
-    clock.revision,
-    clock.read,
-  ]);
+    clock,
+    audio,
+    connection: socket,
+    setError,
+  });
   const take = useCallback(
     (id: string, at: number) => {
       const state = current.current;

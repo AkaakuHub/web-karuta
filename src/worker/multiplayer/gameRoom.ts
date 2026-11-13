@@ -1,3 +1,4 @@
+import { configureHeartbeat } from './roomHeartbeat.js';
 import {
   canCommand,
   disconnectPlayer,
@@ -46,6 +47,7 @@ export class GameRoom {
     private readonly ctx: RoomContext,
     private readonly content: RoomContent,
   ) {
+    configureHeartbeat(ctx);
     ctx.blockConcurrencyWhile(async () => {
       const saved = await loadRoomState(ctx.storage);
       Object.assign(this, saved);
