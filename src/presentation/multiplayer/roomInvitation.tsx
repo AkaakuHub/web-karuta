@@ -1,6 +1,6 @@
 import { useKarutaConfig } from '../config/karutaProvider.js';
 import { useRef, useState } from 'react';
-import { Box, Button } from '@mui/material';
+import { Button } from '@mui/material';
 import { RoomEntranceForm } from './roomEntranceForm.js';
 import ContentCopyRounded from '@mui/icons-material/ContentCopyRounded';
 import CheckRounded from '@mui/icons-material/CheckRounded';
@@ -56,9 +56,11 @@ export function RoomEntrance({
 export function RoomInvitation({
   roomId,
   onError,
+  compact = false,
 }: {
   roomId: string;
   onError: (message: string) => void;
+  compact?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
   function copy() {
@@ -76,15 +78,13 @@ export function RoomInvitation({
       sx={{
         whiteSpace: 'nowrap',
         px: 1,
-        minWidth: { xs: 32, sm: 64 },
-        '& .MuiButton-startIcon': { mr: { xs: 0, sm: 1 }, ml: 0 },
+        minWidth: compact ? 32 : 64,
+        '& .MuiButton-startIcon': { mr: compact ? 0 : 1, ml: 0 },
       }}
       startIcon={copied ? <CheckRounded /> : <ContentCopyRounded />}
       onClick={copy}
     >
-      <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-        招待URLをコピー
-      </Box>
+      {!compact && '招待URLをコピー'}
     </Button>
   );
 }
