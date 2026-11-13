@@ -59,6 +59,7 @@ export function helpRoom(cards: readonly HelpCard[], role: HelpRole, stage: Help
     audio: null,
     answer: stage === 'revealed' ? cards[0]!.id : null,
     winner: stage === 'revealed' ? 'help-a' : null,
+    givenUp: [],
     blocked: [],
     ready: stage === 'loading' ? ['help-a'] : players.map((player) => player.id),
     results,

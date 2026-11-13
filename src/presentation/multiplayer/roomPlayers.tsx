@@ -60,6 +60,7 @@ export function RoomPlayers({
         }}
       >
         {ranked.map((player) => {
+          const givenUp = room.phase === 'playing' && room.givenUp.includes(player.id);
           const ready = room.ready.includes(player.id);
           const waiting = waitingIds.has(player.id);
           const status = player.removed
@@ -70,7 +71,9 @@ export function RoomPlayers({
                 ? '準備中'
                 : room.phase === 'loading'
                   ? '準備完了'
-                  : '接続中';
+                  : givenUp
+                    ? 'お手上げ'
+                    : '接続中';
           const Icon = !player.connected
             ? WifiOffRounded
             : player.id === room.host
@@ -98,7 +101,7 @@ export function RoomPlayers({
                 color={
                   player.removed || !player.connected
                     ? 'default'
-                    : waiting
+                    : waiting || givenUp
                       ? 'warning'
                       : ready
                         ? 'success'
@@ -119,7 +122,7 @@ export function RoomPlayers({
                     <span>
                       {player.rank}位 {player.name}
                     </span>
-                    <strong>{player.score}枚</strong>
+                    <strong>{givenUp ? 'お手上げ' : `${player.score}枚`}</strong>
                   </Box>
                 }
                 sx={{

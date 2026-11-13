@@ -17,6 +17,7 @@ export function emptyRoom(host: string): Room {
     round: 0,
     startsAt: null,
     winner: null,
+    givenUp: [],
     blocked: [],
     ready: [],
     order: [],
@@ -55,6 +56,7 @@ export function beginGame(
     settling: false,
     round: 0,
     startsAt: null,
+    givenUp: [],
     blocked: [],
     ready: [],
     winner: null,
@@ -71,6 +73,7 @@ export function prepareRound(room: Room): Room {
     board: room.board.map((id, index) => (index === slot ? (incoming ?? null) : id)),
     phase: round === room.order.length ? 'finished' : 'loading',
     startsAt: null,
+    givenUp: [],
     blocked: [],
     ready: [],
     winner: null,
@@ -156,4 +159,16 @@ export function finishPreparation(room: Room, startsAt: number): Room {
     room.players.some((player) => player.id === id && player.connected),
   );
   return ready.length ? { ...room, ready, phase: 'playing', startsAt } : skipRound(room, startsAt);
+}
+
+export function giveUp(room: Room, id: string): Room {
+  if (
+    room.phase !== 'playing' ||
+    room.host === id ||
+    room.givenUp.includes(id) ||
+    !room.ready.includes(id) ||
+    !room.players.some((player) => player.id === id && player.connected)
+  )
+    return room;
+  return { ...room, givenUp: [...room.givenUp, id] };
 }

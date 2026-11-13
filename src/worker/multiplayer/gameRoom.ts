@@ -25,6 +25,7 @@ import { moderateRoom } from './roomModeration.js';
 import { acknowledgeProbe, probeSocket, roomClaimWindow, roundStartTime } from './roomTiming.js';
 import { submitClaim, settleClaims, type ClaimRound } from '../../domain/multiplayer/claims.js';
 import {
+  giveUp,
   beginGame,
   finishPreparation,
   emptyRoom,
@@ -67,7 +68,7 @@ export class GameRoom {
     if (request.headers.get('Upgrade')?.toLowerCase() !== 'websocket')
       return new Response('WebSocketが必要です', { status: 426 });
     if (!this.room) return rejectJoin('部屋が存在しないか期限切れです');
-    if (!Object.hasOwn(this.room, 'settling')) return rejectJoin(unsupportedRoom);
+    if (!Object.hasOwn(this.room, 'givenUp')) return rejectJoin(unsupportedRoom);
     const parsed = joinSchema.safeParse(Object.fromEntries(url.searchParams));
     if (!parsed.success) return rejectJoin('参加情報が不正です');
     const { token, name, spectator, connectionId } = parsed.data;
@@ -154,6 +155,7 @@ export class GameRoom {
       }
       if (command.type === 'start') this.room.deckId = command.deckId;
       if (command.type === 'next') this.room = prepareRound(this.room);
+      if (command.type === 'giveUp') this.room = giveUp(this.room, identity.id);
       if (command.type === 'skip') this.room = skipRound(this.room, now);
       if (command.type === 'ready') {
         socket.send(JSON.stringify({ type: 'pong', sent: command.sent, now }));

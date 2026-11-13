@@ -29,6 +29,8 @@ export interface GameControlsProps {
   onVolume: (volume: number) => void;
   onToggleMuted: () => void;
   onSettings?: () => void;
+  onGiveUp?: () => void;
+  givenUp?: boolean;
   onReveal?: () => void;
   onNext?: () => void | Promise<void>;
   onReset: () => void;

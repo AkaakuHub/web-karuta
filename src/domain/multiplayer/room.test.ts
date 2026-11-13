@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+  giveUp,
   beginGame,
   finishPreparation,
   claimCard,
@@ -146,4 +147,25 @@ it('準備期限まで誰も準備できなければ無限に待たず曲を終�
   );
   expect(finished.phase).toBe('revealed');
   expect(finished.results).toHaveLength(1);
+});
+
+describe('お手上げ', () => {
+  it('参加者の申告を共有し、重複させず次の曲で解除する', () => {
+    const room = playing();
+    const next = giveUp(room, 'b');
+    expect(next.givenUp).toEqual(['b']);
+    expect(next.phase).toBe('playing');
+    expect(next.players).toEqual(room.players);
+    expect(giveUp(next, 'b')).toBe(next);
+    expect(prepareRound(skipRound(next, 2200)).givenUp).toEqual([]);
+  });
+  it('ホスト、閲覧者、未準備、出題終了後の申告を受け付けない', () => {
+    const room = playing();
+    expect(giveUp(room, 'a')).toBe(room);
+    expect(giveUp(room, 'spectator')).toBe(room);
+    const waiting = { ...room, ready: ['a'] };
+    expect(giveUp(waiting, 'b')).toBe(waiting);
+    const revealed = skipRound(room, 2200);
+    expect(giveUp(revealed, 'b')).toBe(revealed);
+  });
 });

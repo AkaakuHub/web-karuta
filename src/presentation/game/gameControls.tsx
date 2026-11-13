@@ -31,6 +31,8 @@ export function GameControls({
   onVolume,
   onToggleMuted,
   onSettings,
+  onGiveUp,
+  givenUp,
   onReveal,
   onNext,
   onReset,
@@ -183,6 +185,11 @@ export function GameControls({
             <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
               答えを見る
             </Box>
+          </Button>
+        )}
+        {!complete && !revealed && onGiveUp && (
+          <Button size="small" onClick={onGiveUp} disabled={givenUp || state.loading}>
+            {givenUp ? 'お手上げ済み' : 'お手上げ'}
           </Button>
         )}
         {revealed && <NextRoundButton round={state.round} total={state.total} onNext={onNext} />}
