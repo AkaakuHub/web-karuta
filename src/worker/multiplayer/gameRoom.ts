@@ -18,6 +18,7 @@ import {
   type RoomContext,
 } from './roomIdentity.js';
 import { loadRoomState, saveRoomState } from './roomPersistence.js';
+import { progressRoom } from './roomProgress.js';
 import { publicRoom } from './roomView.js';
 export type { RoomContent } from './roomIdentity.js';
 import { broadcastRoom, readRoomMessage, rejectJoin } from './roomMessages.js';
@@ -29,9 +30,7 @@ import {
   beginGame,
   finishPreparation,
   emptyRoom,
-  prepareRound,
   readyPlayer,
-  skipRound,
   type Room,
 } from '../../domain/multiplayer/room.js';
 declare const WebSocketPair: typeof import('@cloudflare/workers-types').WebSocketPair;
@@ -152,11 +151,12 @@ export class GameRoom {
           boardCapacity,
           Math.random,
         );
+        this.room.deckId = command.deckId;
       }
-      if (command.type === 'start') this.room.deckId = command.deckId;
-      if (command.type === 'next') this.room = prepareRound(this.room);
+
+      this.room = progressRoom(this.room, command, now);
+      if (command.type === 'finish') this.claims = null;
       if (command.type === 'giveUp') this.room = giveUp(this.room, identity.id);
-      if (command.type === 'skip') this.room = skipRound(this.room, now);
       if (command.type === 'ready') {
         socket.send(JSON.stringify({ type: 'pong', sent: command.sent, now }));
         if (identity.samples.length < 2) {
@@ -212,12 +212,8 @@ export class GameRoom {
     const { id } = attachmentSchema.parse(socket.deserializeAttachment());
     if (this.ctx.getWebSockets(id).some((other) => other !== socket && other.readyState === 1))
       return;
-    if (
-      ![...this.room.players, ...this.room.spectators].some(
-        (person) => person.id === id && person.connected,
-      )
-    )
-      return;
+    const participants = [...this.room.players, ...this.room.spectators];
+    if (!participants.some((person) => person.id === id && person.connected)) return;
     const previous = this.view(this.room);
     this.room = disconnectPlayer(this.room, id, this.startTime(Date.now()));
     await this.save();

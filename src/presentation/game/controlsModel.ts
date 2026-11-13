@@ -34,6 +34,7 @@ export interface GameControlsProps {
   hideDuration?: boolean;
   onReveal?: () => void;
   onNext?: () => void | Promise<void>;
+  onFinish?: () => void;
   onReset: () => void;
   resetLabel: string;
 }

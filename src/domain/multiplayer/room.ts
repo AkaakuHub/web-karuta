@@ -179,3 +179,8 @@ export function giveUp(room: Room, id: string): Room {
     return room;
   return { ...room, givenUp: [...room.givenUp, id] };
 }
+
+export function finishGame(room: Room): Room {
+  if (!['loading', 'playing', 'revealed'].includes(room.phase)) return room;
+  return { ...room, phase: 'finished', settling: false, startsAt: null };
+}

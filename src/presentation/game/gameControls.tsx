@@ -1,5 +1,6 @@
+import { ConfirmDialog } from '../shared/confirmDialog.js';
 import { GameSettingsButton } from './gameSettingsButton.js';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { useRoundShortcut } from './useRoundShortcut.js';
 import { BoardControls } from './boardControls.js';
 import {
@@ -7,12 +8,14 @@ import {
   Button,
   Chip,
   CircularProgress,
+  IconButton,
   LinearProgress,
   Paper,
   Tooltip,
   Typography,
 } from '@mui/material';
 import { NextRoundButton, GameExitButton } from './gameActionButtons.js';
+import StopCircleRounded from '@mui/icons-material/StopCircleRounded';
 import SkipNextRounded from '@mui/icons-material/SkipNextRounded';
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
 import CancelRounded from '@mui/icons-material/CancelRounded';
@@ -36,9 +39,11 @@ export function GameControls({
   hideDuration,
   onReveal,
   onNext,
+  onFinish,
   onReset,
   resetLabel,
 }: GameControlsProps) {
+  const [finishing, setFinishing] = useState(false);
   const compact = useContext(BoardControls);
   const complete = state.phase === 'complete';
   const revealed = state.phase === 'revealed';
@@ -199,6 +204,13 @@ export function GameControls({
           </Button>
         )}
         {revealed && <NextRoundButton round={state.round} total={state.total} onNext={onNext} />}
+        {onFinish && (
+          <Tooltip title="終了">
+            <IconButton size="small" aria-label="途中で終了" onClick={() => setFinishing(true)}>
+              <StopCircleRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
         {onSettings && (
           <Box sx={{ ml: 'auto', display: 'flex' }}>
             <GameSettingsButton onClick={onSettings} />
@@ -234,6 +246,16 @@ export function GameControls({
         />
         <GameExitButton label={resetLabel} onClick={onReset} />
       </Box>
+      <ConfirmDialog
+        open={finishing}
+        title="途中で終了して結果を表示しますか？"
+        confirmLabel="終了して結果を表示"
+        onCancel={() => setFinishing(false)}
+        onConfirm={() => {
+          setFinishing(false);
+          onFinish?.();
+        }}
+      />
       <LinearProgress
         variant="determinate"
         value={state.total ? (state.claimed / state.total) * 100 : 0}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+  finishSession,
   canSeekRound,
   createSession,
   nextRound,
@@ -99,4 +100,18 @@ describe('かるたの進行', () => {
     expect(revealed.lastTaken?.kind).toBe('skipped');
     expect(revealed.skipped).toBe(1);
   });
+});
+
+it('ひとり練習の途中終了で取得結果と得点を保持し、計時を止める', () => {
+  const playing = startRound(
+    createSession(['1', '2', '3'], 3, 3, () => 0.5),
+    100,
+  );
+  const won = takeCard(playing, playing.order[0]!, 200);
+  const next = startRound(nextRound(won), 300);
+  const finished = finishSession(next, 500);
+  expect(finished.phase).toBe('complete');
+  expect(finished.results).toEqual(won.results);
+  expect(finished.startedAt).toBeNull();
+  expect(finishSession(finished, 600)).toBe(finished);
 });

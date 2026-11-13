@@ -24,6 +24,7 @@ export const commandSchema = z.discriminatedUnion('type', [
   }),
   z.object({ type: z.literal('next'), round: z.number().int().nonnegative() }),
   z.object({ type: z.literal('giveUp'), round: z.number().int().nonnegative() }),
+  z.object({ type: z.literal('finish'), round: z.number().int().nonnegative() }),
   z.object({ type: z.literal('skip'), round: z.number().int().nonnegative() }),
   z.object({ type: z.literal('kick'), playerId: z.uuid() }),
   z.object({ type: z.literal('unkick'), playerId: z.uuid() }),

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+  finishGame,
   giveUp,
   beginGame,
   finishPreparation,
@@ -172,4 +173,19 @@ describe('お手上げ', () => {
     const revealed = skipRound(room, 2200);
     expect(giveUp(revealed, 'b')).toBe(revealed);
   });
+});
+
+it('途中終了では得点と取得結果を保持し、残りの札を未取得として追加しない', () => {
+  const room = playing();
+  const won = claimCard(room, 'a', room.order[0]!, 2200);
+  for (const state of [room, won, prepareRound(won)]) {
+    const finished = finishGame(state);
+    expect(finished.phase).toBe('finished');
+    expect(finished.results).toEqual(state.results);
+    expect(finished.players).toEqual(state.players);
+    expect(finished.settling).toBe(false);
+    expect(finishGame(finished)).toBe(finished);
+  }
+  const lobby = emptyRoom('a');
+  expect(finishGame(lobby)).toBe(lobby);
 });

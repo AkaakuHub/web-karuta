@@ -5,6 +5,7 @@ import { restoreSession } from '../../domain/game/checkpoint.js';
 import { errorMessage } from '../shared/errorMessage.js';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  finishSession,
   canSeekRound,
   createSession,
   nextRound,
@@ -249,6 +250,13 @@ export function useGame<Song extends { id: string }>(
     reveal,
     next,
     reset,
+    finish: () => {
+      if (!current.current || current.current.phase === 'complete') return;
+      cancelAudio();
+      update(finishSession(current.current, performance.now()));
+      player.current?.clear();
+      notify('complete');
+    },
     pause: cancelAudio,
     seek,
     volume,

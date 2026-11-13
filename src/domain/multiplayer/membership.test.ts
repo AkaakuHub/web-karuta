@@ -43,11 +43,13 @@ describe('閲覧専用の参加', () => {
   });
   it('閲覧者の偽装操作を拒否し同期と退室だけ許す', () => {
     const room = populated();
-    for (const type of ['take', 'ready', 'start', 'next', 'skip', 'kick', 'unkick']) {
+    for (const type of ['take', 'ready', 'start', 'next', 'skip', 'finish', 'kick', 'unkick']) {
       expect(canCommand(room, 'watch', type)).toBe(false);
     }
     for (const type of ['ping', 'sync', 'leave'])
       expect(canCommand(room, 'watch', type)).toBe(true);
+    expect(canCommand(room, 'b', 'finish')).toBe(false);
+    expect(canCommand(room, 'a', 'finish')).toBe(true);
     expect(canCommand(room, 'b', 'kick')).toBe(false);
     expect(canCommand(room, 'a', 'kick')).toBe(true);
   });

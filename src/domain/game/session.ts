@@ -155,3 +155,8 @@ export function nextRound(session: GameSession): GameSession {
     lastTaken: null,
   };
 }
+
+export function finishSession(session: GameSession, now: number): GameSession {
+  if (session.phase === 'complete') return session;
+  return { ...pauseQuestion(session, now), phase: 'complete' };
+}
