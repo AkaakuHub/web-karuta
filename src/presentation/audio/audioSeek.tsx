@@ -7,9 +7,11 @@ export function AudioSeek({
   progress,
   disabled,
   onSeek,
+  hideDuration = false,
 }: {
   progress: TrackProgress;
   disabled: boolean;
+  hideDuration?: boolean;
   onSeek: (position: number) => void | Promise<void>;
 }) {
   const [position, setPosition] = useState<number | null>(null);
@@ -39,11 +41,17 @@ export function AudioSeek({
         variant="caption"
         sx={{
           whiteSpace: 'nowrap',
+          flexShrink: 0,
+          display: 'flex',
+          fontFamily: 'monospace',
+          '& > span': { width: '6ch', textAlign: 'right' },
           fontVariantNumeric: 'tabular-nums',
           fontSize: { xs: 10, sm: 12 },
         }}
       >
-        {formatClock(progress.position, 1)} / {formatClock(progress.duration, 1)}
+        <Box component="span">{formatClock(progress.position, 1)}</Box>
+        {' / '}
+        <Box component="span">{hideDuration ? '?:??' : formatClock(progress.duration, 1)}</Box>
       </Typography>
     </Box>
   );

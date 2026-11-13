@@ -33,6 +33,7 @@ export function GameControls({
   onSettings,
   onGiveUp,
   givenUp,
+  hideDuration,
   onReveal,
   onNext,
   onReset,
@@ -149,7 +150,12 @@ export function GameControls({
           })}
         </Box>
       </Box>
-      <AudioSeek progress={state.progress} disabled={!state.canSeek} onSeek={onSeek} />
+      <AudioSeek
+        hideDuration={hideDuration}
+        progress={state.progress}
+        disabled={!state.canSeek}
+        onSeek={onSeek}
+      />
       <Box
         sx={{
           display: 'flex',

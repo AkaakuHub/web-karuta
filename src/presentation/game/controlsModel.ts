@@ -31,6 +31,7 @@ export interface GameControlsProps {
   onSettings?: () => void;
   onGiveUp?: () => void;
   givenUp?: boolean;
+  hideDuration?: boolean;
   onReveal?: () => void;
   onNext?: () => void | Promise<void>;
   onReset: () => void;
