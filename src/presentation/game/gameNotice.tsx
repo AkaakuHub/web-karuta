@@ -3,14 +3,7 @@ import { useState } from 'react';
 import { GameToast } from './gameToast.js';
 import { ErrorAlert } from '../shared/errorAlert.js';
 
-export function GameNotice({
-  error,
-  mistake = false,
-}: {
-  error: string;
-  mistake?: boolean;
-  reserve?: boolean;
-}) {
+export function GameNotice({ error, mistake = false }: { error: string; mistake?: boolean }) {
   const message = error || (mistake ? 'お手つきのため、このターンは札を取れません。' : '');
   const [dismissed, setDismissed] = useState('');
   const [previous, setPrevious] = useState(message);
@@ -19,7 +12,11 @@ export function GameNotice({
     setDismissed('');
   }
   return (
-    <GameToast open={!!message && message !== dismissed} onClose={() => setDismissed(message)}>
+    <GameToast
+      key={message}
+      open={!!message && message !== dismissed}
+      onClose={() => setDismissed(message)}
+    >
       {error ? <ErrorAlert message={error} /> : <Alert severity="warning">{message}</Alert>}
     </GameToast>
   );

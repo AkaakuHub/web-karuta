@@ -20,7 +20,7 @@ export function GameStatus({
   pending?: boolean;
   waiting?: boolean;
 }) {
-  if (!active) return <GameNotice error={error} reserve={false} />;
+  if (!active) return <GameNotice error={error} />;
   return (
     <Box
       data-game-panel="status"

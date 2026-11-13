@@ -20,7 +20,6 @@ export function PreparationWarning({ room, you }: { room: RoomView | null; you: 
   return (
     <GameToast
       open={loading && delayed === preparation && waiting.length > 0}
-      duration={8000}
       onClose={() => setDelayed(null)}
     >
       <Alert

@@ -27,7 +27,6 @@ export function RoomArrivalNotice({ room, you }: { room: RoomView; you: string }
     <GameToast
       key={notice?.revision}
       open={notice !== null && room.phase !== 'lobby' && room.phase !== 'finished'}
-      duration={4000}
       onClose={() => setNotice(null)}
     >
       <SnackbarContent

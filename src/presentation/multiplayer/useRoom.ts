@@ -1,5 +1,7 @@
+import { Alert } from '@mui/material';
+import { useGameToast } from '../game/gameToast.js';
 import { errorMessage } from '../shared/errorMessage.js';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { createElement, useCallback, useEffect, useRef, useState } from 'react';
 import { z } from 'zod';
 import { applyRoomPatch } from '../../domain/multiplayer/transport.js';
 import { eventSchema } from '../../domain/multiplayer/protocol.js';
@@ -20,6 +22,7 @@ import { useRoomLifecycle } from './useRoomLifecycle.js';
 
 export function useRoom() {
   const { storagePrefix, request } = useKarutaConfig();
+  const { show: showToast } = useGameToast();
   const [roomId, setRoomId] = useState(new URL(location.href).searchParams.get('room') ?? '');
   const [room, setRoom] = useState<RoomView | null>(null);
   const [you, setYou] = useState('');
@@ -234,6 +237,17 @@ export function useRoom() {
   const take = useCallback(
     (id: string, at: number) => {
       const state = current.current;
+      if (state?.phase === 'playing' && state.blocked.includes(connectionPlayer.current)) {
+        showToast(
+          'mistake',
+          createElement(
+            Alert,
+            { severity: 'warning' },
+            '前のターンのお手つきにより、このターンは札を取れません。',
+          ),
+        );
+        return;
+      }
       if (
         !state ||
         state.phase !== 'playing' ||
@@ -253,7 +267,7 @@ export function useRoom() {
         setError(errorMessage(reason, '入力時刻を確認できません'));
       }
     },
-    [send],
+    [send, showToast],
   );
   return {
     audioReady: clock.ready && audioReady,

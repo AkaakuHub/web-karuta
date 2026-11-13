@@ -1,3 +1,4 @@
+import { ToastProvider } from '../shared/toastProvider.js';
 import { RoomExitGuard } from '../multiplayer/roomExitGuard.js';
 import { createContext, useContext, type ReactNode } from 'react';
 
@@ -9,7 +10,9 @@ const Config = createContext<KarutaConfig | null>(null);
 export function KarutaProvider({ value, children }: { value: KarutaConfig; children: ReactNode }) {
   return (
     <Config value={value}>
-      <RoomExitGuard>{children}</RoomExitGuard>
+      <ToastProvider>
+        <RoomExitGuard>{children}</RoomExitGuard>
+      </ToastProvider>
     </Config>
   );
 }
