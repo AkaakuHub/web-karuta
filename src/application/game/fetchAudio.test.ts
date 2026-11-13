@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, expect, it, vi } from 'vite-plus/test';
+import { AudioLoadError } from '../../infrastructure/audio/audioLoadError.js';
 import { fetchAudio } from '../../infrastructure/audio/fetchAudio.js';
 
 beforeEach(() => vi.useFakeTimers());
@@ -50,4 +51,25 @@ it('曲送りや切断によるキャンセルで、古い音声の取得を終�
   controller.abort();
   await rejected;
   expect(vi.getTimerCount()).toBe(0);
+});
+
+it.each([
+  { status: 404, retryable: false },
+  { status: 403, retryable: false },
+  { status: 429, retryable: true },
+  { status: 503, retryable: true },
+])('HTTP $statusの再試行可否を保持する', async ({ status, retryable }) => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue(new Response('failed', { status, headers: { 'Retry-After': '15' } })),
+  );
+  try {
+    await fetchAudio('/failed', new AbortController().signal);
+    throw new Error('失敗を返しませんでした');
+  } catch (error) {
+    expect(error).toBeInstanceOf(AudioLoadError);
+    if (!(error instanceof AudioLoadError)) throw error;
+    expect(error.retryable).toBe(retryable);
+    expect(error.retryAfterMs).toBe(15000);
+  }
 });

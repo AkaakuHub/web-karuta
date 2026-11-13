@@ -6,6 +6,7 @@ export function useRoomAudioActions(
   audio: RefObject<GameAudio | null>,
   setError: (message: string) => void,
   volume: number,
+  retryPreparation: () => boolean,
 ) {
   useEffect(() => {
     audio.current?.volume(volume);
@@ -19,6 +20,7 @@ export function useRoomAudioActions(
       }
     },
     resume: async () => {
+      if (retryPreparation()) return;
       try {
         await audio.current?.resume();
         setError('');

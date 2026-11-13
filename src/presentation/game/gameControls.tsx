@@ -179,7 +179,10 @@ export function GameControls({
       >
         <PlaybackButton
           playing={state.playing}
-          disabled={state.loading || (state.phase === 'playing' && !state.needsResume)}
+          disabled={
+            (state.loading && !state.needsResume) ||
+            (state.phase === 'playing' && !state.needsResume)
+          }
           onPlay={onPlay}
           onPause={onPause}
         />

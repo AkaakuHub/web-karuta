@@ -1,4 +1,4 @@
-import { audioNormalization, decodeAudio } from './decodeAudio.js';
+import { decodeAudio } from './decodeAudio.js';
 import { audibleReactionMs } from '../../domain/game/audioTiming.js';
 import {
   AudioOutputMonitor,
@@ -8,20 +8,18 @@ import {
 } from './outputClock.js';
 import type { TrackProgress } from './audioProgress.js';
 import { playbackPosition } from '../../domain/game/playback.js';
-import { fetchAudio } from './fetchAudio.js';
-import { AudioDecodeQueue } from './audioDecodeQueue.js';
+import { AudioPreparation } from './audioPreparation.js';
 import { diagnostic } from '../diagnostics/diagnostics.js';
 import { resumeAudioContext } from './resumeAudioContext.js';
 
 export class GameAudio {
   private context = new AudioContext();
-  private decoder = new AudioDecodeQueue((data) => decodeAudio(this.context, data));
+  private preparation = new AudioPreparation((data) => decodeAudio(this.context, data));
   private generation = 0;
   private gain = this.context.createGain();
   private normalization = this.context.createGain();
   private buffer: AudioBuffer | null = null;
   private source: AudioBufferSourceNode | null = null;
-  private controller: AbortController | null = null;
   private offset = 0;
   private startedAt: number | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
@@ -145,31 +143,30 @@ export class GameAudio {
   clear() {
     this.scheduled = null;
     this.generation++;
-    this.controller?.abort();
-    this.controller = null;
+    this.preparation.clear();
     this.stop();
     this.buffer = null;
     this.offset = 0;
     this.progress();
   }
+  cancelPreparation() {
+    this.preparation.cancel();
+    this.stop();
+  }
   async prepare(url: string): Promise<boolean> {
     this.scheduled = null;
     this.stop();
-    this.controller?.abort();
-    const controller = new AbortController();
-    this.controller = controller;
-    this.buffer = null;
     this.offset = 0;
+    this.buffer = null;
     this.progress();
-    const data = await fetchAudio(url, controller.signal);
-    const buffer = await this.decoder.run(data, controller.signal);
-    if (!buffer) return false;
-    this.normalization.gain.value = audioNormalization(buffer);
-    this.buffer = buffer;
+    const prepared = await this.preparation.load(url);
+    if (!prepared) return false;
+    this.normalization.gain.value = prepared.normalization;
+    this.buffer = prepared.buffer;
     this.progress();
-    if (!(await this.unlock()) || !(await waitForAudioOutput(this.context, controller.signal)))
+    if (!(await this.unlock()) || !(await waitForAudioOutput(this.context, prepared.signal)))
       return false;
-    return !controller.signal.aborted;
+    return !prepared.signal.aborted;
   }
   private start(delay: number, position: number) {
     this.stop();
@@ -269,7 +266,7 @@ export class GameAudio {
     this.progress();
   }
   private interrupt() {
-    if (this.buffer || this.controller) this.renewContext = true;
+    if (this.buffer || this.preparation.active) this.renewContext = true;
     if (!this.source) return;
     this.stop();
     this.interrupted = true;

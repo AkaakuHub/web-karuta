@@ -113,7 +113,7 @@ export function useRoom() {
           setJoining(false);
           resetPreparation();
           resetClock();
-          if (!connected) player.clear();
+          if (!connected) player.cancelPreparation();
         },
         message: (data) => {
           let input: unknown;
@@ -277,9 +277,9 @@ export function useRoom() {
     pendingTake,
     progress,
     playing,
-    needsResume,
+    needsResume: needsResume || preparation.failed,
     take,
-    ...useRoomAudioActions(audio, setError, effectiveVolume),
+    ...useRoomAudioActions(audio, setError, effectiveVolume, retryPreparation),
     pause: () => audio.current?.stop(),
     roomId,
     spectator: room?.spectators.some((person) => person.id === you) ?? false,
