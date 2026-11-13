@@ -92,7 +92,7 @@ describe('オンライン対戦の取得判定', () => {
     room.players[0]!.connected = false;
     expect(claimCard(room, 'a', room.order[0]!, 2200)).toBe(room);
   });
-  it('お手つきした札だけを禁止し、全員の失敗でもその場では終了しない', () => {
+  it('お手つきした札だけを記録し、その場ではほかの札も取得できない', () => {
     const room = playing();
     const wrong = room.board.find((id) => id !== room.order[0])!;
     const missed = claimCard(room, 'a', wrong, 2200);
@@ -101,7 +101,8 @@ describe('オンライン対戦の取得判定', () => {
     expect(claimCard(missed, 'a', wrong, 2300)).toBe(missed);
     const both = claimCard(missed, 'b', wrong, 2400);
     expect(both.phase).toBe('playing');
-    expect(claimCard(both, 'a', room.order[0]!, 2500).winner).toBe('a');
+    expect(claimCard(both, 'a', room.order[0]!, 2500)).toBe(both);
+    expect(claimCard(missed, 'a', room.order[0]!, 2500)).toBe(missed);
   });
   it('減点せず次の1ターンだけ取得を禁止し、取得またはスキップ後に復帰する', () => {
     for (const skipped of [false, true]) {

@@ -22,6 +22,7 @@ export function submitClaim(
     room.startsAt === null ||
     !room.ready.includes(playerId) ||
     room.blocked.includes(playerId) ||
+    (room.incorrect[playerId]?.length ?? 0) > 0 ||
     !room.board.includes(cardId) ||
     pending?.entries.some((claim) => claim.playerId === playerId)
   )

@@ -119,7 +119,7 @@ export function claimCard(room: Room, playerId: string, cardId: string, now: num
     room.startsAt === null ||
     now < room.startsAt ||
     room.blocked.includes(playerId) ||
-    room.incorrect[playerId]?.includes(cardId) ||
+    (room.incorrect[playerId]?.length ?? 0) > 0 ||
     !room.board.includes(cardId) ||
     !room.players.some((player) => player.id === playerId && player.connected)
   )

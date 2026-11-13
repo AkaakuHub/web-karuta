@@ -153,7 +153,6 @@ export function useRoom() {
               setPendingTake(null);
               effects.notify(kind, null, roomClaimant(next, playerId));
             }
-            if (kind === 'incorrect') submittedRound.current = null;
             setIncorrect(next.incorrect[playerId] ?? []);
             current.current = next;
             connectionPlayer.current = playerId;
@@ -240,6 +239,7 @@ export function useRoom() {
         state.phase !== 'playing' ||
         !state.ready.includes(connectionPlayer.current) ||
         submittedRound.current === state.round ||
+        (state.incorrect[connectionPlayer.current]?.length ?? 0) > 0 ||
         state.spectators.some((person) => person.id === connectionPlayer.current)
       )
         return;
