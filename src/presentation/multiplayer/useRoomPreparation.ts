@@ -41,7 +41,8 @@ export function useRoomPreparation(
     void audio.current
       ?.prepare(url)
       .then((ready) => {
-        if (!ready || controller.signal.aborted) return;
+        if (controller.signal.aborted) return;
+        if (!ready) throw new Error('音声の準備が中断されました。再生ボタンを押してください');
         if (!controller.signal.aborted) {
           failures.current.budget.reset();
           setPrepared({ url, round, attempt });

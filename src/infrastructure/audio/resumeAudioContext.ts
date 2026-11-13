@@ -6,7 +6,18 @@ export async function resumeAudioContext(context: AudioContext, verifyClock: boo
   const startedAt = context.currentTime;
   diagnostic('audio.context.resume', { state: context.state, contextTime: startedAt, verifyClock });
   const resume = async () => {
-    await context.resume();
+    const resumed = context.resume();
+    if (context.state !== 'running' || verifyClock || !context.getOutputTimestamp().performanceTime) {
+      const source = context.createBufferSource();
+      source.buffer = context.createBuffer(1, 1, context.sampleRate);
+      source.connect(context.destination);
+      source.onended = () => {
+        source.disconnect();
+        source.buffer = null;
+      };
+      source.start();
+    }
+    await resumed;
     if (!active) return;
     if (context.state !== 'running') throw new Error('音声が中断されています');
     while (active && verifyClock && context.currentTime <= startedAt) {

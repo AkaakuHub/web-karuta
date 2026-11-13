@@ -20,9 +20,11 @@ export function useRoomAudioActions(
       }
     },
     resume: async () => {
-      if (retryPreparation()) return;
       try {
-        await audio.current?.resume();
+        const player = audio.current;
+        if (!player) return;
+        await player.unlock();
+        if (!retryPreparation()) await player.resume();
         setError('');
       } catch (reason) {
         setError(errorMessage(reason, '再生できません'));
