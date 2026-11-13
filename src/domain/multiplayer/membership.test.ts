@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { removeMembership, type Memberships } from './membership.js';
+import { endMembership, type Memberships } from './membership.js';
 import {
   canCommand,
   disconnectPlayer,
@@ -79,9 +79,11 @@ describe('閲覧専用の参加', () => {
 describe('退室通知の接続識別', () => {
   const members: Memberships = { token: { id: 'a', connectionId: 'current', spectator: false } };
   it('古いページや無関係な接続からの遅延通知で現在の接続を退出させない', () => {
-    expect(removeMembership(members, 'token', 'old')).toBe(members);
-    expect(removeMembership(members, 'missing', 'current')).toBe(members);
-    expect(removeMembership(members, 'token', 'current')).toEqual({});
+    expect(endMembership(members, 'token', 'old')).toBe(members);
+    expect(endMembership(members, 'missing', 'current')).toBe(members);
+    const ended = endMembership(members, 'token', 'current');
+    expect(ended.token).toEqual({ id: 'a', spectator: false, connectionId: '' });
+    expect(endMembership(ended, 'token', 'current')).toBe(ended);
     expect(members.token?.id).toBe('a');
   });
 });
@@ -98,4 +100,21 @@ it('プレイ中に自分の名前だけを変え、役割・得点・進行を�
   expect(viewer.spectators).toEqual([{ ...room.spectators[0]!, name: '閲覧名' }]);
   expect(viewer.players).toEqual(next.players);
   expect(canCommand(room, 'watch', 'rename')).toBe(true);
+});
+
+it('退出後も同じ参加者IDと得点で再入室する', () => {
+  const room = populated();
+  room.results = [{ id: 'card', owner: 'a' }];
+  room.players[0]!.score = 1;
+  const members: Memberships = { token: { id: 'a', spectator: false, connectionId: 'old' } };
+  const ended = endMembership(members, 'token', 'old');
+  const member = ended.token!;
+  const next = joinParticipant(
+    leaveParticipant(room, member.id, 100),
+    member.id,
+    'あかり',
+    member.spectator,
+  );
+  expect(next.players.filter((player) => player.id === 'a')).toEqual([room.players[0]]);
+  expect(next.results).toEqual(room.results);
 });

@@ -5,7 +5,7 @@ import {
   leaveParticipant,
   renameParticipant,
 } from '../../domain/multiplayer/participants.js';
-import { removeMembership, type Memberships } from '../../domain/multiplayer/membership.js';
+import { endMembership, type Memberships } from '../../domain/multiplayer/membership.js';
 import type { RoomView } from '../../domain/multiplayer/protocol.js';
 import { boardCapacity } from '../../domain/game/boardLayout.js';
 import type { WebSocket as RoomSocket } from '@cloudflare/workers-types';
@@ -259,7 +259,7 @@ export class GameRoom {
   }
   private async leave(token: string, connectionId: string) {
     const member = this.tokens[token];
-    const tokens = removeMembership(this.tokens, token, connectionId);
+    const tokens = endMembership(this.tokens, token, connectionId);
     if (!this.room || !member || tokens === this.tokens) return;
     const previous = this.view(this.room);
     this.tokens = tokens;

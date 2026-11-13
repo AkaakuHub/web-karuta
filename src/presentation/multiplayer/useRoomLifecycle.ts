@@ -12,10 +12,7 @@ export function useRoomLifecycle(connection: RefObject<RoomConnection | null>, o
     const beforeUnload = (event: BeforeUnloadEvent) => {
       if (connection.current) event.preventDefault();
     };
-    const pageHide = (event: PageTransitionEvent) => {
-      if (event.persisted) suspend();
-      else connection.current?.leave();
-    };
+    const pageHide = () => suspend();
     window.addEventListener('beforeunload', beforeUnload);
     window.addEventListener('pagehide', pageHide);
     document.addEventListener('freeze', suspend);
