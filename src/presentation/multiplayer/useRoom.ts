@@ -1,3 +1,4 @@
+import { TakeInput, type PendingTake } from '../../domain/multiplayer/takeInput.js';
 import { Alert } from '@mui/material';
 import { useGameToast } from '../game/gameToast.js';
 import { useRoomSynchronization } from './useRoomSynchronization.js';
@@ -43,13 +44,13 @@ export function useRoom() {
     setError,
   );
   const { reset: resetPreparation, retry: retryPreparation } = preparation;
-  const [pendingTake, setPendingTake] = useState<{ id: string; accepted: boolean } | null>(null);
+  const [pendingTake, setPendingTake] = useState<PendingTake | null>(null);
+  const [input] = useState(() => new TakeInput(setPendingTake));
   const acceptedRound = useRef<number | null>(null);
   const { volume, muted, effectiveVolume, setVolume, toggleMuted } = useAudioVolume();
   const effects = useGameFeedback(effectiveVolume, setError);
   const current = useRef<RoomView | null>(null);
   const connectionPlayer = useRef('');
-  const submittedRound = useRef<number | null>(null);
   const [incorrect, setIncorrect] = useState<string[]>([]);
   const [progress, setProgress] = useState<TrackProgress>({ position: 0, duration: 0 });
   const [playing, setPlaying] = useState(false);
@@ -63,12 +64,13 @@ export function useRoom() {
     void audio.current?.dispose();
     audio.current = null;
     setConnected(false);
+    input.reset();
     setTimingReady(false);
     current.current = null;
     setRoom(null);
     resetPreparation();
     resetClock();
-  }, [resetClock, resetPreparation]);
+  }, [resetClock, resetPreparation, input]);
   const leave = useCallback(() => {
     socket.current?.leave();
     disconnect();
@@ -113,8 +115,7 @@ export function useRoom() {
         status: (connected) => {
           setConnected(connected);
           setTimingReady(false);
-          setPendingTake(null);
-          submittedRound.current = null;
+          input.reset();
           acceptedRound.current = null;
           setJoining(false);
           resetPreparation();
@@ -130,20 +131,19 @@ export function useRoom() {
           if (
             message.type === 'takeAccepted' &&
             message.round === current.current?.round &&
-            submittedRound.current === message.round &&
-            acceptedRound.current !== message.round
+            input.accept(message.round)
           ) {
             acceptedRound.current = message.round;
-            setPendingTake((pending) => (pending ? { ...pending, accepted: true } : null));
             effects.notify('correct');
           }
+          if (message.type === 'takeRejected' && input.reject(message.round))
+            socket.current?.wake(true);
           if (message.type === 'timingReady') setTimingReady(true);
           if (message.type === 'probe') send({ type: 'probeAck', id: message.id });
           if (message.type === 'error') {
             serverError = message.message;
             setError(message.message);
-            setPendingTake(null);
-            submittedRound.current = null;
+            input.reset();
           }
           if (message.type === 'state' || message.type === 'update') {
             established = true;
@@ -160,8 +160,7 @@ export function useRoom() {
               previous?.round !== next.round ||
               next.phase === 'loading'
             ) {
-              setPendingTake(null);
-              submittedRound.current = null;
+              input.reset();
             }
             if (previous?.round !== next.round || next.phase === 'loading') {
               effects.clear(next.round > 0);
@@ -169,7 +168,7 @@ export function useRoom() {
               acceptedRound.current = null;
             }
             if (kind) {
-              setPendingTake(null);
+              input.reset();
               if (
                 kind !== 'correct' ||
                 next.winner !== playerId ||
@@ -212,16 +211,12 @@ export function useRoom() {
       setError(errorMessage(reason, '参加できません'));
     }
   }
-  useEffect(() => {
-    if (!connected || !pendingTake) return;
-    const timer = setTimeout(() => socket.current?.wake(true), 3000);
-    return () => clearTimeout(timer);
-  }, [connected, pendingTake?.id]);
   const audioReady = preparation.ready;
   useRoomSynchronization({
     room,
     you,
     connected,
+    pendingId: pendingTake?.id ?? null,
     timingReady,
     audioReady,
     clock,
@@ -247,7 +242,7 @@ export function useRoom() {
         !state ||
         state.phase !== 'playing' ||
         !state.ready.includes(connectionPlayer.current) ||
-        submittedRound.current === state.round ||
+        input.locked(state.round) ||
         (state.incorrect[connectionPlayer.current]?.length ?? 0) > 0 ||
         state.spectators.some((person) => person.id === connectionPlayer.current)
       )
@@ -255,18 +250,23 @@ export function useRoom() {
       try {
         const elapsedMs = audio.current?.reactionTime(at);
         if (elapsedMs === undefined || elapsedMs < 0) return;
-        if (!socket.current?.send({ type: 'take', round: state.round, id, elapsedMs })) {
+        if (
+          !input.submit(
+            state.round,
+            id,
+            () =>
+              socket.current?.send({ type: 'take', round: state.round, id, elapsedMs }) ?? false,
+          )
+        ) {
           socket.current?.wake(true);
           setError('接続を確認しています');
           return;
         }
-        submittedRound.current = state.round;
-        setPendingTake({ id, accepted: false });
       } catch (reason) {
         setError(errorMessage(reason, '入力時刻を確認できません'));
       }
     },
-    [showToast],
+    [input, showToast],
   );
   return {
     audioReady: clock.ready && audioReady,

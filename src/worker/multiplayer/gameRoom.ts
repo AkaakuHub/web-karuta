@@ -1,3 +1,4 @@
+import { submitSocketClaim } from './roomClaim.js';
 import { ClaimTimer } from './claimTimer.js';
 import { preparationDeadline } from '../../domain/multiplayer/preparation.js';
 import { configureHeartbeat } from './roomHeartbeat.js';
@@ -26,8 +27,8 @@ import { publicRoom } from './roomView.js';
 export type { RoomContent } from './roomIdentity.js';
 import { broadcastRoom, readRoomMessage, rejectJoin, sendRoomError } from './roomMessages.js';
 import { moderateRoom } from './roomModeration.js';
-import { acknowledgeProbe, probeSocket, roomClaimWindow, roundStartTime } from './roomTiming.js';
-import { submitClaim, settleClaims, type ClaimRound } from '../../domain/multiplayer/claims.js';
+import { acknowledgeProbe, probeSocket, roundStartTime } from './roomTiming.js';
+import { settleClaims, type ClaimRound } from '../../domain/multiplayer/claims.js';
 import {
   giveUp,
   beginGame,
@@ -112,10 +113,10 @@ export class GameRoom {
     return new Response(null, init);
   }
   async webSocketMessage(socket: RoomSocket, message: string | ArrayBuffer) {
-    const input = readRoomMessage(socket, message, this.room, this.tokens);
+    const now = Date.now();
+    const input = readRoomMessage(socket, message, this.room, this.tokens, now);
     if (!input || !this.room) return;
     const { command, identity } = input;
-    const now = Date.now();
     if (command.type === 'probeAck') {
       acknowledgeProbe(socket, command.id, now);
       return;
@@ -140,11 +141,6 @@ export class GameRoom {
       socket.send(JSON.stringify({ type: 'pong', sent: command.sent, now }));
       probeSocket(socket, now);
       return;
-    }
-    if ('round' in command && command.round !== this.room.round) return;
-    if (command.type === 'take') {
-      if (now - identity.last < 40) return;
-      socket.serializeAttachment({ ...identity, last: now });
     }
     try {
       const previous = this.room;
@@ -183,15 +179,13 @@ export class GameRoom {
           now,
         );
       if (command.type === 'take') {
-        const take = submitClaim(
+        const take = submitSocketClaim(
           this.room,
           this.claims,
-          identity.id,
-          command.id,
-          command.elapsedMs,
+          socket,
+          command,
           now,
-          identity.samples,
-          roomClaimWindow(this.ctx.getWebSockets(), this.room.ready),
+          this.ctx.getWebSockets(),
         );
         this.room = take.room;
         this.claims = take.pending;

@@ -265,3 +265,25 @@ it('オフライン中は復帰通知が来ても通信せず、オンライン�
   expect(sockets).toHaveLength(2);
   expect(sockets[1]!.url).toBe(first.url);
 });
+
+it('切断中の札入力を送信済みにせず、再接続後は即座に送信できる', async () => {
+  const { connection, sockets } = setup();
+  const take = { type: 'take', round: 2, id: 'card', elapsedMs: 500 } as const;
+  expect(connection.send(take)).toBe(true);
+  sockets[0]!.drop();
+  expect(connection.send(take)).toBe(false);
+  await vi.advanceTimersByTimeAsync(1000);
+  sockets[1]!.open();
+  expect(connection.send(take)).toBe(true);
+  expect(sockets[1]!.sent.filter((command) => command.type === 'take')).toEqual([take]);
+});
+it('自動応答が届いていても、ゲーム状態の再同期に応答しない接続を復旧する', async () => {
+  const { connection, sockets } = setup();
+  sockets[0]!.autoReply = true;
+  await vi.advanceTimersByTimeAsync(1000);
+  connection.wake(true);
+  sockets[0]!.receive();
+  await vi.advanceTimersByTimeAsync(30000);
+  expect(sockets).toHaveLength(2);
+  expect(sockets[0]!.readyState).toBe(3);
+});

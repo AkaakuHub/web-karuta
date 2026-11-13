@@ -8,10 +8,11 @@ import { commandSchema } from '../../domain/multiplayer/protocol.js';
 import { attachmentSchema, unsupportedRoom } from './roomIdentity.js';
 
 export function readRoomMessage(
-  socket: RoomSocket,
+  socket: Pick<RoomSocket, 'close' | 'send' | 'deserializeAttachment' | 'serializeAttachment'>,
   message: string | ArrayBuffer,
   room: Room | null,
   tokens: Memberships,
+  now: number,
 ) {
   if (room && !Object.hasOwn(room, 'settling')) {
     socket.close(1008, unsupportedRoom);
@@ -37,7 +38,20 @@ export function readRoomMessage(
     return null;
   }
   const parsed = commandSchema.safeParse(input);
-  return parsed.success ? { command: parsed.data, identity } : null;
+  if (!parsed.success) return null;
+  const command = parsed.data;
+  if ('round' in command && command.round !== room.round) {
+    if (command.type === 'take') rejectTake(socket, command.round);
+    return null;
+  }
+  if (command.type === 'take') {
+    if (now - identity.last < 40) {
+      rejectTake(socket, command.round);
+      return null;
+    }
+    socket.serializeAttachment({ ...identity, last: now });
+  }
+  return { command, identity };
 }
 
 export function broadcastRoom(
@@ -75,4 +89,8 @@ export function sendRoomError(socket: RoomSocket, error: unknown) {
       message: error instanceof Error ? error.message : '操作できません',
     }),
   );
+}
+
+export function rejectTake(socket: Pick<RoomSocket, 'send'>, round: number) {
+  socket.send(JSON.stringify({ type: 'takeRejected', round }));
 }

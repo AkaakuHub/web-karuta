@@ -9,6 +9,7 @@ export function useRoomSynchronization({
   room,
   you,
   connected,
+  pendingId,
   timingReady,
   audioReady,
   clock,
@@ -19,6 +20,7 @@ export function useRoomSynchronization({
   room: RoomView | null;
   you: string;
   connected: boolean;
+  pendingId: string | null;
   timingReady: boolean;
   audioReady: boolean;
   clock: ReturnType<typeof useRoomClock>;
@@ -26,6 +28,11 @@ export function useRoomSynchronization({
   connection: RefObject<RoomConnection | null>;
   setError: (message: string) => void;
 }) {
+  useEffect(() => {
+    if (!connected || !pendingId) return;
+    const timer = setTimeout(() => connection.current?.wake(true), 3000);
+    return () => clearTimeout(timer);
+  }, [connected, pendingId, connection]);
   useEffect(() => {
     if (connected && room?.phase === 'loading') connection.current?.synchronize();
   }, [connected, room?.phase, room?.round]);

@@ -1,3 +1,4 @@
+import { readRoomEvent } from './readRoomEvent.js';
 import { heartbeat } from '../../domain/multiplayer/heartbeat.js';
 import { retryDelay } from '../../domain/network/retry.js';
 import type { Command } from '../../domain/multiplayer/protocol.js';
@@ -95,8 +96,10 @@ export class RoomConnection {
     socket.onmessage = (event) => {
       if (this.socket !== socket || typeof event.data !== 'string') return;
       this.lastReceived = Date.now();
-      if (this.probe) clearTimeout(this.probe);
-      this.probe = null;
+      if (this.probe && readRoomEvent(event.data).event?.type === 'state') {
+        clearTimeout(this.probe);
+        this.probe = null;
+      }
       if (Date.now() - this.openedAt >= 30000) this.retries = 0;
       if (event.data !== heartbeat.response) this.callbacks.message(event.data);
     };

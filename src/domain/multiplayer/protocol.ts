@@ -71,5 +71,6 @@ export const eventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('probe'), id: z.uuid() }),
   z.object({ type: z.literal('timingReady') }),
   z.object({ type: z.literal('takeAccepted'), round: z.number().int() }),
+  z.object({ type: z.literal('takeRejected'), round: z.number().int() }),
   z.object({ type: z.literal('error'), message: z.string() }),
 ]);
