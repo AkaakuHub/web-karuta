@@ -55,7 +55,7 @@ export function useRoom() {
   const [playing, setPlaying] = useState(false);
   const [needsResume, setNeedsResume] = useState(false);
   const send = useCallback((command: Command) => {
-    return socket.current?.send(command) ?? false;
+    socket.current?.send(command);
   }, []);
   const disconnect = useCallback(() => {
     socket.current?.close();
@@ -255,7 +255,7 @@ export function useRoom() {
       try {
         const elapsedMs = audio.current?.reactionTime(at);
         if (elapsedMs === undefined || elapsedMs < 0) return;
-        if (!send({ type: 'take', round: state.round, id, elapsedMs })) {
+        if (!socket.current?.send({ type: 'take', round: state.round, id, elapsedMs })) {
           socket.current?.wake(true);
           setError('接続を確認しています');
           return;
@@ -266,7 +266,7 @@ export function useRoom() {
         setError(errorMessage(reason, '入力時刻を確認できません'));
       }
     },
-    [send, showToast],
+    [showToast],
   );
   return {
     audioReady: clock.ready && audioReady,
