@@ -29,5 +29,6 @@ export function useRoomClock() {
       setRevision((revision) => revision + 1);
     }
   }, []);
-  return { latency, ready, revision, read, reset, receive };
+  const reschedule = useCallback(() => setRevision((value) => value + 1), []);
+  return { latency, ready, revision, read, reset, receive, reschedule };
 }

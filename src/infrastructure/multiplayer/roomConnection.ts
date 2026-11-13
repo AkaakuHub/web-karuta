@@ -40,7 +40,9 @@ export class RoomConnection {
     this.heartbeat = setInterval(() => this.wake(), heartbeat.intervalMs);
   }
   send(command: Command) {
-    if (this.socket?.readyState === 1) this.socket.send(JSON.stringify(command));
+    if (this.socket?.readyState !== 1) return false;
+    this.socket.send(JSON.stringify(command));
+    return true;
   }
   wake(resync = false) {
     if (this.stopped) return;
