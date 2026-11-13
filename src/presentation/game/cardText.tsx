@@ -14,11 +14,11 @@ export function CardText({
   actions?: ReactNode;
 }) {
   return (
-    <Stack aria-label="札の裏面" spacing={0.5} sx={{ minWidth: 0, minHeight: 0, height: '100%' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
-        <FavoriteButton id={card.id} title={card.title} />
-        {actions}
-      </Box>
+    <Stack
+      aria-label="札の裏面"
+      spacing={0.5}
+      sx={{ minWidth: 0, minHeight: 0, height: '100%', position: 'relative', pr: 4 }}
+    >
       <Box
         sx={{
           minHeight: 0,
@@ -46,6 +46,19 @@ export function CardText({
               {text}
             </Typography>
           ))}
+      </Box>
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+        }}
+      >
+        <FavoriteButton id={card.id} title={card.title} />
+        {actions}
       </Box>
       <ReviewLinks links={card.links} />
     </Stack>

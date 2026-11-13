@@ -23,11 +23,13 @@ export const GameBoard = memo(function GameBoard({
   renderCard,
   onTake,
   pendingId,
+  blocked = false,
 }: {
   slots: readonly (string | null)[];
   retired: { id: string; slot: number } | null;
   incorrect: readonly string[];
   disabled: boolean;
+  blocked?: boolean;
   pendingId?: string | null;
   renderCard: (id: string, back: boolean) => ReactNode;
   onTake: (id: string, at: number) => void;
@@ -47,6 +49,8 @@ export const GameBoard = memo(function GameBoard({
         p: `${boardPadding}px`,
         borderRadius: 1,
         bgcolor: '#e5eaf3',
+        filter: blocked ? 'grayscale(1)' : undefined,
+        opacity: blocked ? 0.4 : 1,
         overflow: 'hidden',
       }}
     >
