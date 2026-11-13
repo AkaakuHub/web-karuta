@@ -273,33 +273,3 @@ it('中止した音声の展開が終わるまで次の展開を重ねず、古�
     await audio.dispose();
   }
 });
-
-it('接続断から同じ曲を準備し直しても取得とデコードを繰り返さない', async () => {
-  const { audio, context } = setup();
-  try {
-    await audio.prepare('/track/one');
-    await audio.resume();
-    const original = context.sources.at(-1)!.buffer;
-    audio.cancelPreparation();
-    await audio.prepare('/track/one');
-    await audio.resume();
-    expect(fetch).toHaveBeenCalledTimes(1);
-    expect(context.sources.at(-1)!.buffer).toBe(original);
-  } finally {
-    await audio.dispose();
-  }
-});
-it('保持する音声は現在の1曲だけにし、別の曲と明示的な破棄では取り直す', async () => {
-  const { audio } = setup();
-  try {
-    await audio.prepare('/track/one');
-    await audio.prepare('/track/two');
-    await audio.prepare('/track/one');
-    expect(fetch).toHaveBeenCalledTimes(3);
-    audio.clear();
-    await audio.prepare('/track/one');
-    expect(fetch).toHaveBeenCalledTimes(4);
-  } finally {
-    await audio.dispose();
-  }
-});

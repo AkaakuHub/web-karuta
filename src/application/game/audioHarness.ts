@@ -3,6 +3,7 @@ import { GameAudio } from '../../infrastructure/audio/gameAudio.js';
 
 class Source {
   offset = 0;
+  when = 0;
   buffer: AudioBuffer | null = null;
   onended: ((event: Event) => void) | null = null;
   connected = false;
@@ -12,7 +13,8 @@ class Source {
   disconnect() {
     this.connected = false;
   }
-  start(_when: number, offset: number) {
+  start(when: number, offset: number) {
+    this.when = when;
     this.offset = offset;
   }
   stop() {}

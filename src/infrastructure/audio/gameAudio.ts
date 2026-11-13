@@ -150,6 +150,7 @@ export class GameAudio {
     this.progress();
   }
   cancelPreparation() {
+    this.scheduled = null;
     this.preparation.cancel();
     this.stop();
   }
