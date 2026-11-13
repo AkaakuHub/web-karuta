@@ -18,7 +18,10 @@ export function useRoomPreparation(
   const failed = useRef(false);
   const [failure, setFailure] = useState(false);
   const failures = useRef({ url, round, budget: new RetryBudget(3, 5000) });
-  const reset = useCallback(() => setPrepared(null), []);
+  const reset = useCallback(() => {
+    setPrepared(null);
+    setAttempt((value) => value + 1);
+  }, []);
   const retry = useCallback(() => {
     if (!failed.current) return false;
     failed.current = false;
