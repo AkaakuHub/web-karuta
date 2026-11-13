@@ -14,8 +14,9 @@ describe('保存済み対戦データの移行', () => {
       results: [{ id: 'one', owner: 'host' }],
       blocked: ['guest'],
     };
-    const { givenUp, ...legacy } = current;
+    const { givenUp, incorrect, ...legacy } = current;
     expect(givenUp).toEqual([]);
+    expect(incorrect).toEqual({});
     expect(migrateRoom(legacy)).toEqual(current);
   });
   it('移行済みの申告を保持し、再度移行しても状態を変えない', () => {

@@ -14,7 +14,8 @@ export async function loadRoomState(storage: RoomContext['storage']) {
     storage.get<number>('loadingDeadline'),
   ]);
   const restored = room ? migrateRoom(room) : null;
-  if (room && room.givenUp === undefined) await storage.put({ room: restored });
+  if (room && (room.givenUp === undefined || room.incorrect === undefined))
+    await storage.put({ room: restored });
   return {
     room: restored,
     tokens: tokens ?? {},

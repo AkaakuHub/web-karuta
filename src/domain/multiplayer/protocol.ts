@@ -49,6 +49,7 @@ const roomViewSchema = z.object({
   audio: z.string().nullable(),
   answer: z.string().nullable(),
   winner: z.string().nullable(),
+  incorrect: z.record(z.string(), z.array(z.string())),
   givenUp: z.array(z.string()),
   blocked: z.array(z.string()),
   ready: z.array(z.string()),

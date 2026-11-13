@@ -17,6 +17,7 @@ export function emptyRoom(host: string): Room {
     round: 0,
     startsAt: null,
     winner: null,
+    incorrect: {},
     givenUp: [],
     blocked: [],
     ready: [],
@@ -56,6 +57,7 @@ export function beginGame(
     settling: false,
     round: 0,
     startsAt: null,
+    incorrect: {},
     givenUp: [],
     blocked: [],
     ready: [],
@@ -73,8 +75,9 @@ export function prepareRound(room: Room): Room {
     board: room.board.map((id, index) => (index === slot ? (incoming ?? null) : id)),
     phase: round === room.order.length ? 'finished' : 'loading',
     startsAt: null,
+    incorrect: {},
     givenUp: [],
-    blocked: [],
+    blocked: Object.keys(room.incorrect),
     ready: [],
     winner: null,
   };
@@ -116,13 +119,17 @@ export function claimCard(room: Room, playerId: string, cardId: string, now: num
     room.startsAt === null ||
     now < room.startsAt ||
     room.blocked.includes(playerId) ||
+    room.incorrect[playerId]?.includes(cardId) ||
     !room.board.includes(cardId) ||
     !room.players.some((player) => player.id === playerId && player.connected)
   )
     return room;
   const correct = room.order[room.round] === cardId;
   if (correct) return awardCard(room, playerId);
-  return revealBlockedRound({ ...room, blocked: [...room.blocked, playerId] });
+  return {
+    ...room,
+    incorrect: { ...room.incorrect, [playerId]: [...(room.incorrect[playerId] ?? []), cardId] },
+  };
 }
 
 export function awardCard(room: Room, owner: string): Room {

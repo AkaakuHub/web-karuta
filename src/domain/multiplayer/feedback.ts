@@ -9,7 +9,8 @@ export function roomFeedback(
   if (!previous) return null;
   if (next.phase === 'finished' && previous.phase !== 'finished') return 'complete';
   if (next.round !== previous.round || next.phase === 'loading') return null;
-  if (next.blocked.includes(you) && !previous.blocked.includes(you)) return 'incorrect';
+  if ((next.incorrect[you]?.length ?? 0) > (previous.incorrect[you]?.length ?? 0))
+    return 'incorrect';
   if (next.phase === 'revealed' && previous.phase !== 'revealed')
     return next.winner ? 'correct' : 'skipped';
   return null;

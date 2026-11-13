@@ -92,33 +92,36 @@ describe('オンライン対戦の取得判定', () => {
     room.players[0]!.connected = false;
     expect(claimCard(room, 'a', room.order[0]!, 2200)).toBe(room);
   });
-  it('参加中の全員がお手つきしたら正解を発表し、次へ進める', () => {
-    const room = playing();
-    room.players.push({ id: 'offline', name: 'offline', score: 0, connected: false });
-    const wrong = room.board.find((id) => id !== room.order[0])!;
-    const first = claimCard(room, 'a', wrong, 200);
-    expect(first.phase).toBe('playing');
-    const last = claimCard(first, 'b', wrong, 300);
-    expect(last.phase).toBe('revealed');
-    expect(last.winner).toBeNull();
-    expect(last.results).toEqual([{ id: room.order[0], owner: null }]);
-    expect(last.players.map((player) => player.score)).toEqual([0, 0, 0]);
-    expect(last.board).toEqual(room.board);
-    const next = prepareRound(last);
-    expect(next.round).toBe(1);
-    expect(next.blocked).toEqual([]);
-  });
-  it('お手つきは減点せず、その曲だけ取得を禁止する', () => {
+  it('お手つきした札だけを禁止し、全員の失敗でもその場では終了しない', () => {
     const room = playing();
     const wrong = room.board.find((id) => id !== room.order[0])!;
     const missed = claimCard(room, 'a', wrong, 2200);
-    expect(missed.players[0]!.score).toBe(0);
-    expect(claimCard(missed, 'a', room.order[0]!, 2300)).toBe(missed);
-    const won = claimCard(missed, 'b', room.order[0]!, 2400);
-    const next = prepareRound(won);
-    expect(next.blocked).toEqual([]);
-    expect(next.phase).toBe('loading');
-    expect(next.round).toBe(1);
+    expect(missed.blocked).toEqual([]);
+    expect(missed.incorrect.a).toEqual([wrong]);
+    expect(claimCard(missed, 'a', wrong, 2300)).toBe(missed);
+    const both = claimCard(missed, 'b', wrong, 2400);
+    expect(both.phase).toBe('playing');
+    expect(claimCard(both, 'a', room.order[0]!, 2500).winner).toBe('a');
+  });
+  it('減点せず次の1ターンだけ取得を禁止し、取得またはスキップ後に復帰する', () => {
+    for (const skipped of [false, true]) {
+      const room = playing();
+      const wrong = room.board.find((id) => id !== room.order[0])!;
+      const missed = claimCard(room, 'a', wrong, 2200);
+      expect(missed.players[0]!.score).toBe(0);
+      const next = prepareRound(claimCard(missed, 'b', room.order[0]!, 2400));
+      expect(next.blocked).toEqual(['a']);
+      expect(next.incorrect).toEqual({});
+      const started = readyPlayer(readyPlayer(next, 'a', 3000), 'b', 3000);
+      expect(claimCard(started, 'a', started.order[1]!, 4000)).toBe(started);
+      const ended = skipped
+        ? skipRound(started, 4000)
+        : claimCard(started, 'b', started.order[1]!, 4000);
+      const restored = prepareRound(ended);
+      expect(restored.blocked).toEqual([]);
+      const resumed = readyPlayer(readyPlayer(restored, 'a', 5000), 'b', 5000);
+      expect(claimCard(resumed, 'a', resumed.order[2]!, 6000).winner).toBe('a');
+    }
   });
 });
 

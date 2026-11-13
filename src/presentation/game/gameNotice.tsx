@@ -11,7 +11,7 @@ export function GameNotice({
   mistake?: boolean;
   reserve?: boolean;
 }) {
-  const message = error || (mistake ? 'お手つき。この曲の札は取れません。' : '');
+  const message = error || (mistake ? 'お手つきのため、このターンは札を取れません。' : '');
   const [dismissed, setDismissed] = useState('');
   const [previous, setPrevious] = useState(message);
   if (previous !== message) {

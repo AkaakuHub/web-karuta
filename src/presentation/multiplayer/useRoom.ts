@@ -44,7 +44,6 @@ export function useRoom() {
   const effects = useGameFeedback(effectiveVolume, setError);
   const current = useRef<RoomView | null>(null);
   const connectionPlayer = useRef('');
-  const attempted = useRef<string | null>(null);
   const submittedRound = useRef<number | null>(null);
   const [incorrect, setIncorrect] = useState<string[]>([]);
   const [progress, setProgress] = useState<TrackProgress>({ position: 0, duration: 0 });
@@ -154,7 +153,8 @@ export function useRoom() {
               setPendingTake(null);
               effects.notify(kind, null, roomClaimant(next, playerId));
             }
-            if (kind === 'incorrect' && attempted.current) setIncorrect([attempted.current]);
+            if (kind === 'incorrect') submittedRound.current = null;
+            setIncorrect(next.incorrect[playerId] ?? []);
             current.current = next;
             connectionPlayer.current = playerId;
             const person = [...next.players, ...next.spectators].find(
@@ -243,7 +243,6 @@ export function useRoom() {
         state.spectators.some((person) => person.id === connectionPlayer.current)
       )
         return;
-      attempted.current = id;
       try {
         const elapsedMs = audio.current?.reactionTime(at);
         if (elapsedMs === undefined || elapsedMs < 0) return;
