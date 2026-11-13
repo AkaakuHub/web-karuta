@@ -7,7 +7,11 @@ export async function resumeAudioContext(context: AudioContext, verifyClock: boo
   diagnostic('audio.context.resume', { state: context.state, contextTime: startedAt, verifyClock });
   const resume = async () => {
     const resumed = context.resume();
-    if (context.state !== 'running' || verifyClock || !context.getOutputTimestamp().performanceTime) {
+    if (
+      context.state !== 'running' ||
+      verifyClock ||
+      !context.getOutputTimestamp().performanceTime
+    ) {
       const source = context.createBufferSource();
       source.buffer = context.createBuffer(1, 1, context.sampleRate);
       source.connect(context.destination);
