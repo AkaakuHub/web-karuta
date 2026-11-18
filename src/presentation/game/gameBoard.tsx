@@ -78,7 +78,8 @@ export const GameBoard = memo(function GameBoard({
                     position: 'relative',
                     minHeight: 0,
                     borderRadius: 1,
-                    border: displayed ? undefined : '1px dashed #bac6d9',
+                    border: displayed ? undefined : '1px dashed',
+                    borderColor: 'divider',
                   }}
                 >
                   {displayed && (

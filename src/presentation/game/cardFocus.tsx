@@ -32,9 +32,10 @@ export function CardFocus({
       slotProps={{
         paper: {
           sx: {
-            m: { xs: 1.5, sm: 3 },
+            m: 0,
             width: '100%',
-            maxHeight: 'calc(100dvh - 24px)',
+            maxHeight: '100dvh',
+            borderRadius: { xs: 0, sm: 2 },
             overflow: 'hidden',
           },
         },
@@ -54,10 +55,10 @@ export function CardFocus({
         sx={{
           display: 'grid',
           gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'minmax(0, 280px) minmax(0, 1fr)' },
-          gridTemplateRows: { xs: 'minmax(0, 1fr) minmax(0, 0.8fr)', sm: 'minmax(0, 1fr)' },
-          gap: 2,
-          height: 'min(650px, 78dvh)',
-          overflow: 'hidden',
+          alignItems: 'start',
+          gap: 1.5,
+          px: { xs: 1.5, sm: 2 },
+          pb: 1.5,
         }}
       >
         <Box
@@ -72,11 +73,7 @@ export function CardFocus({
           <Box
             sx={{
               minHeight: 0,
-              flex: 1,
-              display: 'flex',
-              justifyContent: 'center',
-              width: '100%',
-              '& > svg': { width: 'auto', height: '100%', maxWidth: '100%' },
+              width: { xs: 'min(100%, 30dvh)', sm: 'min(100%, 39dvh)' },
             }}
           >
             {renderCard(card.id, back)}

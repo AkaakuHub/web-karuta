@@ -56,10 +56,10 @@ export function CatalogSongDialog({
       slotProps={{
         paper: {
           sx: {
-            m: 1,
-            width: 'calc(100% - 16px)',
-            maxHeight: 'calc(100dvh - 16px)',
-            borderRadius: 2,
+            m: 0,
+            width: '100%',
+            maxHeight: '100dvh',
+            borderRadius: { xs: 0, sm: 2 },
           },
         },
       }}
@@ -154,7 +154,7 @@ function SongContent({
         {song.videos.length > 0 && <Tab value="videos" label="動画" />}
         <Tab value="images" label="画像" />
       </Tabs>
-      <DialogContent sx={{ p: { xs: 1.5, sm: 2 }, minHeight: 0 }}>
+      <DialogContent sx={{ px: { xs: 1.5, sm: 2 }, py: 0, minHeight: 0 }}>
         {tab === 'card' && (
           <Box
             sx={{
