@@ -55,7 +55,7 @@ export function useRoom() {
   const [progress, setProgress] = useState<TrackProgress>({ position: 0, duration: 0 });
   const [playing, setPlaying] = useState(false);
   const [needsResume, setNeedsResume] = useState(false);
-  const send = useCallback((command: Command) => socket.current?.send(command), []);
+  const send = useCallback((command: Command) => void socket.current?.send(command), []);
   const disconnect = useCallback(() => {
     socket.current?.close();
     socket.current = null;
