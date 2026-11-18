@@ -23,7 +23,8 @@ import { useRoomExit } from './roomExitGuard.js';
 import { useRoomLifecycle } from './useRoomLifecycle.js';
 
 export function useRoom() {
-  const { storagePrefix, request } = useKarutaConfig();
+  const config = useKarutaConfig();
+  const { storagePrefix, request } = config;
   const { show: showToast } = useGameToast();
   const [roomId, setRoomId] = useState(new URL(location.href).searchParams.get('room') ?? '');
   const [room, setRoom] = useState<RoomView | null>(null);
@@ -109,7 +110,7 @@ export function useRoom() {
       history.replaceState(null, '', url);
       let serverError = '';
       let established = false;
-      const connection = connectRoom(id, name, spectator, storagePrefix, {
+      const connection = connectRoom(id, name, spectator, config, {
         status: (connected) => {
           setConnected(connected);
           setTimingReady(false);

@@ -2,6 +2,7 @@ import type { DurableObjectState } from '@cloudflare/workers-types';
 import type { RoomStorage } from './roomPersistence.js';
 import { z } from 'zod';
 export interface RoomContent {
+  clientVersion?: string;
   deckIds(id: string): string[];
   audioFor(cardId: string, round: number): string;
 }
@@ -18,6 +19,7 @@ export const attachmentSchema = z.object({
 });
 export const joinSchema = z.object({
   token: z.uuid(),
+  version: z.string().max(64).optional(),
   connectionId: z.uuid(),
   spectator: z.enum(['true', 'false']).transform((value) => value === 'true'),
   name: z.string().trim().min(1).max(24),

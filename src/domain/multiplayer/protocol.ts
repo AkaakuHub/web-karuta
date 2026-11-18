@@ -39,6 +39,10 @@ const playerSchema = z.object({
 });
 const roomViewSchema = z.object({
   host: z.string(),
+  clientUpdate: z
+    .object({ version: z.string(), waiting: z.array(z.string()) })
+    .nullable()
+    .optional(),
   deckId: z.string().nullable(),
   players: z.array(playerSchema),
   spectators: z.array(playerSchema.pick({ id: true, name: true, connected: true })),

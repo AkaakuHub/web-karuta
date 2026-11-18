@@ -2,6 +2,7 @@ export interface Membership {
   id: string;
   connectionId: string;
   spectator: boolean;
+  version?: string;
 }
 export type Memberships = Record<string, Membership | null>;
 

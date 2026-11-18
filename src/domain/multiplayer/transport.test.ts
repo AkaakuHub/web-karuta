@@ -10,6 +10,7 @@ const initial: RoomView = {
   total: 0,
   audio: null,
   answer: null,
+  clientUpdate: null,
   results: [],
 };
 describe('部屋の差分配信', () => {

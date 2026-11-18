@@ -47,6 +47,7 @@ describe('参加者の退出操作', () => {
       total: 2,
       audio: '/audio',
       answer: null,
+      clientUpdate: null,
     };
     expect(waitingPlayers(view).map((player) => player.id)).toEqual(['c']);
     expect(

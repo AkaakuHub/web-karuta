@@ -1,8 +1,17 @@
 import { scoreTotal } from '../game/results.js';
-import type { RoomView } from './protocol.js';
+import type { Command, RoomView } from './protocol.js';
 
-export interface Room extends Omit<RoomView, 'total' | 'audio' | 'answer' | 'players'> {
+export interface Room extends Omit<
+  RoomView,
+  'total' | 'audio' | 'answer' | 'players' | 'clientUpdate'
+> {
   order: string[];
+  clientUpdate?: {
+    version: string;
+    waiting: Record<string, string>;
+    command: Extract<Command, { type: 'next' | 'start' }>;
+  };
+  waitForUpdateAudio?: boolean;
   settling: boolean;
   players: Omit<RoomView['players'][number], 'removed'>[];
 }
@@ -54,6 +63,7 @@ export function beginGame(
     order,
     results: [],
     phase: 'loading',
+    waitForUpdateAudio: false,
     settling: false,
     round: 0,
     startsAt: null,
@@ -74,6 +84,7 @@ export function prepareRound(room: Room): Room {
     round,
     board: room.board.map((id, index) => (index === slot ? (incoming ?? null) : id)),
     phase: round === room.order.length ? 'finished' : 'loading',
+    waitForUpdateAudio: false,
     startsAt: null,
     incorrect: {},
     givenUp: [],
@@ -110,6 +121,7 @@ export function readyPlayer(room: Room, id: string, now: number): Room {
     ...room,
     ready,
     phase: start ? 'playing' : 'loading',
+    waitForUpdateAudio: !start && room.waitForUpdateAudio,
     startsAt: start ? now : null,
   };
 }

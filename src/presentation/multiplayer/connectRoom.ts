@@ -1,3 +1,4 @@
+import type { KarutaConfig } from '../config/karutaProvider.js';
 import { v4 } from 'uuid';
 import {
   RoomConnection,
@@ -8,7 +9,7 @@ export function connectRoom(
   id: string,
   name: string,
   spectator: boolean,
-  storagePrefix: string,
+  { storagePrefix, clientVersion }: Pick<KarutaConfig, 'storagePrefix' | 'clientVersion'>,
   callbacks: RoomCallbacks,
 ) {
   const key = `${storagePrefix}-room:${id}`;
@@ -20,5 +21,6 @@ export function connectRoom(
   endpoint.searchParams.set('spectator', String(spectator));
   endpoint.searchParams.set('connectionId', v4());
   endpoint.searchParams.set('name', name.trim());
+  if (clientVersion) endpoint.searchParams.set('version', clientVersion);
   return new RoomConnection(endpoint.href, callbacks);
 }

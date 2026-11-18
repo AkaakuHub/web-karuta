@@ -22,7 +22,7 @@ export function disconnectPlayer(room: Room, id: string, now: number): Room {
   };
   if (id === next.host)
     next = { ...next, host: next.players.find((player) => player.connected)?.id ?? '' };
-  if (next.phase === 'loading') {
+  if (next.phase === 'loading' && !next.waitForUpdateAudio) {
     const ready = next.players.find((player) => player.connected && next.ready.includes(player.id));
     if (ready) next = readyPlayer(next, ready.id, now);
   }

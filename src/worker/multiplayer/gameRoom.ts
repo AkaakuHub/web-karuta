@@ -5,13 +5,11 @@ import { configureHeartbeat } from './roomHeartbeat.js';
 import {
   canCommand,
   disconnectPlayer,
-  joinParticipant,
   leaveParticipant,
   renameParticipant,
 } from '../../domain/multiplayer/participants.js';
 import { endMembership, type Memberships } from '../../domain/multiplayer/membership.js';
 import type { RoomView } from '../../domain/multiplayer/protocol.js';
-import { boardCapacity } from '../../domain/game/boardLayout.js';
 import type { WebSocket as RoomSocket } from '@cloudflare/workers-types';
 import {
   attachmentSchema,
@@ -22,7 +20,7 @@ import {
   type RoomContext,
 } from './roomIdentity.js';
 import { RoomPersistence, roomLifetime } from './roomPersistence.js';
-import { progressRoom } from './roomProgress.js';
+import { finishUpdate, joinRoom, progressRoom } from './roomProgress.js';
 import { publicRoom } from './roomView.js';
 export type { RoomContent } from './roomIdentity.js';
 import { broadcastRoom, readRoomMessage, rejectJoin, sendRoomError } from './roomMessages.js';
@@ -31,7 +29,6 @@ import { acknowledgeProbe, probeSocket, roundStartTime } from './roomTiming.js';
 import { settleClaims, type ClaimRound } from '../../domain/multiplayer/claims.js';
 import {
   giveUp,
-  beginGame,
   finishPreparation,
   emptyRoom,
   readyPlayer,
@@ -78,7 +75,7 @@ export class GameRoom {
     if (!Object.hasOwn(this.room, 'settling')) return rejectJoin(unsupportedRoom);
     const parsed = joinSchema.safeParse(Object.fromEntries(url.searchParams));
     if (!parsed.success) return rejectJoin('参加情報が不正です');
-    const { token, name, spectator, connectionId } = parsed.data;
+    const { token, name, spectator, connectionId, version } = parsed.data;
     const previous = this.view(this.room);
     const member = this.tokens[token];
     if (member === null) return rejectJoin('ホストによって退出しました');
@@ -91,9 +88,10 @@ export class GameRoom {
       if (count >= (spectator ? 32 : 20)) return rejectJoin('部屋が満員です');
     }
     const id = member?.id ?? crypto.randomUUID();
-    this.tokens[token] = { id, spectator, connectionId };
+    const joined = { id, spectator, connectionId, version };
+    this.tokens[token] = joined;
     for (const socket of this.ctx.getWebSockets(id)) socket.close(4001, '別の接続に切り替えました');
-    this.room = joinParticipant(this.room, id, name, spectator);
+    this.room = joinRoom(this.room, joined, name, this.tokens, this.content);
     const pair = new WebSocketPair();
     this.ctx.acceptWebSocket(pair[1], [id]);
     pair[1].serializeAttachment({
@@ -131,6 +129,7 @@ export class GameRoom {
       socket.send(JSON.stringify({ type: 'error', message: 'この操作の権限がありません' }));
       return;
     }
+    if (this.room.clientUpdate && !['sync', 'ping'].includes(command.type)) return;
     if (command.type === 'sync') {
       socket.send(JSON.stringify({ type: 'state', you: identity.id, room: this.view(this.room) }));
       return;
@@ -147,17 +146,7 @@ export class GameRoom {
       const previousView = this.view(previous);
       if (command.type === 'rename')
         this.room = renameParticipant(this.room, identity.id, command.name);
-      if (command.type === 'start') {
-        this.room = beginGame(
-          this.room,
-          this.content.deckIds(command.deckId),
-          boardCapacity,
-          Math.random,
-        );
-        this.room.deckId = command.deckId;
-      }
-
-      this.room = progressRoom(this.room, command, now);
+      this.room = progressRoom(this.room, command, now, this.content, this.tokens);
       if (command.type === 'finish') this.claims = null;
       if (command.type === 'giveUp') this.room = giveUp(this.room, identity.id);
       if (command.type === 'ready') {
@@ -211,7 +200,9 @@ export class GameRoom {
     const participants = [...this.room.players, ...this.room.spectators];
     if (!participants.some((person) => person.id === id && person.connected)) return;
     const previous = this.view(this.room);
+    const host = this.room.host;
     this.room = disconnectPlayer(this.room, id, this.startTime(Date.now()));
+    if (this.room.clientUpdate) this.room = { ...this.room, host };
     await this.save();
     this.broadcast(previous);
   }
@@ -264,7 +255,11 @@ export class GameRoom {
         this.room = { ...this.room, settling: false };
       }
     }
-    this.room = leaveParticipant(this.room, member.id, this.startTime(Date.now()));
+    this.room = finishUpdate(
+      leaveParticipant(this.room, member.id, this.startTime(Date.now())),
+      this.content,
+      member.id,
+    );
     await this.save(true);
     this.broadcast(previous);
     for (const socket of this.ctx.getWebSockets(member.id))
