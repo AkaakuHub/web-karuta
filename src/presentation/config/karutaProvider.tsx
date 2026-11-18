@@ -1,3 +1,5 @@
+import { AudioVolumeProvider } from '../audio/useAudioVolume.js';
+import { GameSettingsProvider } from '../game/useGameSettings.js';
 import { ToastProvider } from '../shared/toastProvider.js';
 import { RoomExitGuard } from '../multiplayer/roomExitGuard.js';
 import { createContext, useContext, type ReactNode } from 'react';
@@ -12,7 +14,11 @@ export function KarutaProvider({ value, children }: { value: KarutaConfig; child
   return (
     <Config value={value}>
       <ToastProvider>
-        <RoomExitGuard>{children}</RoomExitGuard>
+        <AudioVolumeProvider>
+          <GameSettingsProvider>
+            <RoomExitGuard>{children}</RoomExitGuard>
+          </GameSettingsProvider>
+        </AudioVolumeProvider>
       </ToastProvider>
     </Config>
   );

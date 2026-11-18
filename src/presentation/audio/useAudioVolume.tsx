@@ -1,5 +1,5 @@
 import { useKarutaConfig } from '../config/karutaProvider.js';
-import { useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { z } from 'zod';
 
 const preferenceSchema = z.object({
@@ -8,7 +8,7 @@ const preferenceSchema = z.object({
   previous: z.number().positive().max(1),
 });
 
-export function useAudioVolume() {
+function useVolumePreference() {
   const { storagePrefix } = useKarutaConfig();
   const key = `${storagePrefix}-volume`;
   const [preference, setPreference] = useState(() => {
@@ -20,12 +20,15 @@ export function useAudioVolume() {
   useEffect(() => {
     localStorage.setItem(key, JSON.stringify(preference));
   }, [preference, key]);
-  function setVolume(volume: number) {
+  function saveVolume(volume: number, muted: boolean) {
     setPreference((current) => ({
-      volume,
-      muted: volume === 0,
+      volume: !muted && volume === 0 ? current.previous : volume,
+      muted,
       previous: volume > 0 ? volume : current.previous,
     }));
+  }
+  function setVolume(volume: number) {
+    saveVolume(volume, volume === 0);
   }
   function toggleMuted() {
     setPreference((current) =>
@@ -39,6 +42,20 @@ export function useAudioVolume() {
     muted: preference.muted,
     effectiveVolume: preference.muted ? 0 : preference.volume,
     setVolume,
+    saveVolume,
     toggleMuted,
   };
+}
+
+const VolumeContext = createContext<ReturnType<typeof useVolumePreference> | null>(null);
+
+export function AudioVolumeProvider({ children }: { children: ReactNode }) {
+  const volume = useVolumePreference();
+  return <VolumeContext value={volume}>{children}</VolumeContext>;
+}
+
+export function useAudioVolume() {
+  const volume = useContext(VolumeContext);
+  if (!volume) throw new Error('音量設定がありません');
+  return volume;
 }
