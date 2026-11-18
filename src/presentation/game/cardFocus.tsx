@@ -35,7 +35,7 @@ export function CardFocus({
             m: 0,
             width: '100%',
             maxHeight: '100dvh',
-            borderRadius: { xs: 0, sm: 2 },
+            borderRadius: { xs: 0, sm: 1 },
             overflow: 'hidden',
           },
         },

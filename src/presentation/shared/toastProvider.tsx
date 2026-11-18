@@ -68,7 +68,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               maxHeight: { xs: appToolbarHeight.xs - 8, sm: appToolbarHeight.sm - 8 },
               overflowY: 'auto',
               boxShadow: '0 4px 16px #17202d26',
-              borderRadius: 2.5,
+              borderRadius: 1,
             },
           }}
         >

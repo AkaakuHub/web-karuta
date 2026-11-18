@@ -116,7 +116,7 @@ export function GameFeedback({
           maxWidth: '100%',
           minWidth: 0,
           py: compact ? 0 : 0.5,
-          borderRadius: 3,
+          borderRadius: 1,
           boxShadow: 3,
         }}
       >

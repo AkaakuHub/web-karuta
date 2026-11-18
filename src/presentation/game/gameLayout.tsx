@@ -27,7 +27,7 @@ export function GameLayout({
       aria-label="ゲームコントロール"
       sx={{
         position: 'relative',
-        borderRadius: board ? 0.5 : 1.5,
+        borderRadius: board ? 0.5 : 1,
         p: results ? 0 : board ? (mobile ? 0 : 1) : { xs: 2, sm: 3 },
         maxWidth: area ? undefined : 560,
         minHeight: 0,

@@ -40,7 +40,7 @@ export function GameHelp({
               width: 'calc(100% - 24px)',
               height: 'calc(100dvh - 24px)',
               maxHeight: 'calc(100dvh - 24px)',
-              borderRadius: 2,
+              borderRadius: 1,
             },
           },
         }}
