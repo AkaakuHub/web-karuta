@@ -160,7 +160,8 @@ export class RoomConnection {
     endpoint.pathname += '/leave';
     const token = endpoint.searchParams.get('token');
     const connectionId = endpoint.searchParams.get('connectionId');
-    endpoint.search = '';
+    for (const parameter of ['token', 'connectionId', 'name', 'spectator'])
+      endpoint.searchParams.delete(parameter);
     if (this.socket?.readyState !== 1 && token && connectionId)
       navigator.sendBeacon(
         endpoint.href,
