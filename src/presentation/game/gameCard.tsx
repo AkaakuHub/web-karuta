@@ -25,7 +25,8 @@ export const GameCard = memo(function GameCard({
         height: '100%',
         opacity: incorrect ? 0.4 : 1,
         filter: incorrect ? 'grayscale(1)' : undefined,
-        outline: taken ? '3px solid #16854c' : pending ? '2px solid #2449bb' : undefined,
+        outline: taken ? '3px solid' : pending ? '2px solid' : undefined,
+        outlineColor: taken ? 'success.main' : 'primary.main',
         outlineOffset: 2,
         animation: incorrect ? 'card-shake 360ms ease-in-out' : undefined,
         '@keyframes card-shake': {

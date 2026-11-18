@@ -52,7 +52,10 @@ export function RoomArrivalNotice({ room, you }: { room: RoomView; you: string }
           flexGrow: 0,
           py: 0,
           px: 1.5,
-          bgcolor: '#17202d',
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          border: 1,
+          borderColor: 'divider',
           '& .MuiSnackbarContent-message': { py: 0.75, fontSize: 13, minWidth: 0 },
         }}
       />

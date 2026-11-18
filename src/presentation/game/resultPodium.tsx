@@ -1,3 +1,4 @@
+import { tintedSurface } from '../shared/tintedSurface.js';
 import { Box, Stack, Typography } from '@mui/material';
 import EmojiEventsRounded from '@mui/icons-material/EmojiEventsRounded';
 import { SeriesPie } from './seriesBreakdown.js';
@@ -5,10 +6,10 @@ import type { PlayerSeries } from '../../domain/game/seriesBreakdown.js';
 import type { rankPlayers } from '../../domain/game/ranking.js';
 
 const places = [
-  { rank: 2, column: 1, height: 40, color: '#64748b', background: '#e2e8f0' },
-  { rank: 1, column: 2, height: 56, color: '#9a6700', background: '#ffdf80' },
-  { rank: 3, column: 3, height: 28, color: '#98532c', background: '#f2d2bc' },
-];
+  { rank: 2, column: 1, height: 40, tone: 'primary' },
+  { rank: 1, column: 2, height: 56, tone: 'warning' },
+  { rank: 3, column: 3, height: 28, tone: 'secondary' },
+] as const;
 
 export function ResultPodium({
   players,
@@ -45,7 +46,9 @@ export function ResultPodium({
             textAlign: 'center',
           }}
         >
-          <EmojiEventsRounded sx={{ color: place.color, fontSize: place.rank === 1 ? 28 : 24 }} />
+          <EmojiEventsRounded
+            sx={{ color: `${place.tone}.main`, fontSize: place.rank === 1 ? 28 : 24 }}
+          />
           <Stack spacing={0.75} sx={{ pb: 1 }}>
             {place.players.map((player) => (
               <Box key={player.id}>
@@ -76,8 +79,9 @@ export function ResultPodium({
           <Box
             sx={{
               height: place.height,
-              bgcolor: place.background,
-              color: place.color,
+              bgcolor: tintedSurface(place.tone),
+              color: 'text.primary',
+              borderColor: `${place.tone}.main`,
               borderTop: '3px solid',
               borderRadius: '4px 4px 0 0',
               display: 'grid',

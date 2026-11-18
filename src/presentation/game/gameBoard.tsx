@@ -1,3 +1,4 @@
+import { boardCapacity } from '../../domain/game/boardLayout.js';
 import { BoardControls } from './boardControls.js';
 import { memo, useContext, type ReactNode } from 'react';
 import { Box } from '@mui/material';
@@ -32,7 +33,10 @@ export const GameBoard = memo(function GameBoard({
   renderCard: (id: string, back: boolean) => ReactNode;
   onTake: (id: string, at: number) => void;
 }) {
-  const board = slots;
+  const board = Array.from(
+    { length: Math.max(boardCapacity, slots.length) },
+    (_, slot) => slots[slot] ?? null,
+  );
   const controls = useContext(BoardControls);
   const gap = controls ? boardGap.mobile : boardGap.desktop;
   const { container, layout } = useCardLayout(
@@ -46,7 +50,7 @@ export const GameBoard = memo(function GameBoard({
         minHeight: 0,
         p: `${boardPadding}px`,
         borderRadius: 1,
-        bgcolor: '#e5eaf3',
+        bgcolor: 'background.default',
         overflow: 'hidden',
       }}
     >

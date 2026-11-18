@@ -1,3 +1,4 @@
+import { tintedSurface } from '../shared/tintedSurface.js';
 import { Box, Typography } from '@mui/material';
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
 import CancelRounded from '@mui/icons-material/CancelRounded';
@@ -19,7 +20,7 @@ export function GameFeedback({
   const wrong = feedback.kind === 'incorrect';
   const complete = feedback.kind === 'complete';
   const correct = feedback.kind === 'correct';
-  const color = wrong ? '#d32f2f' : correct && !feedback.opponent ? '#16854c' : '#2449bb';
+  const tone = wrong ? 'error' : correct && !feedback.opponent ? 'success' : 'primary';
   const Icon = wrong
     ? CancelRounded
     : complete
@@ -84,7 +85,9 @@ export function GameFeedback({
                 width: 6,
                 height: 12,
                 borderRadius: 1,
-                bgcolor: ['#ffbd39', '#16854c', '#5476e8', '#ef7b46'][index % 4],
+                bgcolor: ['warning.main', 'success.main', 'primary.main', 'secondary.main'][
+                  index % 4
+                ],
                 '--dx': `${Math.cos(angle) * 180}px`,
                 '--dy': `${Math.sin(angle) * 130 + 70}px`,
                 animation: 'confetti-burst 1000ms ease-out forwards',
@@ -105,19 +108,22 @@ export function GameFeedback({
           display: 'flex',
           alignItems: 'center',
           gap: compact ? 0.25 : 1,
-          color,
-          bgcolor: feedback.opponent ? '#e6f0ff' : '#ffffffee',
+          color: 'text.primary',
+          bgcolor: tintedSurface(tone),
+          border: 1,
+          borderColor: `${tone}.main`,
           px: { xs: 0.5, sm: 1.5 },
           maxWidth: '100%',
           minWidth: 0,
           py: compact ? 0 : 0.5,
           borderRadius: 3,
-          boxShadow: '0 8px 30px #18233115',
+          boxShadow: 3,
         }}
       >
         <Icon
           sx={{
             flexShrink: 0,
+            color: `${tone}.main`,
             fontSize: { xs: compact ? 14 : 18, sm: wrong || complete ? 32 : 28 },
           }}
         />

@@ -123,7 +123,7 @@ export function HelpScene({ role }: { role: HelpRole }) {
                     top: y,
                     width: Math.hypot(endX - x, endY - y),
                     height: '1px',
-                    bgcolor: '#2449bbaa',
+                    bgcolor: 'primary.main',
                     transform: `rotate(${Math.atan2(endY - y, endX - x)}rad)`,
                     transformOrigin: 'left center',
                   }}
@@ -139,11 +139,12 @@ export function HelpScene({ role }: { role: HelpRole }) {
                     display: 'grid',
                     placeItems: 'center',
                     bgcolor: 'primary.main',
-                    color: 'white',
+                    color: 'primary.contrastText',
                     fontSize: 11,
                     fontWeight: 800,
                     borderRadius: '50%',
-                    boxShadow: '0 0 0 2px white',
+                    outline: '2px solid',
+                    outlineColor: 'background.paper',
                   }}
                 >
                   {index + 1}
@@ -188,7 +189,7 @@ export function HelpScene({ role }: { role: HelpRole }) {
                 display: 'grid',
                 placeItems: 'center',
                 bgcolor: 'primary.main',
-                color: 'white',
+                color: 'primary.contrastText',
                 fontSize: 11,
                 fontWeight: 800,
                 borderRadius: '50%',

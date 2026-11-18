@@ -45,7 +45,7 @@ export function SeriesPie({ player }: { player: PlayerSeries }) {
           disableTouchListener
           arrow
           slotProps={{
-            tooltip: { sx: { bgcolor: '#243247', boxShadow: 3 } },
+            tooltip: { sx: { boxShadow: 3 } },
             arrow: { sx: { color: '#243247' } },
           }}
         >
@@ -64,7 +64,8 @@ export function SeriesPie({ player }: { player: PlayerSeries }) {
                 width: 24,
                 height: 24,
                 borderRadius: '50%',
-                background: player.slices.length ? seriesGradient(player.slices) : '#dce3ed',
+                background: player.slices.length ? seriesGradient(player.slices) : undefined,
+                bgcolor: 'action.disabledBackground',
               }}
             />
           </IconButton>
