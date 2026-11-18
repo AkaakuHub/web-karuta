@@ -40,6 +40,10 @@
       "types": "./dist/domain/game/checkpoint.d.ts",
       "default": "./dist/domain/game/checkpoint.js"
     },
+    "./domain/game/deckSelection": {
+      "types": "./dist/domain/game/deckSelection.d.ts",
+      "default": "./dist/domain/game/deckSelection.js"
+    },
     "./domain/game/playback": {
       "types": "./dist/domain/game/playback.d.ts",
       "default": "./dist/domain/game/playback.js"
