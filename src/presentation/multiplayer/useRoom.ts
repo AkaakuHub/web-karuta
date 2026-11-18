@@ -23,7 +23,7 @@ import { useRoomExit } from './roomExitGuard.js';
 import { useRoomLifecycle } from './useRoomLifecycle.js';
 
 export function useRoom() {
-  const { storagePrefix, request, roomEndpoint: endpoint = '/api/rooms' } = useKarutaConfig();
+  const { storagePrefix, request } = useKarutaConfig();
   const { show: showToast } = useGameToast();
   const [roomId, setRoomId] = useState(new URL(location.href).searchParams.get('room') ?? '');
   const [room, setRoom] = useState<RoomView | null>(null);
@@ -101,7 +101,7 @@ export function useRoom() {
       await Promise.all([player.unlock(), effects.unlock()]);
       let id = code.trim();
       if (create) {
-        id = z.object({ id: z.uuid() }).parse(await request(endpoint, { method: 'POST' })).id;
+        id = z.object({ id: z.uuid() }).parse(await request('/api/rooms', { method: 'POST' })).id;
       }
       if (!z.uuidv7().safeParse(id).success)
         throw new Error('UUIDv7の部屋コードを入力してください');
@@ -111,7 +111,7 @@ export function useRoom() {
       history.replaceState(null, '', url);
       let serverError = '';
       let established = false;
-      const connection = connectRoom(id, name, spectator, storagePrefix, endpoint, {
+      const connection = connectRoom(id, name, spectator, storagePrefix, {
         status: (connected) => {
           setConnected(connected);
           setTimingReady(false);

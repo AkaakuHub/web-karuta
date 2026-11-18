@@ -4,7 +4,6 @@ import { createContext, useContext, type ReactNode } from 'react';
 
 export interface KarutaConfig {
   storagePrefix: string;
-  roomEndpoint?: string;
   request: (path: string, init?: RequestInit) => Promise<unknown>;
 }
 const Config = createContext<KarutaConfig | null>(null);

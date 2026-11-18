@@ -9,7 +9,7 @@ export const commandSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('rename'), name: z.string().trim().min(1).max(24) }),
   z.object({
     type: z.literal('start'),
-    deckId: z.string().min(1).max(32),
+    deckId: z.string().min(1).max(512),
   }),
   z.object({
     type: z.literal('ready'),

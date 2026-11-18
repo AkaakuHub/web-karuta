@@ -9,14 +9,12 @@ export function connectRoom(
   name: string,
   spectator: boolean,
   storagePrefix: string,
-  roomEndpoint: string,
   callbacks: RoomCallbacks,
 ) {
   const key = `${storagePrefix}-room:${id}`;
   const token = localStorage.getItem(key) ?? v4();
   localStorage.setItem(key, token);
-  const endpoint = new URL(roomEndpoint, location.href);
-  endpoint.pathname += `/${id}`;
+  const endpoint = new URL(`/api/rooms/${id}`, location.href);
   endpoint.protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
   endpoint.searchParams.set('token', token);
   endpoint.searchParams.set('spectator', String(spectator));
