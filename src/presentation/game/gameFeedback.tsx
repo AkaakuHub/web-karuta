@@ -27,15 +27,7 @@ export function GameFeedback({
 
   return (
     <GameToast key={feedback.id} open>
-      <Alert
-        severity={severity}
-        role="status"
-        sx={{
-          alignItems: 'center',
-          py: 0,
-          '& .MuiAlert-message': { py: 0.75, minWidth: 0 },
-        }}
-      >
+      <Alert severity={severity} role="status">
         {message}
         {kind === 'correct' && time !== null && (
           <Box component="span" sx={{ ml: 0.75, whiteSpace: 'nowrap' }}>

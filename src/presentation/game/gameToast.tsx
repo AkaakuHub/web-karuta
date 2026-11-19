@@ -11,10 +11,12 @@ export function GameToast({
   open,
   onClose,
   children,
+  persistent = false,
 }: {
   open: boolean;
   onClose?: () => void;
   children: ReactElement;
+  persistent?: boolean;
 }) {
   const { show, hide } = useGameToast();
   const id = useId();
@@ -22,8 +24,8 @@ export function GameToast({
   content.current = { children, onClose };
   useEffect(() => {
     if (!open) return;
-    show(id, content.current.children, () => content.current.onClose?.());
+    show(id, content.current.children, () => content.current.onClose?.(), persistent);
     return () => hide(id);
-  }, [open, id, show, hide]);
+  }, [open, id, show, hide, persistent]);
   return null;
 }

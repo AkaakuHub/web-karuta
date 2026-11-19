@@ -26,7 +26,7 @@ export function GameStatus({
   const message = pending ? '判定中…' : '次の曲から参加';
   return (
     <GameToast key={message} open>
-      <Alert severity="info" role="status" sx={{ alignItems: 'center', py: 0 }}>
+      <Alert severity="info" role="status">
         {message}
       </Alert>
     </GameToast>
