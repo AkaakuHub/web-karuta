@@ -108,13 +108,15 @@ export function RoomPlayers({
                 color={
                   player.removed || !player.connected
                     ? 'default'
-                    : waiting || roundStatus
-                      ? 'warning'
-                      : ready
-                        ? 'success'
-                        : player.id === you
-                          ? 'primary'
-                          : 'default'
+                    : surrender === 'giveUp'
+                      ? 'secondary'
+                      : waiting || surrender === 'mistake'
+                        ? 'warning'
+                        : ready
+                          ? 'success'
+                          : player.id === you
+                            ? 'primary'
+                            : 'default'
                 }
                 variant={player.connected ? 'filled' : 'outlined'}
                 onClick={
