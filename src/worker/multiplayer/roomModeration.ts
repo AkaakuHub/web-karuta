@@ -11,12 +11,12 @@ export function moderateRoom(
   tokens: Memberships,
   kickedTokens: Record<string, string[]>,
   sockets: readonly RoomSocket[],
-  now: number,
+  startsAt: number,
 ): Room {
   if (command.type === 'kick') {
     if (!Object.values(tokens).some((person) => person?.id === command.playerId))
       throw new Error('この参加者は退出済みです');
-    const next = kickPlayer(room, actor, command.playerId, now);
+    const next = kickPlayer(room, actor, command.playerId, startsAt);
     for (const [token, player] of Object.entries(tokens)) {
       if (player?.id === command.playerId) {
         kickedTokens[player.id] = [...(kickedTokens[player.id] ?? []), token];

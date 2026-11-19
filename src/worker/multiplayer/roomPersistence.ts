@@ -55,7 +55,11 @@ export class RoomPersistence {
       await this.storage.put(Object.fromEntries(changed));
       for (const [key, value] of changed) this.previous.set(key, JSON.stringify(value));
     }
-    const alarm = Math.min(state.expiresAt, state.claims?.deadline ?? state.expiresAt);
+    const alarm = Math.min(
+      state.expiresAt,
+      state.claims?.deadline ?? Infinity,
+      ...Object.values(state.room?.reconnecting ?? {}),
+    );
     if (alarm !== this.alarm) {
       await this.storage.setAlarm(alarm);
       this.alarm = alarm;

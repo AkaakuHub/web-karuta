@@ -12,6 +12,7 @@ export interface Room extends Omit<
   };
   waitForUpdateAudio?: boolean;
   settling: boolean;
+  reconnecting?: Record<string, number>;
   players: Omit<RoomView['players'][number], 'removed'>[];
 }
 export function emptyRoom(host: string): Room {
@@ -110,18 +111,15 @@ export function readyPlayer(room: Room, id: string, now: number): Room {
     !room.players.some((player) => player.id === id && player.connected)
   )
     return room;
-  const ready = [...new Set([...room.ready, id])];
-  if (room.phase === 'playing') return room.ready.includes(id) ? room : { ...room, ready };
+  const next = room.ready.includes(id) ? room : { ...room, ready: [...room.ready, id] };
+  return startReadyRound(next, now);
+}
+export function startReadyRound(room: Room, startsAt: number): Room {
+  if (room.phase !== 'loading' || Object.keys(room.reconnecting ?? {}).length) return room;
   const connected = room.players.filter((player) => player.connected);
-  const start = connected.length >= 2 && connected.every((player) => ready.includes(player.id));
-  if (!start && room.ready.includes(id)) return room;
-  return {
-    ...room,
-    ready,
-    phase: start ? 'playing' : 'loading',
-    waitForUpdateAudio: !start && room.waitForUpdateAudio,
-    startsAt: start ? now : null,
-  };
+  return connected.length > 0 && connected.every((player) => room.ready.includes(player.id))
+    ? { ...room, phase: 'playing', waitForUpdateAudio: false, startsAt }
+    : room;
 }
 export function claimCard(room: Room, playerId: string, cardId: string, now: number): Room {
   if (

@@ -1,4 +1,4 @@
-import { readyPlayer, revealBlockedRound, type Room } from './room.js';
+import { startReadyRound, revealBlockedRound, type Room } from './room.js';
 import type { RoomView } from './protocol.js';
 
 export function waitingPlayers(room: RoomView) {
@@ -22,11 +22,7 @@ export function disconnectPlayer(room: Room, id: string, now: number): Room {
   };
   if (id === next.host)
     next = { ...next, host: next.players.find((player) => player.connected)?.id ?? '' };
-  if (next.phase === 'loading' && !next.waitForUpdateAudio) {
-    const ready = next.players.find((player) => player.connected && next.ready.includes(player.id));
-    if (ready) next = readyPlayer(next, ready.id, now);
-  }
-  return revealBlockedRound(next);
+  return revealBlockedRound(next.waitForUpdateAudio ? next : startReadyRound(next, now));
 }
 
 export function kickPlayer(room: Room, actor: string, target: string, now: number): Room {

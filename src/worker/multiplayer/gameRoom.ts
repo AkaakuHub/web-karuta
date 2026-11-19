@@ -3,7 +3,6 @@ import { ClaimTimer } from './claimTimer.js';
 import { configureHeartbeat } from './roomHeartbeat.js';
 import {
   canCommand,
-  disconnectPlayer,
   leaveParticipant,
   renameParticipant,
 } from '../../domain/multiplayer/participants.js';
@@ -21,6 +20,7 @@ import {
 import { RoomPersistence, roomLifetime } from './roomPersistence.js';
 import { finishUpdate, joinRoom, progressRoom } from './roomProgress.js';
 import { publicRoom } from './roomView.js';
+import { clearReconnect, closeRoomConnection, expireReconnects } from './roomReconnect.js';
 export type { RoomContent } from './roomIdentity.js';
 import { broadcastRoom, readRoomMessage, rejectJoin, sendRoomError } from './roomMessages.js';
 import { moderateRoom } from './roomModeration.js';
@@ -83,7 +83,7 @@ export class GameRoom {
     const joined = { id, spectator, connectionId, version };
     this.tokens[token] = joined;
     for (const socket of this.ctx.getWebSockets(id)) socket.close(4001, '別の接続に切り替えました');
-    this.room = joinRoom(this.room, joined, name, this.tokens, this.content);
+    this.room = joinRoom(clearReconnect(this.room, id), joined, name, this.tokens, this.content);
     const pair = new WebSocketPair();
     this.ctx.acceptWebSocket(pair[1], [id]);
     pair[1].serializeAttachment({
@@ -151,13 +151,13 @@ export class GameRoom {
       }
       if (command.type === 'kick' || command.type === 'unkick')
         this.room = moderateRoom(
-          this.room,
+          command.type === 'kick' ? clearReconnect(this.room, command.playerId) : this.room,
           command,
           identity.id,
           this.tokens,
           this.kickedTokens,
           this.ctx.getWebSockets(command.playerId),
-          now,
+          this.startTime(now),
         );
       if (command.type === 'take') {
         const take = submitSocketClaim(
@@ -192,9 +192,8 @@ export class GameRoom {
     const participants = [...this.room.players, ...this.room.spectators];
     if (!participants.some((person) => person.id === id && person.connected)) return;
     const previous = this.view(this.room);
-    const host = this.room.host;
-    this.room = disconnectPlayer(this.room, id, this.startTime(Date.now()));
-    if (this.room.clientUpdate) this.room = { ...this.room, host };
+    const now = Date.now();
+    this.room = closeRoomConnection(this.room, id, now, this.startTime(now));
     await this.save();
     this.broadcast(previous);
   }
@@ -213,8 +212,15 @@ export class GameRoom {
       this.claims = null;
       this.claimTimer.schedule(null);
       await this.persistence.clear();
-    } else if (this.claims && now >= this.claims.deadline) await this.settleClaims();
-    else await this.save();
+    } else if (this.room) {
+      const previous = this.room;
+      this.room = expireReconnects(previous, now, this.startTime(now), this.content);
+      const changed = this.room !== previous;
+      if (changed) await this.save();
+      if (changed) this.broadcast(this.view(previous));
+      if (this.claims && now >= this.claims.deadline) await this.settleClaims();
+      else if (!changed) await this.save();
+    }
   }
   private async settleClaims() {
     if (!this.room || !this.claims) return;
@@ -243,7 +249,7 @@ export class GameRoom {
       }
     }
     this.room = finishUpdate(
-      leaveParticipant(this.room, member.id, this.startTime(Date.now())),
+      leaveParticipant(clearReconnect(this.room, member.id), member.id, this.startTime(Date.now())),
       this.content,
       member.id,
     );
