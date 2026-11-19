@@ -1,7 +1,7 @@
 import { AppHeaderContent } from '../shared/appHeaderContent.js';
 import { BoardControls } from './boardControls.js';
 import { type ReactNode } from 'react';
-import { Box, Paper, Stack, Chip, useMediaQuery, useTheme } from '@mui/material';
+import { Box, Paper, Stack, Chip, Tooltip, useMediaQuery, useTheme } from '@mui/material';
 import {
   boardGap,
   bottomControlsHeight,
@@ -12,6 +12,7 @@ import {
 export function GameLayout({
   board,
   regulation,
+  regulationDetails,
   clock,
   children,
   actions,
@@ -20,12 +21,21 @@ export function GameLayout({
 }: {
   board: ReactNode;
   regulation?: string;
+  regulationDetails?: readonly string[];
   clock?: ReactNode;
   children: ReactNode;
   actions?: ReactNode;
   results?: ReactNode;
   players?: ReactNode;
 }) {
+  const regulationChip = regulation && (
+    <Chip
+      size="small"
+      label={regulation}
+      tabIndex={regulationDetails?.length ? 0 : undefined}
+      sx={{ minWidth: 0, '& .MuiChip-label': { px: 0.75, fontSize: { xs: 10, sm: 12 } } }}
+    />
+  );
   const area = results ?? board;
   const mobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const controls = (
@@ -103,12 +113,17 @@ export function GameLayout({
     >
       <AppHeaderContent>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, minWidth: 0 }}>
-          {regulation && (
-            <Chip
-              size="small"
-              label={regulation}
-              sx={{ minWidth: 0, '& .MuiChip-label': { px: 0.75, fontSize: { xs: 10, sm: 12 } } }}
-            />
+          {regulationChip && regulationDetails?.length ? (
+            <Tooltip
+              describeChild
+              arrow
+              title={regulationDetails.join('\n')}
+              slotProps={{ tooltip: { sx: { whiteSpace: 'pre-line' } } }}
+            >
+              {regulationChip}
+            </Tooltip>
+          ) : (
+            regulationChip
           )}
           {clock}
           {actions && <Box sx={{ ml: 'auto', flexShrink: 0 }}>{actions}</Box>}
