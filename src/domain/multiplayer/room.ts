@@ -118,7 +118,7 @@ export function startReadyRound(room: Room, startsAt: number): Room {
   if (room.phase !== 'loading' || Object.keys(room.reconnecting ?? {}).length) return room;
   const connected = room.players.filter((player) => player.connected);
   return connected.length > 0 && connected.every((player) => room.ready.includes(player.id))
-    ? { ...room, phase: 'playing', waitForUpdateAudio: false, startsAt }
+    ? revealBlockedRound({ ...room, phase: 'playing', waitForUpdateAudio: false, startsAt })
     : room;
 }
 export function claimCard(room: Room, playerId: string, cardId: string, now: number): Room {

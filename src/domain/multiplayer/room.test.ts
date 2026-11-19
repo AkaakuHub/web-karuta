@@ -102,6 +102,8 @@ describe('オンライン対戦の取得判定', () => {
     expect(claimCard(missed, 'a', wrong, 2300)).toBe(missed);
     const both = claimCard(missed, 'b', wrong, 2400);
     expect(both.phase).toBe('revealed');
+    const next = prepareRound(both);
+    expect(readyPlayer(readyPlayer(next, 'a', 3000), 'b', 3000).phase).toBe('revealed');
     expect(claimCard(both, 'a', room.order[0]!, 2500)).toBe(both);
     expect(claimCard(missed, 'a', room.order[0]!, 2500)).toBe(missed);
   });
