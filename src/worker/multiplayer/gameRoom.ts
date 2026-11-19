@@ -45,6 +45,11 @@ export class GameRoom {
     configureHeartbeat(ctx);
     ctx.blockConcurrencyWhile(async () => {
       Object.assign(this, await this.persistence.load());
+      if (!this.content.clientVersion && this.room?.clientUpdate) {
+        this.room = { ...this.room, clientUpdate: undefined };
+        await this.save();
+        this.broadcast();
+      }
       this.claimTimer.schedule(this.claims?.deadline ?? null);
     });
   }

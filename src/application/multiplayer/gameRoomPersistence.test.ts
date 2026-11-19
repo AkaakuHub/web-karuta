@@ -22,7 +22,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-async function restore(storage: Storage) {
+async function restore(storage: Storage, clientVersion?: string) {
   let initializing: Promise<unknown> = Promise.resolve();
   const context: RoomContext = {
     storage,
@@ -35,7 +35,7 @@ async function restore(storage: Storage) {
     acceptWebSocket: () => {},
     setWebSocketAutoResponse: () => {},
   };
-  const room = new GameRoom(context, { deckIds: () => [], audioFor: () => 'audio' });
+  const room = new GameRoom(context, { clientVersion, deckIds: () => [], audioFor: () => 'audio' });
   await initializing;
   return room;
 }
@@ -112,4 +112,21 @@ it('受付済みの正解は次の通信もアラームも待たずに確定す�
   const writes = storage.writes.length;
   await vi.advanceTimersByTimeAsync(30000);
   expect(storage.writes).toHaveLength(writes);
+});
+
+it.each([undefined, 'new'])('更新設定（%s）に従い保存済みの更新待ちを扱う', async (version) => {
+  const storage = new Storage();
+  const clientUpdate = {
+    version: 'new',
+    waiting: { host: 'previous-connection' },
+    command: { type: 'next', round: 1 },
+  };
+  storage.values.set('room', { ...emptyRoom('host'), phase: 'revealed', round: 1, clientUpdate });
+  storage.values.set('expiresAt', 86_400_000);
+  await restore(storage, version);
+  expect(storage.values.get('room')).toMatchObject({
+    phase: 'revealed',
+    round: 1,
+    clientUpdate: version ? clientUpdate : undefined,
+  });
 });
