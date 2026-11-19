@@ -16,9 +16,9 @@ export function MobileCardReview({
       disabled={!card}
       onClick={onCollection}
       size="small"
-      sx={{ p: 0.5 }}
+      sx={{ p: 0.25 }}
     >
-      <CollectionsBookmarkRounded sx={{ fontSize: 20 }} />
+      <CollectionsBookmarkRounded sx={{ fontSize: 16 }} />
     </IconButton>
   );
   return (
