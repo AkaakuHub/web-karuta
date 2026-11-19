@@ -1,7 +1,12 @@
 import { createAudioOutput } from './audioOutput.js';
 import { decodeAudio } from './decodeAudio.js';
 import { audibleReactionMs } from '../../domain/game/audioTiming.js';
-import { audioOutputAdvancing, outputContextTime, waitForAudioOutput } from './outputClock.js';
+import {
+  AudioOutputMonitor,
+  audioOutputAdvancing,
+  outputContextTime,
+  waitForAudioOutput,
+} from './outputClock.js';
 import type { TrackProgress } from './audioProgress.js';
 import { playbackPosition } from '../../domain/game/playback.js';
 import { AudioPreparation } from './audioPreparation.js';
@@ -26,7 +31,7 @@ export class GameAudio {
   private playbackRevision = 0;
   private recoveryPending = false;
   private outputStartedAt = 0;
-  private recoveredSilentOutput = false;
+  private outputMonitor = new AudioOutputMonitor();
   private scheduled: (() => Promise<void>) | null = null;
   private readonly visibilityChanged = () => {
     if (document.hidden) {
@@ -36,6 +41,7 @@ export class GameAudio {
   private readonly pageHidden = () => this.interrupt();
   private readonly pageShown = () => this.recover();
   private readonly contextChanged = () => {
+    diagnostic('audio.context.state', { state: this.context.state });
     if (this.context.state !== 'running') this.interrupt();
     else this.recover();
     this.progress();
@@ -69,13 +75,12 @@ export class GameAudio {
     );
   }
   private progress() {
-    const fault =
-      this.source && this.buffer && this.output?.fault(this.buffer, this.position, this.startedAt);
-    if (fault) {
-      const recover = fault === 'clock' || !this.recoveredSilentOutput;
-      if (fault === 'signal') this.recoveredSilentOutput = true;
-      this.interrupt(fault === 'signal' ? this.offset : this.position);
-      if (recover) this.recover();
+    if (
+      this.source &&
+      !this.outputMonitor.check(this.context.getOutputTimestamp(), performance.now())
+    ) {
+      this.interrupt();
+      this.recover();
       return;
     }
     this.report(
@@ -105,10 +110,13 @@ export class GameAudio {
     const previous = this.output;
     if (!previous) return;
     previous.context.removeEventListener('statechange', this.contextChanged);
-    void previous.close().catch(() => diagnostic('audio.context.close.failed'));
+    previous.normalization.disconnect();
+    previous.gain.disconnect();
+    void previous.context.close().catch(() => diagnostic('audio.context.close.failed'));
     this.output = this.createOutput(previous.normalization.gain.value);
     this.renewContext = false;
     this.verifyClock = true;
+    diagnostic('audio.context.replaced', { position: this.offset });
   }
   async play(url: string): Promise<boolean> {
     this.clear();
@@ -129,7 +137,6 @@ export class GameAudio {
     }
   }
   clear() {
-    this.recoveredSilentOutput = false;
     this.scheduled = null;
     this.generation++;
     this.preparation.clear();
@@ -175,7 +182,7 @@ export class GameAudio {
     source.connect(output.normalization);
     this.offset = position;
     this.startedAt = this.context.currentTime + delay;
-    output.reset();
+    this.outputMonitor = new AudioOutputMonitor();
     this.source = source;
     this.recoveryPending = false;
     this.outputStartedAt =
@@ -259,11 +266,10 @@ export class GameAudio {
     this.timer = null;
     this.progress();
   }
-  private interrupt(position = this.position) {
+  private interrupt() {
     if (this.buffer || this.preparation.active) this.renewContext = true;
     if (!this.source) return;
     this.stop();
-    this.offset = position;
     this.interrupted = true;
     this.progress();
   }
@@ -289,6 +295,6 @@ export class GameAudio {
     const context = this.output?.context;
     context?.removeEventListener('statechange', this.contextChanged);
     this.clear();
-    await this.output?.close();
+    await context?.close();
   }
 }
