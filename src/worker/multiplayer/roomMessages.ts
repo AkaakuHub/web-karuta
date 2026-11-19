@@ -18,7 +18,7 @@ export function readRoomMessage(
     socket.close(1008, unsupportedRoom);
     return null;
   }
-  if (!room || typeof message !== 'string' || message.length > 1024) {
+  if (!room || typeof message !== 'string' || message.length > 4096) {
     socket.close(1008, '不正な通信です');
     return null;
   }
