@@ -42,7 +42,6 @@ function useVolumePreference() {
     muted: preference.muted,
     effectiveVolume: preference.muted ? 0 : preference.volume,
     setVolume,
-    saveVolume,
     toggleMuted,
   };
 }

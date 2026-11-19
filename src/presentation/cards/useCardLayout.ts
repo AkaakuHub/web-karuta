@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { fitKarutaBoard } from '../../domain/game/boardLayout.js';
 
-export function useCardLayout(count: number, gap: number, fixedColumns?: number) {
+export function useCardLayout(
+  count: number,
+  gap: number,
+  fixedColumns?: number,
+  lastRowMinHeight?: number,
+) {
   const container = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   useEffect(() => {
@@ -13,5 +18,8 @@ export function useCardLayout(count: number, gap: number, fixedColumns?: number)
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
-  return { container, layout: fitKarutaBoard(count, size.width, size.height, gap, fixedColumns) };
+  return {
+    container,
+    layout: fitKarutaBoard(count, size.width, size.height, gap, fixedColumns, lastRowMinHeight),
+  };
 }

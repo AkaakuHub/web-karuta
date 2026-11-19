@@ -55,7 +55,7 @@ export function RoomPlayers({
           gap: 0.5,
           overflowX: 'auto',
           minWidth: 0,
-          height: { xs: 20, sm: 28 },
+          height: { xs: 32, sm: 40 },
           flexShrink: 0,
         }}
       >
@@ -127,10 +127,10 @@ export function RoomPlayers({
                 }
                 sx={{
                   flexShrink: 0,
-                  height: { xs: 18, sm: 24 },
+                  height: { xs: 28, sm: 34 },
                   opacity: player.removed ? 0.5 : 1,
-                  '& .MuiChip-label': { px: 0.75, fontSize: { xs: 10, sm: 12 } },
-                  '& .MuiChip-icon': { fontSize: { xs: 13, sm: 18 }, ml: 0.5 },
+                  '& .MuiChip-label': { px: 0.75, fontSize: { xs: 12, sm: 14 } },
+                  '& .MuiChip-icon': { fontSize: { xs: 16, sm: 20 }, ml: 0.5 },
                 }}
               />
             </Tooltip>
@@ -150,8 +150,8 @@ export function RoomPlayers({
               onClick={person.id === you ? () => setRenaming(true) : undefined}
               sx={{
                 flexShrink: 0,
-                height: { xs: 18, sm: 24 },
-                '& .MuiChip-label': { fontSize: { xs: 10, sm: 12 } },
+                height: { xs: 28, sm: 34 },
+                '& .MuiChip-label': { fontSize: { xs: 12, sm: 14 } },
               }}
             />
           ))}

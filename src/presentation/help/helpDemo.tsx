@@ -71,8 +71,6 @@ export function HelpDemo({ role, stage }: { role: HelpRole; stage: HelpStage }) 
           needsResume: false,
           canSeek: stage === 'revealed',
           progress: { position: 12, duration: 45 },
-          volume: 0.6,
-          muted: false,
           claimed: room.results.length,
           board: room.board.length,
           reserve: Math.max(
@@ -84,9 +82,7 @@ export function HelpDemo({ role, stage }: { role: HelpRole; stage: HelpStage }) 
         onPlay={ignore}
         onPause={ignore}
         onSeek={ignore}
-        onVolume={ignore}
-        onToggleMuted={ignore}
-        onSettings={host ? ignore : undefined}
+        onSettings={ignore}
         onReveal={host && stage !== 'revealed' ? ignore : undefined}
         onNext={host ? ignore : undefined}
         onReset={ignore}

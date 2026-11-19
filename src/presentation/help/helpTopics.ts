@@ -37,8 +37,8 @@ export function helpTopics(role: HelpRole): HelpTopic[] {
     },
     {
       id: 'settings',
-      title: '次の曲までの待ち時間',
-      description: '歯車から、自動送りと次の曲までの待ち時間を変更できます。',
+      title: '音量と進行の設定',
+      description: '歯車から音量と、正解後に次の曲へ進むまでの待ち時間を変更できます。',
     },
     {
       id: 'start',
@@ -79,11 +79,6 @@ export function helpTopics(role: HelpRole): HelpTopic[] {
       id: 'series',
       title: 'シリーズの内訳',
       description: '名前の横の円をタップ・ホバーすると、シリーズごとの枚数と割合を表示。',
-    },
-    {
-      id: 'volume',
-      title: '音量とミュート',
-      description: 'スピーカーでミュートを切り替え、つまみで音量を調整します。',
     },
     {
       id: 'invite',

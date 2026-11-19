@@ -27,3 +27,11 @@ it('札や表示領域がない状態では配置を作らない', () => {
   expect(fitKarutaBoard(0, 1000, 500, 10)).toBeNull();
   expect(fitKarutaBoard(12, 0, 500, 10)).toBeNull();
 });
+
+it('スマホで操作欄の最低高さを確保し、札を画面内に収める', () => {
+  const layout = fitKarutaBoard(25, 304, 480, 6, 5, 146);
+  if (!layout) throw new Error('札を配置できません');
+  expect(layout.cardWidth / layout.cardHeight).toBeCloseTo(55 / 91);
+  const height = (layout.rows - 1) * (layout.cardHeight + 6) + Math.max(layout.cardHeight, 146);
+  expect(height).toBeLessThanOrEqual(480.001);
+});

@@ -31,7 +31,7 @@ export function useGame<Song extends { id: string }>(
   const [needsResume, setNeedsResume] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { volume, muted, effectiveVolume, setVolume, toggleMuted } = useAudioVolume();
+  const { effectiveVolume } = useAudioVolume();
   const { feedback, revision, notify, clear } = useGameFeedback(effectiveVolume, setError);
   const current = useRef<GameSession | null>(null);
   const [progress, setProgress] = useState<TrackProgress>({ position: 0, duration: 0 });
@@ -59,7 +59,6 @@ export function useGame<Song extends { id: string }>(
         setError('');
       }
     });
-    audio.volume(0.7);
     player.current = audio;
     return () => {
       if (current.current && current.current.phase !== 'complete')
@@ -69,7 +68,7 @@ export function useGame<Song extends { id: string }>(
   }, [saveSession, update]);
   useEffect(() => {
     player.current?.volume(effectiveVolume);
-  }, [effectiveVolume]);
+  }, [effectiveVolume, update]);
 
   useEffect(() => {
     suspended.current = timingPaused || needsResume;
@@ -259,9 +258,5 @@ export function useGame<Song extends { id: string }>(
     },
     pause: cancelAudio,
     seek,
-    volume,
-    muted,
-    setVolume,
-    toggleMuted,
   };
 }

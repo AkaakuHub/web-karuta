@@ -21,7 +21,6 @@ import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
 import CancelRounded from '@mui/icons-material/CancelRounded';
 import EmojiEventsRounded from '@mui/icons-material/EmojiEventsRounded';
 import { ResultControls } from './resultControls.js';
-import { VolumeControl } from '../audio/volumeControl.js';
 import type { GameControlsProps } from './controlsModel.js';
 import { AudioSeek } from '../audio/audioSeek.js';
 import { PlaybackButton } from '../audio/playbackButton.js';
@@ -31,8 +30,6 @@ export function GameControls({
   onPlay,
   onPause,
   onSeek,
-  onVolume,
-  onToggleMuted,
   onSettings,
   onGiveUp,
   givenUp,
@@ -49,22 +46,14 @@ export function GameControls({
   const revealed = state.phase === 'revealed';
   useRoundShortcut(complete ? undefined : revealed ? onNext : onReveal);
   if (complete)
-    return (
-      <ResultControls
-        state={state}
-        onVolume={onVolume}
-        onToggleMuted={onToggleMuted}
-        onReset={onReset}
-        resetLabel={resetLabel}
-        onSettings={onSettings}
-      />
-    );
+    return <ResultControls onReset={onReset} resetLabel={resetLabel} onSettings={onSettings} />;
   return (
     <Paper
       data-game-panel="controls"
       data-help-stage={state.loading ? 'loading' : state.phase}
       sx={{
         p: { xs: 0.25, sm: 1 },
+        pt: { xs: '24px', sm: '32px' },
         border: '1px solid',
         borderColor: 'divider',
         borderRadius: 1,
@@ -72,9 +61,10 @@ export function GameControls({
         minHeight: 0,
         flexShrink: 0,
         display: 'grid',
-        gridTemplateRows: { xs: 'auto 12px 32px 24px 2px', sm: '28px 24px 36px 32px 3px' },
+        gridTemplateRows: { xs: 'auto 16px 32px 2px', sm: 'auto 24px 36px 3px' },
+        rowGap: { xs: 0, sm: 0.5 },
         gridTemplateColumns: 'minmax(0, 1fr)',
-        alignContent: 'space-between',
+        alignContent: 'start',
         overflow: 'hidden',
       }}
     >
@@ -106,6 +96,15 @@ export function GameControls({
             sx={{ maxWidth: { xs: 60, sm: 150 } }}
           />
         )}
+        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+          <Typography
+            variant="caption"
+            sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}
+          >
+            場{state.board}枚・控え{state.reserve}枚
+          </Typography>
+          <GameExitButton label={resetLabel} onClick={onReset} />
+        </Box>
         <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
         <Box
           sx={{
@@ -219,35 +218,6 @@ export function GameControls({
             <GameSettingsButton onClick={onSettings} />
           </Box>
         )}
-      </Box>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0.5,
-          gridColumn: 1,
-          justifyContent: 'space-between',
-          '& > .MuiTooltip-root': { p: 0.25 },
-        }}
-      >
-        <Typography
-          variant="caption"
-          sx={{
-            display: { xs: 'none', sm: 'block' },
-            mr: 'auto',
-            ml: 'auto',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          場{state.board}枚・控え{state.reserve}枚
-        </Typography>
-        <VolumeControl
-          value={state.volume}
-          muted={state.muted}
-          onToggleMuted={onToggleMuted}
-          onChange={onVolume}
-        />
-        <GameExitButton label={resetLabel} onClick={onReset} />
       </Box>
       <ConfirmDialog
         open={finishing}

@@ -10,8 +10,6 @@ interface GameControlsState {
   needsResume: boolean;
   canSeek: boolean;
   progress: TrackProgress;
-  volume: number;
-  muted: boolean;
   claimed: number;
   board: number;
   reserve: number;
@@ -26,8 +24,6 @@ export interface GameControlsProps {
   onPlay: () => void | Promise<void>;
   onPause: () => void;
   onSeek: (position: number) => void | Promise<void>;
-  onVolume: (volume: number) => void;
-  onToggleMuted: () => void;
   onSettings?: () => void;
   onGiveUp?: () => void;
   givenUp?: boolean;

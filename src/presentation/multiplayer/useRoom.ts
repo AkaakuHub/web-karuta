@@ -48,7 +48,7 @@ export function useRoom() {
   const [pendingTake, setPendingTake] = useState<PendingTake | null>(null);
   const [input] = useState(() => new TakeInput(setPendingTake));
   const acceptedRound = useRef<number | null>(null);
-  const { volume, muted, effectiveVolume, setVolume, toggleMuted } = useAudioVolume();
+  const { effectiveVolume } = useAudioVolume();
   const effects = useGameFeedback(effectiveVolume, setError);
   const current = useRef<RoomView | null>(null);
   const connectionPlayer = useRef('');
@@ -291,10 +291,6 @@ export function useRoom() {
     send,
     rename: (name: string) => send({ type: 'rename', name }),
     join,
-    volume,
-    muted,
-    setVolume,
-    toggleMuted,
     leave,
     prepareReload: disconnect,
   };
