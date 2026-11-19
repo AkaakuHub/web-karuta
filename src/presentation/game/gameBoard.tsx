@@ -39,12 +39,10 @@ export const GameBoard = memo(function GameBoard({
   );
   const controls = useContext(BoardControls);
   const gap = controls ? boardGap.mobile : boardGap.desktop;
-  const lastRowMinHeight = controls ? 146 : 0;
   const { container, layout } = useCardLayout(
     board.length + (controls ? 4 : 0),
     gap,
     controls ? 5 : undefined,
-    lastRowMinHeight,
   );
   return (
     <Box
@@ -64,12 +62,7 @@ export const GameBoard = memo(function GameBoard({
               display: 'grid',
               gap: `${gap}px`,
               gridTemplateColumns: `repeat(${layout.columns}, ${layout.cardWidth}px)`,
-              gridTemplateRows: controls
-                ? [
-                    ...Array<string>(layout.rows - 1).fill(`${layout.cardHeight}px`),
-                    `${Math.max(layout.cardHeight, lastRowMinHeight)}px`,
-                  ].join(' ')
-                : `repeat(${layout.rows}, ${layout.cardHeight}px)`,
+              gridTemplateRows: `repeat(${layout.rows}, ${layout.cardHeight}px)`,
               alignContent: controls ? 'start' : 'center',
               justifyContent: 'center',
             }}

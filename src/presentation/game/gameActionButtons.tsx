@@ -38,7 +38,7 @@ export function NextRoundButton({
       aria-keyshortcuts="Space Enter"
       aria-label={label}
       sx={{
-        width: { xs: 32, sm: 'auto' },
+        width: { xs: 26, sm: 'auto' },
         minWidth: 0,
         '& .MuiButton-startIcon': { m: { xs: 0, sm: undefined } },
       }}

@@ -11,6 +11,7 @@ export function GameLayout({
   children,
   actions,
   results,
+  players,
 }: {
   board: ReactNode;
   regulation?: string;
@@ -18,6 +19,7 @@ export function GameLayout({
   children: ReactNode;
   actions?: ReactNode;
   results?: ReactNode;
+  players?: ReactNode;
 }) {
   const area = results ?? board;
   const mobile = useMediaQuery(useTheme().breakpoints.down('sm'));
@@ -55,22 +57,23 @@ export function GameLayout({
             ? {
                 '@media (max-width: 599.95px)': {
                   display: 'grid',
-                  gridTemplateRows: 'min-content minmax(0, 1fr)',
+                  gridTemplateRows: 'minmax(0, 1fr)',
+                  gridTemplateColumns: players
+                    ? 'minmax(0, 1fr) minmax(0, 1fr)'
+                    : 'minmax(0, 1.16fr) minmax(0, 0.84fr)',
                   columnGap: '6px',
-                  rowGap: '2px',
-                  '& > [data-game-panel="players"]': { gridColumn: 1, gridRow: 1 },
-                  '& > [data-game-panel="controls"]': { gridColumn: 1, gridRow: 2 },
+                  '& > [data-game-panel="controls"]': { gridRow: 1 },
                   '& > [data-game-panel="review"]': {
                     gridColumn: 2,
-                    gridRow: '1 / span 2',
-                    height: '100%',
+                    gridRow: 1,
+                    minHeight: 0,
                     pb: '18px',
                   },
                   '& > [data-game-panel="status"]': {
-                    position: 'absolute',
-                    right: 0,
-                    bottom: 0,
-                    width: 'calc((100% - 6px) / 2)',
+                    gridColumn: 2,
+                    gridRow: 1,
+                    alignSelf: 'end',
+                    zIndex: 1,
                     height: 16,
                     minHeight: 16,
                     '& [role="status"]': { height: 16 },
@@ -85,11 +88,15 @@ export function GameLayout({
                   '& > :not([data-game-panel]) .MuiChip-root': { height: 16, flexShrink: 0 },
                   '& > :not([data-game-panel]) .MuiChip-label': { fontSize: 10 },
                 },
-                '& > [data-game-panel="review"]': { gridColumn: 2, gridRow: '1 / span 4' },
+                '& > [data-game-panel="review"]': {
+                  gridColumn: 2,
+                  gridRow: { sm: '1 / span 4' },
+                },
               }
             : {}),
         }}
       >
+        {(!mobile || !board) && players}
         {children}
       </Stack>
     </Paper>
@@ -118,6 +125,7 @@ export function GameLayout({
         </Box>
       </AppHeaderContent>
       <Box
+        data-game-board-layout={board ? true : undefined}
         sx={{
           height: '100%',
           display: area ? 'grid' : 'block',
@@ -128,12 +136,15 @@ export function GameLayout({
           gridTemplateRows: results
             ? 'minmax(0, 1fr) 48px'
             : mobile
-              ? 'minmax(0, 1fr)'
+              ? players
+                ? 'auto minmax(0, 1fr)'
+                : 'minmax(0, 1fr)'
               : { sm: `minmax(0, 1fr) ${bottomControlsHeight}px`, md: 'minmax(0, 1fr)' },
-          gap: `${panelGap}px`,
+          gap: mobile && board ? 0 : `${panelGap}px`,
           minHeight: 0,
         }}
       >
+        {mobile && board && players}
         {area}
         {(!mobile || !board) && controls}
       </Box>

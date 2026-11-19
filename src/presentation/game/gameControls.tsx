@@ -54,8 +54,9 @@ export function GameControls({
       data-game-panel="controls"
       data-help-stage={state.loading ? 'loading' : state.phase}
       sx={{
+        position: 'relative',
         p: { xs: 0.25, sm: 1 },
-        pt: { xs: '24px', sm: '32px' },
+        pt: { xs: 0.25, sm: '32px' },
         border: '1px solid',
         borderColor: 'divider',
         borderRadius: 1,
@@ -63,7 +64,8 @@ export function GameControls({
         minHeight: 0,
         flexShrink: 0,
         display: 'grid',
-        gridTemplateRows: { xs: 'auto 16px 32px 2px', sm: 'auto 24px 36px 3px' },
+        gridTemplateRows: { xs: 'minmax(0, 1fr) 18px 32px', sm: 'minmax(0, 1fr) 24px 36px' },
+        pb: { xs: 0.5, sm: 0.75 },
         rowGap: { xs: 0, sm: 0.5 },
         gridTemplateColumns: 'minmax(0, 1fr)',
         alignContent: 'start',
@@ -73,32 +75,33 @@ export function GameControls({
       <Box
         sx={{
           display: 'flex',
-          flexWrap: { xs: 'wrap', sm: 'nowrap' },
+          flexWrap: 'nowrap',
           alignItems: 'center',
-          gap: 0.5,
+          gap: { xs: 0.25, sm: 0.5 },
           rowGap: 0,
           minWidth: 0,
           gridColumn: '1 / -1',
           '& .MuiChip-root': { height: { xs: 16, sm: 24 } },
+          '& .MuiChip-icon': { fontSize: { xs: 12, sm: 18 } },
+          '& [data-help="exit"]': { p: { xs: 0.25, sm: 0.5 } },
+          '& [data-help="exit"] svg': { fontSize: { xs: 18, sm: 24 } },
           '& .MuiChip-label': { fontSize: { xs: 10, sm: 12 }, px: 0.5 },
         }}
       >
         <Chip size="small" label={complete ? '結果' : `${state.round + 1} / ${state.total}`} />
-        <CircularProgress
-          size={16}
-          aria-label="音声を準備中"
-          sx={{ visibility: state.loading ? 'visible' : 'hidden', flexShrink: 0 }}
-        />
+        {state.loading && (
+          <CircularProgress size={16} aria-label="音声を準備中" sx={{ flexShrink: 0 }} />
+        )}
         {state.winner && (
           <Chip
             size="small"
             color="success"
             icon={<EmojiEventsRounded />}
             label={state.winner}
-            sx={{ maxWidth: { xs: 60, sm: 150 } }}
+            sx={{ minWidth: 0, maxWidth: { xs: 60, sm: 150 } }}
           />
         )}
-        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
           <Typography
             variant="caption"
             sx={{ display: { xs: 'none', sm: 'block' }, whiteSpace: 'nowrap' }}
@@ -110,14 +113,13 @@ export function GameControls({
         <Box sx={{ flex: 1, display: { xs: 'none', sm: 'block' } }} />
         <Box
           sx={{
-            display: 'flex',
-            flexWrap: { xs: 'wrap', sm: 'nowrap' },
-            width: { xs: '100%', sm: 'auto' },
+            flexWrap: 'nowrap',
+            display: state.statistics.length ? 'flex' : 'none',
             justifyContent: { xs: 'space-between', sm: 'flex-start' },
             gap: { xs: 0.125, sm: 0.75 },
             flexShrink: 0,
             fontSize: { xs: 9, sm: 14 },
-            '& svg': { fontSize: { xs: 14, sm: 20 } },
+            '& svg': { fontSize: { xs: 12, sm: 20 } },
           }}
         >
           {state.statistics.map((statistic) => {
@@ -164,9 +166,11 @@ export function GameControls({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: { xs: 0.5, sm: 1 },
+          gap: { xs: 0.25, sm: 1 },
           minWidth: 0,
           gridColumn: 1,
+          '& > *': { flexShrink: 0 },
+          '& [data-audio-control]': { p: { xs: 0.25, sm: 1 } },
           '& .MuiButton-root': {
             minWidth: 0,
             minHeight: { xs: 28, sm: 32 },
@@ -208,7 +212,12 @@ export function GameControls({
         {revealed && <NextRoundButton round={state.round} total={state.total} onNext={onNext} />}
         {onFinish && (
           <Tooltip title="終了">
-            <IconButton size="small" aria-label="途中で終了" onClick={() => setFinishing(true)}>
+            <IconButton
+              size="small"
+              aria-label="途中で終了"
+              onClick={() => setFinishing(true)}
+              sx={{ p: { xs: 0.25, sm: 0.5 }, '& svg': { fontSize: { xs: 18, sm: 24 } } }}
+            >
               <StopCircleRounded fontSize="small" />
             </IconButton>
           </Tooltip>
@@ -232,7 +241,8 @@ export function GameControls({
       <LinearProgress
         variant="determinate"
         value={state.total ? (state.claimed / state.total) * 100 : 0}
-        sx={{ height: 2, borderRadius: 1, gridColumn: '1 / -1' }}
+        aria-label="デッキの進捗"
+        sx={{ position: 'absolute', inset: 'auto 0 0', height: 2 }}
       />
     </Paper>
   );
