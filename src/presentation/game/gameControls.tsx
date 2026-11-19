@@ -75,7 +75,8 @@ export function GameControls({
       <Box
         sx={{
           display: 'flex',
-          flexWrap: 'nowrap',
+          flexWrap: { xs: state.statistics.length ? 'wrap' : 'nowrap', sm: 'nowrap' },
+          alignContent: 'center',
           alignItems: 'center',
           gap: { xs: 0.25, sm: 0.5 },
           rowGap: 0,
@@ -84,7 +85,7 @@ export function GameControls({
           '& .MuiChip-root': { height: { xs: 16, sm: 24 } },
           '& .MuiChip-icon': { fontSize: { xs: 12, sm: 18 } },
           '& [data-help="exit"]': { p: { xs: 0.25, sm: 0.5 } },
-          '& [data-help="exit"] svg': { fontSize: { xs: 18, sm: 24 } },
+          '& [data-help="exit"] svg': { fontSize: { xs: 14, sm: 24 } },
           '& .MuiChip-label': { fontSize: { xs: 10, sm: 12 }, px: 0.5 },
         }}
       >
@@ -115,7 +116,8 @@ export function GameControls({
           sx={{
             flexWrap: 'nowrap',
             display: state.statistics.length ? 'flex' : 'none',
-            justifyContent: { xs: 'space-between', sm: 'flex-start' },
+            flexBasis: { xs: '100%', sm: 'auto' },
+            justifyContent: { xs: 'center', sm: 'flex-start' },
             gap: { xs: 0.125, sm: 0.75 },
             flexShrink: 0,
             fontSize: { xs: 9, sm: 14 },

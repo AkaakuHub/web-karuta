@@ -2,7 +2,12 @@ import { AppHeaderContent } from '../shared/appHeaderContent.js';
 import { BoardControls } from './boardControls.js';
 import { type ReactNode } from 'react';
 import { Box, Paper, Stack, Chip, useMediaQuery, useTheme } from '@mui/material';
-import { bottomControlsHeight, panelGap, sideControlsWidth } from '../shared/playLayout.js';
+import {
+  boardGap,
+  bottomControlsHeight,
+  panelGap,
+  sideControlsWidth,
+} from '../shared/playLayout.js';
 
 export function GameLayout({
   board,
@@ -58,10 +63,7 @@ export function GameLayout({
                 '@media (max-width: 599.95px)': {
                   display: 'grid',
                   gridTemplateRows: 'minmax(0, 1fr)',
-                  gridTemplateColumns: players
-                    ? 'minmax(0, 1fr) minmax(0, 1fr)'
-                    : 'minmax(0, 1.22fr) minmax(0, 0.78fr)',
-                  columnGap: '6px',
+                  columnGap: `${boardGap.mobile}px`,
                   '& > [data-game-panel="controls"]': { gridRow: 1 },
                   '& > [data-game-panel="review"]': {
                     gridColumn: 2,
