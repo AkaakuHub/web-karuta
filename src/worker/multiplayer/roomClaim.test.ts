@@ -29,7 +29,7 @@ function setup() {
     order: ['correct', 'wrong'],
     board: ['correct', 'wrong'],
     ready: ['a', 'b'],
-    players: ['a', 'b'].map((id) => ({ id, name: id, score: 0, connected: true })),
+    players: ['a', 'b'].map((id) => ({ id, name: id, connected: true })),
   };
   const command = { type: 'take' as const, round: 0, id: 'correct', elapsedMs: 1000 };
   return { room, socket, events, command };

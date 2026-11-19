@@ -87,7 +87,7 @@ it('受付済みの正解は次の通信もアラームも待たずに確定す�
     phase: 'playing',
     startsAt: 90000,
     settling: true,
-    players: [{ id: 'host', name: 'host', score: 0, connected: true }],
+    players: [{ id: 'host', name: 'host', connected: true }],
     ready: ['host'],
     board: ['one'],
     order: ['one'],

@@ -1,3 +1,4 @@
+import { correctCount } from '../game/results.js';
 import { expect, it } from 'vite-plus/test';
 import { submitClaim, settleClaims } from './claims.js';
 import { beginGame, emptyRoom, readyPlayer, skipRound } from './room.js';
@@ -5,7 +6,7 @@ import { disconnectPlayer } from './participants.js';
 
 function playing() {
   const room = emptyRoom('a');
-  room.players = ['a', 'b', 'c'].map((id) => ({ id, name: id, score: 0, connected: true }));
+  room.players = ['a', 'b', 'c'].map((id) => ({ id, name: id, connected: true }));
   return readyPlayer(
     readyPlayer(
       readyPlayer(
@@ -39,7 +40,9 @@ it('届いた時点では正解を公開せず、遅い回線から早い反応�
   );
   const settled = settleClaims(second.room, second.pending!, () => 0);
   expect(settled.winner).toBe('b');
-  expect(settled.players.map((player) => player.score)).toEqual([0, 1, 0]);
+  expect(settled.players.map((player) => correctCount(settled.results, player.id))).toEqual([
+    0, 1, 0,
+  ]);
 });
 
 it('時刻が完全に同じ場合も1人だけへ1点を与え、札を重複して記録しない', () => {
@@ -58,7 +61,9 @@ it('時刻が完全に同じ場合も1人だけへ1点を与え、札を重複�
   const settled = settleClaims(second.room, second.pending!, () => 0.99);
   expect(settled.winner).toBe('b');
   expect(settled.results).toEqual([{ id: room.order[0], owner: 'b' }]);
-  expect(settled.players.map((player) => player.score)).toEqual([0, 1, 0]);
+  expect(settled.players.map((player) => correctCount(settled.results, player.id))).toEqual([
+    0, 1, 0,
+  ]);
 });
 
 it('判定中の見送りや残りの人のお手つきで正解の入力を失わない', () => {
@@ -75,7 +80,7 @@ it('判定中の見送りや残りの人のお手つきで正解の入力を失�
 
 it('準備していない途中参加者と同じ人の重複入力を採用しない', () => {
   const room = playing();
-  room.players.push({ id: 'late', name: 'late', score: 0, connected: true });
+  room.players.push({ id: 'late', name: 'late', connected: true });
   expect(submitClaim(room, null, 'late', room.order[0]!, 500, 1520, [40, 40], 350).room).toBe(room);
   const first = submitClaim(room, null, 'a', room.order[0]!, 500, 1520, [40, 40], 350);
   expect(

@@ -1,3 +1,4 @@
+import { correctCount } from '../game/results.js';
 import { describe, expect, it } from 'vite-plus/test';
 import {
   finishGame,
@@ -13,7 +14,7 @@ import {
 
 function playing() {
   const room = emptyRoom('a');
-  room.players = ['a', 'b'].map((id) => ({ id, name: id, score: 0, connected: true }));
+  room.players = ['a', 'b'].map((id) => ({ id, name: id, connected: true }));
   return readyPlayer(
     readyPlayer(
       beginGame(room, ['one', 'two', 'three'], 3, () => 0.4),
@@ -27,7 +28,7 @@ function playing() {
 describe('オンライン対戦の取得判定', () => {
   it('デッキ全体を出題し、取得した位置へ控えの札を補充する', () => {
     const base = emptyRoom('a');
-    base.players = ['a', 'b'].map((id) => ({ id, name: id, score: 0, connected: true }));
+    base.players = ['a', 'b'].map((id) => ({ id, name: id, connected: true }));
     let room = beginGame(base, ['one', 'two', 'three', 'four', 'five'], 2, () => 0.4);
     expect(room.order.length).toBe(5);
     expect(room.board.length).toBe(2);
@@ -42,7 +43,7 @@ describe('オンライン対戦の取得判定', () => {
       expect(room.board.length).toBe(2);
     }
     expect(room.phase).toBe('finished');
-    expect(room.players[0]!.score).toBe(5);
+    expect(correctCount(room.results, 'a')).toBe(5);
   });
   it('音源の準備に失敗した曲を見送り、札を除いて次へ進める', () => {
     const room = playing();
@@ -56,7 +57,7 @@ describe('オンライン対戦の取得判定', () => {
   });
   it('全員の音声準備が完了するまで開始しない', () => {
     const room = emptyRoom('a');
-    room.players = ['a', 'b'].map((id) => ({ id, name: id, score: 0, connected: true }));
+    room.players = ['a', 'b'].map((id) => ({ id, name: id, connected: true }));
     const waiting = readyPlayer(
       beginGame(room, ['one', 'two'], 2, () => 0.4),
       'a',
@@ -81,7 +82,7 @@ describe('オンライン対戦の取得判定', () => {
     const second = claimCard(first, 'b', answer, 2201);
     expect(second.winner).toBe('a');
     expect(second.results).toEqual([{ id: answer, owner: 'a' }]);
-    expect(second.players.map((player) => player.score)).toEqual([1, 0]);
+    expect(second.players.map((player) => correctCount(second.results, player.id))).toEqual([1, 0]);
     expect(second.board).toContain(answer);
     expect(second.board.length).toBe(room.board.length);
     expect(prepareRound(second).board).not.toContain(answer);
@@ -110,7 +111,7 @@ describe('オンライン対戦の取得判定', () => {
       const room = playing();
       const wrong = room.board.find((id) => id !== room.order[0])!;
       const missed = claimCard(room, 'a', wrong, 2200);
-      expect(missed.players[0]!.score).toBe(0);
+      expect(correctCount(missed.results, 'a')).toBe(0);
       const next = prepareRound(claimCard(missed, 'b', room.order[0]!, 2400));
       expect(next.blocked).toEqual(['a']);
       expect(next.incorrect).toEqual({});
@@ -129,7 +130,7 @@ describe('オンライン対戦の取得判定', () => {
 
 it('準備期限後は準備できた参加者だけで開始し、遅れた参加者も後から合流する', () => {
   const base = emptyRoom('a');
-  base.players = ['a', 'b'].map((id) => ({ id, name: id, score: 0, connected: true }));
+  base.players = ['a', 'b'].map((id) => ({ id, name: id, connected: true }));
   const loading = readyPlayer(
     beginGame(base, ['one', 'two'], 2, () => 0.4),
     'a',
@@ -145,7 +146,7 @@ it('準備期限後は準備できた参加者だけで開始し、遅れた参�
 
 it('準備期限まで誰も準備できなければその曲を見送り次へ進める', () => {
   const base = emptyRoom('a');
-  base.players = ['a', 'b'].map((id) => ({ id, name: id, score: 0, connected: true }));
+  base.players = ['a', 'b'].map((id) => ({ id, name: id, connected: true }));
   const finished = finishPreparation(
     beginGame(base, ['one', 'two'], 2, () => 0.4),
     15000,

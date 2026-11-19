@@ -34,10 +34,7 @@ export function RoomPlayers({
   const [renaming, setRenaming] = useState(false);
   const self = [...room.players, ...room.spectators].find((person) => person.id === you);
   const host = room.host === you;
-  const ranked = rankPlayers(room.players, room.results).map(({ id, rank }) => ({
-    ...room.players.find((person) => person.id === id)!,
-    rank,
-  }));
+  const ranked = rankPlayers(room.players, room.results);
   const rankingContainer = usePlayerRankingAnimation(ranked.map((person) => person.id).join(','));
   const waitingIds = new Set(waitingPlayers(room).map((player) => player.id));
   const menuPlayer = room.players.find((player) => player.id === menu?.id);
@@ -86,7 +83,7 @@ export function RoomPlayers({
           return (
             <Tooltip
               key={player.id}
-              title={`${player.name}・${player.id === room.host ? 'ホスト・' : ''}${status}・${player.score}枚`}
+              title={`${player.name}・${player.id === room.host ? 'ホスト・' : ''}${status}・${player.count}枚`}
               describeChild
             >
               <Chip
@@ -96,7 +93,7 @@ export function RoomPlayers({
                 aria-label={
                   player.id === you
                     ? `名前を変更：${player.name}`
-                    : `${player.name} ${status} ${player.score}枚`
+                    : `${player.name} ${status} ${player.count}枚`
                 }
                 color={
                   player.removed || !player.connected
@@ -122,7 +119,7 @@ export function RoomPlayers({
                     <span>
                       {player.rank}位 {player.name}
                     </span>
-                    <strong>{givenUp ? 'お手上げ' : `${player.score}枚`}</strong>
+                    <strong>{givenUp ? 'お手上げ' : `${player.count}枚`}</strong>
                   </Box>
                 }
                 sx={{

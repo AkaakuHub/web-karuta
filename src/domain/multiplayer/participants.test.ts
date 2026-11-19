@@ -4,7 +4,7 @@ import { beginGame, emptyRoom, readyPlayer } from './room.js';
 
 function loading() {
   const room = emptyRoom('a');
-  room.players = ['a', 'b', 'c'].map((id) => ({ id, name: id, score: 0, connected: true }));
+  room.players = ['a', 'b', 'c'].map((id) => ({ id, name: id, connected: true }));
   return readyPlayer(
     readyPlayer(
       beginGame(room, ['one', 'two'], 2, () => 0.5),

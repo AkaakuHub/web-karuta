@@ -16,7 +16,7 @@ interface GameControlsState {
   statistics: readonly {
     name: string;
     value: string | number;
-    kind: 'score' | 'correct' | 'incorrect' | 'skipped';
+    kind: 'correct' | 'incorrect' | 'skipped';
   }[];
 }
 export interface GameControlsProps {

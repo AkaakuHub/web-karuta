@@ -1,4 +1,3 @@
-import { scoreTotal } from '../game/results.js';
 import type { Command, RoomView } from './protocol.js';
 
 export interface Room extends Omit<
@@ -58,7 +57,6 @@ export function beginGame(
   }
   return {
     ...room,
-    players: room.players.map((player) => ({ ...player, score: 0 })),
     board,
     order,
     results: [],
@@ -153,7 +151,6 @@ export function awardCard(room: Room, owner: string): Room {
     results,
     phase: 'revealed',
     winner: owner,
-    players: room.players.map((player) => ({ ...player, score: scoreTotal(results, player.id) })),
   };
 }
 

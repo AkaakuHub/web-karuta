@@ -33,7 +33,6 @@ export type Command = z.infer<typeof commandSchema>;
 const playerSchema = z.object({
   id: z.string(),
   name: z.string(),
-  score: z.number(),
   connected: z.boolean(),
   removed: z.boolean(),
 });

@@ -1,3 +1,4 @@
+import EmojiEventsRounded from '@mui/icons-material/EmojiEventsRounded';
 import { ConfirmDialog } from '../shared/confirmDialog.js';
 import { GameSettingsButton } from './gameSettingsButton.js';
 import { useContext, useState } from 'react';
@@ -19,7 +20,6 @@ import StopCircleRounded from '@mui/icons-material/StopCircleRounded';
 import SkipNextRounded from '@mui/icons-material/SkipNextRounded';
 import CheckCircleRounded from '@mui/icons-material/CheckCircleRounded';
 import CancelRounded from '@mui/icons-material/CancelRounded';
-import EmojiEventsRounded from '@mui/icons-material/EmojiEventsRounded';
 import { ResultControls } from './resultControls.js';
 import type { GameControlsProps } from './controlsModel.js';
 import { AudioSeek } from '../audio/audioSeek.js';
@@ -120,13 +120,11 @@ export function GameControls({
         >
           {state.statistics.map((statistic) => {
             const Icon =
-              statistic.kind === 'score'
-                ? EmojiEventsRounded
-                : statistic.kind === 'correct'
-                  ? CheckCircleRounded
-                  : statistic.kind === 'incorrect'
-                    ? CancelRounded
-                    : SkipNextRounded;
+              statistic.kind === 'correct'
+                ? CheckCircleRounded
+                : statistic.kind === 'incorrect'
+                  ? CancelRounded
+                  : SkipNextRounded;
             return (
               <Tooltip key={statistic.name} title={statistic.name}>
                 <Box

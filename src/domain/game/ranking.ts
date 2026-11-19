@@ -1,11 +1,11 @@
-import { scoreTotal, type RoundResult } from './results.js';
+import { correctCount, type RoundResult } from './results.js';
 
-export function rankPlayers(
-  players: readonly { id: string; name: string }[],
+export function rankPlayers<Player extends { id: string; name: string }>(
+  players: readonly Player[],
   results: readonly RoundResult[],
 ) {
   const ranked = players
-    .map((player) => ({ ...player, count: scoreTotal(results, player.id) }))
+    .map((player) => ({ ...player, count: correctCount(results, player.id) }))
     .sort((a, b) => b.count - a.count);
   let rank = 0;
   return ranked.map((player, index) => {

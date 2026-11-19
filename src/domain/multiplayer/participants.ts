@@ -58,7 +58,7 @@ export function joinParticipant(room: Room, id: string, name: string, spectator:
       : id,
     players: existing
       ? room.players.map((person) => (person.id === id ? { ...person, connected: true } : person))
-      : [...room.players, { id, name, score: 0, connected: true }],
+      : [...room.players, { id, name, connected: true }],
   };
 }
 

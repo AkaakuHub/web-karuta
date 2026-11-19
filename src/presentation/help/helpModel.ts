@@ -1,3 +1,4 @@
+import { rankPlayers } from '../../domain/game/ranking.js';
 import type { RoomView } from '../../domain/multiplayer/protocol.js';
 import type { PlayerSeries } from '../../domain/game/seriesBreakdown.js';
 import type { HelpCard } from './helpExamples.js';
@@ -32,7 +33,6 @@ export function helpRoom(cards: readonly HelpCard[], role: HelpRole, stage: Help
     ...(role === 'solo' ? [] : [{ id: 'help-b', name: 'ひなた' }]),
   ].map((player) => ({
     ...player,
-    score: results.filter((result) => result.owner === player.id).length,
     connected: true,
     removed: false,
   }));
@@ -68,25 +68,25 @@ export function helpRoom(cards: readonly HelpCard[], role: HelpRole, stage: Help
 }
 
 export function helpSeries(room: RoomView): PlayerSeries[] {
-  return room.players.map((player) => ({
+  return rankPlayers(room.players, room.results).map((player) => ({
     id: player.id,
     name: player.name,
-    total: player.score,
-    slices: player.score
+    total: player.count,
+    slices: player.count
       ? [
           {
             id: 'a',
             name: 'シリーズA',
             color: '#168fe5',
-            count: Math.ceil(player.score * 0.6),
-            value: Math.ceil(player.score * 0.6),
+            count: Math.ceil(player.count * 0.6),
+            value: Math.ceil(player.count * 0.6),
           },
           {
             id: 'b',
             name: 'シリーズB',
             color: '#ed70aa',
-            count: Math.floor(player.score * 0.4),
-            value: Math.floor(player.score * 0.4),
+            count: Math.floor(player.count * 0.4),
+            value: Math.floor(player.count * 0.4),
           },
         ].filter((slice) => slice.count > 0)
       : [],
