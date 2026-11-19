@@ -376,6 +376,10 @@
       "types": "./dist/presentation/help/gameHelp.d.ts",
       "default": "./dist/presentation/help/gameHelp.js"
     },
+    "./presentation/catalog/catalogSearch": {
+      "types": "./dist/presentation/catalog/catalogSearch.d.ts",
+      "default": "./dist/presentation/catalog/catalogSearch.js"
+    },
     "./presentation/catalog/catalogSongDialog": {
       "types": "./dist/presentation/catalog/catalogSongDialog.d.ts",
       "default": "./dist/presentation/catalog/catalogSongDialog.js"
