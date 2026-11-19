@@ -43,10 +43,6 @@ export function GameResults({
         p: { xs: 1.5, sm: 2 },
         minHeight: 0,
         overflow: 'auto',
-        '& > [data-game-panel="status"]:not([data-game-error="true"])': {
-          height: { xs: 24, sm: 40 },
-          minHeight: { xs: 24, sm: 40 },
-        },
       }}
     >
       {feedback}

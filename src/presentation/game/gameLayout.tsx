@@ -57,7 +57,6 @@ export function GameLayout({
           gridTemplateRows: 'min-content min-content min-content minmax(0, 1fr)',
           alignContent: 'start',
           '& > *': { minWidth: 0, gridColumn: 1 },
-          ...(!board ? { '& > [data-game-panel="status"]': { order: -1 } } : {}),
           ...(board
             ? {
                 '@media (max-width: 599.95px)': {
@@ -69,17 +68,6 @@ export function GameLayout({
                     gridColumn: 2,
                     gridRow: 1,
                     minHeight: 0,
-                    pb: '18px',
-                  },
-                  '& > [data-game-panel="status"]': {
-                    gridColumn: 2,
-                    gridRow: 1,
-                    alignSelf: 'end',
-                    zIndex: 1,
-                    height: 16,
-                    minHeight: 16,
-                    '& [role="status"]': { height: 16 },
-                    '& [role="status"] p': { fontSize: 11 },
                   },
                   '& > :not([data-game-panel])': {
                     flexWrap: 'nowrap',

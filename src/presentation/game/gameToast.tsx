@@ -13,7 +13,7 @@ export function GameToast({
   children,
 }: {
   open: boolean;
-  onClose: () => void;
+  onClose?: () => void;
   children: ReactElement;
 }) {
   const { show, hide } = useGameToast();
@@ -22,7 +22,7 @@ export function GameToast({
   content.current = { children, onClose };
   useEffect(() => {
     if (!open) return;
-    show(id, content.current.children, () => content.current.onClose());
+    show(id, content.current.children, () => content.current.onClose?.());
     return () => hide(id);
   }, [open, id, show, hide]);
   return null;

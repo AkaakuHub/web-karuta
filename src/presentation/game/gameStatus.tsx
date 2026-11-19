@@ -1,4 +1,5 @@
-import { Box, Typography } from '@mui/material';
+import { Alert } from '@mui/material';
+import { GameToast } from './gameToast.js';
 import type { GameFeedback as Feedback } from '../../domain/game/session.js';
 import { GameNotice } from './gameNotice.js';
 import { GameFeedback } from './gameFeedback.js';
@@ -20,32 +21,14 @@ export function GameStatus({
   pending?: boolean;
   waiting?: boolean;
 }) {
-  if (!active) return <GameNotice error={error} />;
+  if (!active || error || mistake) return <GameNotice error={error} mistake={active && mistake} />;
+  if (!pending && !waiting) return <GameFeedback feedback={feedback} winner={winner} />;
+  const message = pending ? '判定中…' : '次の曲から参加';
   return (
-    <Box
-      data-game-panel="status"
-      sx={{
-        height: 40,
-        minHeight: 40,
-        minWidth: 0,
-        flexShrink: 0,
-        display: 'grid',
-        alignItems: 'center',
-        '& .MuiAlert-message': { maxHeight: 96, overflowY: 'auto' },
-      }}
-    >
-      {error || mistake ? (
-        <GameNotice error={error} mistake={mistake} />
-      ) : pending || waiting ? (
-        <Typography
-          role="status"
-          sx={{ textAlign: 'center', fontSize: 12, fontWeight: 700, color: 'primary.main' }}
-        >
-          {pending ? '判定中…' : '次の曲から参加'}
-        </Typography>
-      ) : (
-        <GameFeedback feedback={feedback} winner={winner} />
-      )}
-    </Box>
+    <GameToast key={message} open>
+      <Alert severity="info" role="status" sx={{ alignItems: 'center', py: 0 }}>
+        {message}
+      </Alert>
+    </GameToast>
   );
 }
