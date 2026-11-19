@@ -127,17 +127,17 @@ export function claimCard(room: Room, playerId: string, cardId: string, now: num
     room.startsAt === null ||
     now < room.startsAt ||
     room.blocked.includes(playerId) ||
-    (room.incorrect[playerId]?.length ?? 0) > 0 ||
+    roundSurrender(room, playerId) !== null ||
     !room.board.includes(cardId) ||
     !room.players.some((player) => player.id === playerId && player.connected)
   )
     return room;
   const correct = room.order[room.round] === cardId;
   if (correct) return awardCard(room, playerId);
-  return {
+  return revealBlockedRound({
     ...room,
-    incorrect: { ...room.incorrect, [playerId]: [...(room.incorrect[playerId] ?? []), cardId] },
-  };
+    incorrect: { ...room.incorrect, [playerId]: [cardId] },
+  });
 }
 
 export function awardCard(room: Room, owner: string): Room {
@@ -152,12 +152,17 @@ export function awardCard(room: Room, owner: string): Room {
   };
 }
 
+export function roundSurrender(room: Pick<RoomView, 'incorrect' | 'givenUp'>, id: string) {
+  if (room.incorrect[id]?.length) return 'mistake';
+  return room.givenUp.includes(id) ? 'giveUp' : null;
+}
+
 export function revealBlockedRound(room: Room): Room {
   const connected = room.players.filter((player) => player.connected);
   return !room.settling &&
     room.phase === 'playing' &&
     connected.length > 0 &&
-    connected.every((player) => room.blocked.includes(player.id))
+    connected.every(({ id }) => room.blocked.includes(id) || roundSurrender(room, id) !== null)
     ? {
         ...room,
         phase: 'revealed',
@@ -170,13 +175,13 @@ export function revealBlockedRound(room: Room): Room {
 export function giveUp(room: Room, id: string): Room {
   if (
     room.phase !== 'playing' ||
-    room.host === id ||
-    room.givenUp.includes(id) ||
+    roundSurrender(room, id) !== null ||
+    room.blocked.includes(id) ||
     !room.ready.includes(id) ||
     !room.players.some((player) => player.id === id && player.connected)
   )
     return room;
-  return { ...room, givenUp: [...room.givenUp, id] };
+  return revealBlockedRound({ ...room, givenUp: [...room.givenUp, id] });
 }
 
 export function finishGame(room: Room): Room {

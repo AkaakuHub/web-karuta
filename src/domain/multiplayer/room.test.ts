@@ -101,7 +101,7 @@ describe('オンライン対戦の取得判定', () => {
     expect(missed.incorrect.a).toEqual([wrong]);
     expect(claimCard(missed, 'a', wrong, 2300)).toBe(missed);
     const both = claimCard(missed, 'b', wrong, 2400);
-    expect(both.phase).toBe('playing');
+    expect(both.phase).toBe('revealed');
     expect(claimCard(both, 'a', room.order[0]!, 2500)).toBe(both);
     expect(claimCard(missed, 'a', room.order[0]!, 2500)).toBe(missed);
   });
@@ -128,6 +128,25 @@ describe('オンライン対戦の取得判定', () => {
 });
 
 describe('お手上げ', () => {
+  it('ホストのお手つきと参加者のお手上げが揃うと取得者なしで正解を公開する', () => {
+    const room = playing();
+    const wrong = room.board.find((id) => id !== room.order[0])!;
+    const resigned = giveUp(room, 'b');
+    expect(claimCard(resigned, 'b', room.order[0]!, 2300)).toBe(resigned);
+    const revealed = claimCard(resigned, 'a', wrong, 2300);
+    expect(revealed.phase).toBe('revealed');
+    expect(revealed.results).toEqual([{ id: room.order[0], owner: null }]);
+    expect(revealed.incorrect.a).toEqual([wrong]);
+    expect(revealed.givenUp).toEqual(['b']);
+
+    const missed = claimCard(room, 'a', wrong, 2300);
+    expect(giveUp(missed, 'b')).toEqual(revealed);
+  });
+  it('ホストもお手上げでき、全員のお手上げで正解を公開する', () => {
+    const resigned = giveUp(playing(), 'a');
+    expect(resigned.phase).toBe('playing');
+    expect(giveUp(resigned, 'b').phase).toBe('revealed');
+  });
   it('参加者の申告を共有し、重複させず次の曲で解除する', () => {
     const room = playing();
     const next = giveUp(room, 'b');
@@ -137,9 +156,8 @@ describe('お手上げ', () => {
     expect(giveUp(next, 'b')).toBe(next);
     expect(prepareRound(skipRound(next, 2200)).givenUp).toEqual([]);
   });
-  it('ホスト、閲覧者、未準備、出題終了後の申告を受け付けない', () => {
+  it('閲覧者、未準備、出題終了後の申告を受け付けない', () => {
     const room = playing();
-    expect(giveUp(room, 'a')).toBe(room);
     expect(giveUp(room, 'spectator')).toBe(room);
     const waiting = { ...room, ready: ['a'] };
     expect(giveUp(waiting, 'b')).toBe(waiting);

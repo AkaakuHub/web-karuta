@@ -1,3 +1,4 @@
+import { roundSurrender } from '../../domain/multiplayer/room.js';
 import { rankPlayers } from '../../domain/game/ranking.js';
 import { usePlayerRankingAnimation } from './usePlayerRankingAnimation.js';
 import { useState } from 'react';
@@ -66,7 +67,9 @@ export function RoomPlayers({
         }}
       >
         {ranked.map((player) => {
-          const givenUp = room.phase === 'playing' && room.givenUp.includes(player.id);
+          const surrender = roundSurrender(room, player.id);
+          const roundStatus =
+            surrender === 'mistake' ? 'お手つき' : surrender === 'giveUp' ? 'お手上げ' : null;
           const ready = room.ready.includes(player.id);
           const waiting = waitingIds.has(player.id);
           const status = player.removed
@@ -77,9 +80,7 @@ export function RoomPlayers({
                 ? '準備中'
                 : room.phase === 'loading'
                   ? '準備完了'
-                  : givenUp
-                    ? 'お手上げ'
-                    : '接続中';
+                  : (roundStatus ?? '接続中');
           const Icon = !player.connected
             ? WifiOffRounded
             : player.id === room.host
@@ -107,7 +108,7 @@ export function RoomPlayers({
                 color={
                   player.removed || !player.connected
                     ? 'default'
-                    : waiting || givenUp
+                    : waiting || roundStatus
                       ? 'warning'
                       : ready
                         ? 'success'
@@ -128,7 +129,7 @@ export function RoomPlayers({
                     <span>
                       {player.rank}位 {player.name}
                     </span>
-                    <strong>{givenUp ? 'お手上げ' : `${player.count}枚`}</strong>
+                    <strong>{roundStatus ?? `${player.count}枚`}</strong>
                   </Box>
                 }
                 sx={{

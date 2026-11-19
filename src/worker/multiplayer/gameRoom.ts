@@ -145,7 +145,11 @@ export class GameRoom {
         this.room = renameParticipant(this.room, identity.id, command.name);
       this.room = progressRoom(this.room, command, now, this.content, this.tokens);
       if (command.type === 'finish') this.claims = null;
-      if (command.type === 'giveUp') this.room = giveUp(this.room, identity.id);
+      if (
+        command.type === 'giveUp' &&
+        !this.claims?.entries.some(({ playerId }) => playerId === identity.id)
+      )
+        this.room = giveUp(this.room, identity.id);
       if (command.type === 'ready') {
         socket.send(JSON.stringify({ type: 'pong', sent: command.sent, now }));
         if (identity.samples.length < 2) {

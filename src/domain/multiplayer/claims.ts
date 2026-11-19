@@ -1,4 +1,4 @@
-import { awardCard, claimCard, type Room } from './room.js';
+import { awardCard, claimCard, revealBlockedRound, roundSurrender, type Room } from './room.js';
 import { claimAllowance, validClaimTime, winningClaim, type TimedClaim } from './claimTiming.js';
 
 export interface ClaimRound {
@@ -22,7 +22,7 @@ export function submitClaim(
     room.startsAt === null ||
     !room.ready.includes(playerId) ||
     room.blocked.includes(playerId) ||
-    (room.incorrect[playerId]?.length ?? 0) > 0 ||
+    roundSurrender(room, playerId) !== null ||
     !room.board.includes(cardId) ||
     pending?.entries.some((claim) => claim.playerId === playerId)
   )
@@ -45,5 +45,5 @@ export function settleClaims(room: Room, pending: ClaimRound, random: () => numb
     room.players.some((player) => player.id === claim.playerId),
   );
   const winner = winningClaim(eligible, random);
-  return winner ? awardCard(room, winner) : { ...room, settling: false };
+  return winner ? awardCard(room, winner) : revealBlockedRound({ ...room, settling: false });
 }
