@@ -1,3 +1,4 @@
+import { useResumeOnInteraction } from '../audio/useResumeOnInteraction.js';
 import EmojiEventsRounded from '@mui/icons-material/EmojiEventsRounded';
 import { ConfirmDialog } from '../shared/confirmDialog.js';
 import { GameSettingsButton } from './gameSettingsButton.js';
@@ -40,6 +41,7 @@ export function GameControls({
   onReset,
   resetLabel,
 }: GameControlsProps) {
+  useResumeOnInteraction(state.needsResume, onPlay);
   const [finishing, setFinishing] = useState(false);
   const compact = useContext(BoardControls);
   const complete = state.phase === 'complete';

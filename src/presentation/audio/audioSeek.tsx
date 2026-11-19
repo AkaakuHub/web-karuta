@@ -24,6 +24,7 @@ export function AudioSeek({
       <Slider
         disabled={!canSeek}
         aria-label="再生位置"
+        data-audio-control
         size="small"
         onChange={(_, value) => {
           if (typeof value === 'number') setPosition(value);

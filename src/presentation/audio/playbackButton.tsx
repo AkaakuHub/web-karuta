@@ -19,6 +19,7 @@ export function PlaybackButton({
       <span>
         <IconButton
           aria-label={label}
+          data-audio-control
           disabled={disabled}
           onClick={() => (playing ? onPause() : void onPlay())}
           sx={{

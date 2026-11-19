@@ -1,3 +1,4 @@
+import { useResumeOnInteraction } from './useResumeOnInteraction.js';
 import { useEffect, useRef, useState } from 'react';
 import { GameAudio } from '../../infrastructure/audio/gameAudio.js';
 import type { TrackProgress } from '../../infrastructure/audio/audioProgress.js';
@@ -7,16 +8,18 @@ import { errorMessage } from '../shared/errorMessage.js';
 export function useTrackPlayer(url: string) {
   const player = useRef<GameAudio | null>(null);
   const [progress, setProgress] = useState<TrackProgress>({ position: 0, duration: 0 });
+  const [interrupted, setInterrupted] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const volume = useAudioVolume();
   useEffect(() => {
     let active = true;
-    const audio = new GameAudio((progress, playing) => {
+    const audio = new GameAudio((progress, playing, needsResume) => {
       if (!active) return;
       setProgress(progress);
       setPlaying(playing);
+      setInterrupted(needsResume);
     });
     player.current = audio;
     return () => {
@@ -42,6 +45,7 @@ export function useTrackPlayer(url: string) {
       if (player.current === audio) setLoading(false);
     }
   }
+  useResumeOnInteraction(interrupted, play);
   async function seek(position: number) {
     const audio = player.current;
     try {

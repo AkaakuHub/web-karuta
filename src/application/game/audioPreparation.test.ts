@@ -3,9 +3,10 @@ import { setup, resetAudioHarness } from './audioHarness.js';
 afterEach(resetAudioHarness);
 
 it('接続断から同じ曲を準備し直しても取得とデコードを繰り返さない', async () => {
-  const { audio, context } = setup();
+  const { audio, contexts } = setup();
   try {
     await audio.prepare('/track/one');
+    const context = contexts[0]!;
     await audio.resume();
     const original = context.sources.at(-1)!.buffer;
     audio.cancelPreparation();
@@ -33,9 +34,10 @@ it('保持する音声は現在の1曲だけにし、別の曲と明示的な破
 });
 
 it('切断時の予約を破棄し、音声の再利用時に古い開始時刻を使わない', async () => {
-  const { audio, context } = setup();
+  const { audio, contexts } = setup();
   try {
     await audio.prepare('/track/one');
+    const context = contexts[0]!;
     await audio.schedule(10000, () => 0, new AbortController().signal);
     audio.cancelPreparation();
     await audio.resume();

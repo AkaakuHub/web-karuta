@@ -4,10 +4,11 @@ import { buffer, setup, resetAudioHarness } from './audioHarness.js';
 afterEach(resetAudioHarness);
 
 it('別アプリへの移動中は位置を保持し、戻ると再取得せず停止位置から再開する', async () => {
-  const { audio, context, contexts, page, report } = setup();
+  const { audio, contexts, page, report } = setup();
   try {
     audio.volume(0.23);
     await audio.play('/track/one');
+    const context = contexts[0]!;
     const original = context.sources[0]!.buffer;
     const normalization = context.gains[1]!.gain.value;
     context.currentTime = 0.04;
@@ -31,9 +32,10 @@ it('別アプリへの移動中は位置を保持し、戻ると再取得せず�
 
 it('runningでも時計が止まっていれば再生済みとせず、次の操作で音源を再利用して復帰する', async () => {
   vi.useFakeTimers();
-  const { audio, context, contexts, contextType, page, report } = setup();
+  const { audio, contexts, contextType, page, report } = setup();
   try {
     await audio.play('/track/one');
+    const context = contexts[0]!;
     const original = context.sources[0]!.buffer;
     context.currentTime = 0.03;
     page.hidden = true;
@@ -61,9 +63,10 @@ it('runningでも時計が止まっていれば再生済みとせず、次の操
 });
 
 it('自分で停止した音声は画面に戻っても自動再開しない', async () => {
-  const { audio, context, page } = setup();
+  const { audio, contexts, page } = setup();
   try {
     await audio.play('/track/one');
+    const context = contexts[0]!;
     audio.stop();
     page.hidden = true;
     page.dispatchEvent(new Event('visibilitychange'));
@@ -78,9 +81,10 @@ it('自分で停止した音声は画面に戻っても自動再開しない', a
 
 it('対戦中はタブ移動だけで再生を停止しない', async () => {
   const recover = vi.fn();
-  const { audio, context, page } = setup(recover);
+  const { audio, contexts, page } = setup(recover);
   try {
     await audio.play('/track/one');
+    const context = contexts[0]!;
     page.hidden = true;
     page.dispatchEvent(new Event('visibilitychange'));
     page.hidden = false;
@@ -93,9 +97,10 @@ it('対戦中はタブ移動だけで再生を停止しない', async () => {
 });
 
 it('次の曲の開始が中断された場合に前の曲のバッファを再開しない', async () => {
-  const { audio, context, contexts, contextType, report } = setup();
+  const { audio, contexts, contextType, report } = setup();
   try {
     await audio.play('/track/old');
+    const context = contexts[0]!;
     context.state = 'interrupted';
     context.dispatchEvent(new Event('statechange'));
     const resume = vi
@@ -116,9 +121,10 @@ it('次の曲の開始が中断された場合に前の曲のバッファを再�
 });
 
 it('対戦の開始前にSafariが中断しても再生操作を残す', async () => {
-  const { audio, context, contexts, contextType, report } = setup();
+  const { audio, contexts, contextType, report } = setup();
   try {
     await audio.prepare('/track/one');
+    const context = contexts[0]!;
     context.state = 'interrupted';
     const resume = vi
       .spyOn(contextType.prototype, 'resume')
@@ -134,8 +140,10 @@ it('対戦の開始前にSafariが中断しても再生操作を残す', async (
 });
 
 it('読み込み中の中断でも展開済み音源を保持し、画面に戻ると再取得せず再開する', async () => {
-  const { audio, context, contexts, contextType, report } = setup();
+  const { audio, contexts, contextType, report } = setup();
   try {
+    await audio.unlock();
+    const context = contexts[0]!;
     context.decode = async () => {
       context.state = 'interrupted';
       return buffer();
@@ -158,9 +166,10 @@ it('読み込み中の中断でも展開済み音源を保持し、画面に戻�
 });
 
 it('Safariの中断から自動再開できなくても再開操作を残し、1回の操作で復帰する', async () => {
-  const { audio, context, contexts, contextType, report } = setup();
+  const { audio, contexts, contextType, report } = setup();
   try {
     await audio.play('/track/one');
+    const context = contexts[0]!;
     context.currentTime = 0.03;
     context.state = 'interrupted';
     context.dispatchEvent(new Event('statechange'));
@@ -181,9 +190,10 @@ it('Safariの中断から自動再開できなくても再開操作を残し、1
 
 it('再開が未完了でも2秒で操作を返し、終了後に遅れて音声を再開しない', async () => {
   vi.useFakeTimers();
-  const { audio, context, contextType } = setup();
+  const { audio, contexts, contextType } = setup();
   try {
     await audio.play('/track/one');
+    const context = contexts[0]!;
     context.state = 'interrupted';
     context.dispatchEvent(new Event('statechange'));
     let finish: () => void = () => {};
@@ -206,9 +216,10 @@ it('再開が未完了でも2秒で操作を返し、終了後に遅れて音声
 });
 
 it('100曲を切り替えても、過去の再生ノードが音声バッファと終了通知を保持しない', async () => {
-  const { audio, context } = setup();
+  const { audio, contexts } = setup();
   try {
     for (let index = 0; index < 100; index++) await audio.play(`/track/${index}`);
+    const context = contexts[0]!;
     expect(context.sources.filter((source) => source.buffer !== null)).toHaveLength(1);
     expect(
       context.sources.slice(0, -1).every((source) => source.onended === null && !source.connected),
@@ -223,9 +234,10 @@ it('100曲を切り替えても、過去の再生ノードが音声バッファ�
 });
 
 it('自然終了したノードを解放しても、同じ音声を再取得せずに再生し直せる', async () => {
-  const { audio, context } = setup();
+  const { audio, contexts } = setup();
   try {
     await audio.play('/track/one');
+    const context = contexts[0]!;
     const original = context.sources[0]!.buffer;
     context.sources[0]!.finish();
     expect(context.sources[0]!.buffer).toBeNull();
@@ -238,7 +250,7 @@ it('自然終了したノードを解放しても、同じ音声を再取得せ�
 });
 
 it('中止した音声の展開が終わるまで次の展開を重ねず、古い結果を再生しない', async () => {
-  const { audio, context } = setup();
+  const { audio, contexts } = setup();
   let finish: (value: AudioBuffer) => void = () => {
     throw new Error('展開が開始していません');
   };
@@ -256,8 +268,10 @@ it('中止した音声の展開が終わるまで次の展開を重ねず、古�
         }),
     )
     .mockImplementation(async () => buffer());
-  context.decode = decode;
   try {
+    await audio.unlock();
+    const context = contexts[0]!;
+    context.decode = decode;
     const first = audio.prepare('/track/old');
     await started;
     const second = audio.prepare('/track/new');
@@ -275,13 +289,19 @@ it('中止した音声の展開が終わるまで次の展開を重ねず、古�
 });
 
 it('参加操作と同じ呼び出しで無音出力を開始し、音声取得前に出力を初期化する', async () => {
-  const { audio, context } = setup();
+  const { audio, contexts } = setup();
   try {
+    expect(contexts).toHaveLength(0);
+    audio.volume(0.35);
+    expect(contexts).toHaveLength(0);
     const playing = audio.play('/track/one');
+    const context = contexts[0]!;
     expect(context.primingSources).toHaveLength(1);
     expect(fetch).not.toHaveBeenCalled();
     await playing;
     expect(context.sources).toHaveLength(1);
+    expect(context.sources[0]).toMatchObject({ when: 0, offset: 0 });
+    expect(context.gains[0]!.gain.value).toBe(0.35);
     expect(
       context.primingSources.every(
         (source) => source.buffer === null && source.onended === null && !source.connected,

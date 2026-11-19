@@ -5,9 +5,10 @@ afterEach(resetAudioHarness);
 
 it('中断と復帰イベントが重なっても対戦の再同期は一度だけ行う', async () => {
   const recover = vi.fn();
-  const { audio, context, page } = setup(recover);
+  const { audio, contexts, page } = setup(recover);
   try {
     await audio.play('/track');
+    const context = contexts[0]!;
     page.hidden = true;
     context.state = 'interrupted';
     context.dispatchEvent(new Event('statechange'));
@@ -21,10 +22,11 @@ it('中断と復帰イベントが重なっても対戦の再同期は一度だ�
 });
 
 it('手動で対戦の音声を復帰しても停止位置ではなく現在の時刻へ追いつく', async () => {
-  const { audio, context, contexts } = setup(vi.fn());
+  const { audio, contexts } = setup(vi.fn());
   let now = 0;
   try {
     await audio.prepare('/track');
+    const context = contexts[0]!;
     await audio.schedule(0, () => now, new AbortController().signal);
     context.state = 'interrupted';
     context.dispatchEvent(new Event('statechange'));

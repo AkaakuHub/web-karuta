@@ -1,3 +1,4 @@
+import { createAudioOutput } from './audioOutput.js';
 import { decodeAudio } from './decodeAudio.js';
 import { audibleReactionMs } from '../../domain/game/audioTiming.js';
 import {
@@ -13,11 +14,10 @@ import { diagnostic } from '../diagnostics/diagnostics.js';
 import { resumeAudioContext } from './resumeAudioContext.js';
 
 export class GameAudio {
-  private context = new AudioContext();
+  private output: ReturnType<GameAudio['createOutput']> | null = null;
+  private level = 0.7;
   private preparation = new AudioPreparation((data) => decodeAudio(this.context, data));
   private generation = 0;
-  private gain = this.context.createGain();
-  private normalization = this.context.createGain();
   private buffer: AudioBuffer | null = null;
   private source: AudioBufferSourceNode | null = null;
   private offset = 0;
@@ -54,19 +54,23 @@ export class GameAudio {
     ) => void,
     private readonly onRecover: (() => void) | null = null,
   ) {
-    this.normalization.connect(this.gain);
-    this.gain.connect(this.context.destination);
-    this.gain.gain.value = 0.7;
     document.addEventListener('visibilitychange', this.visibilityChanged);
     window.addEventListener('pagehide', this.pageHidden);
     window.addEventListener('pageshow', this.pageShown);
-    this.context.addEventListener('statechange', this.contextChanged);
+  }
+  private createOutput(normalizationLevel: number) {
+    const output = createAudioOutput(this.level, normalizationLevel);
+    output.context.addEventListener('statechange', this.contextChanged);
+    return output;
+  }
+  private get context() {
+    return (this.output ??= this.createOutput(1)).context;
   }
   private get position() {
     return playbackPosition(
       this.offset,
       this.startedAt,
-      this.context.currentTime,
+      this.output?.context.currentTime ?? 0,
       this.buffer?.duration ?? 0,
     );
   }
@@ -103,21 +107,13 @@ export class GameAudio {
     }
   }
   private replaceContext() {
-    const previous = this.context;
-    const volume = this.gain.gain.value;
-    const normalization = this.normalization.gain.value;
-    previous.removeEventListener('statechange', this.contextChanged);
-    this.normalization.disconnect();
-    this.gain.disconnect();
-    void previous.close().catch(() => diagnostic('audio.context.close.failed'));
-    this.context = new AudioContext();
-    this.gain = this.context.createGain();
-    this.normalization = this.context.createGain();
-    this.normalization.connect(this.gain);
-    this.gain.connect(this.context.destination);
-    this.gain.gain.value = volume;
-    this.normalization.gain.value = normalization;
-    this.context.addEventListener('statechange', this.contextChanged);
+    const previous = this.output;
+    if (!previous) return;
+    previous.context.removeEventListener('statechange', this.contextChanged);
+    previous.normalization.disconnect();
+    previous.gain.disconnect();
+    void previous.context.close().catch(() => diagnostic('audio.context.close.failed'));
+    this.output = this.createOutput(previous.normalization.gain.value);
     this.renewContext = false;
     this.verifyClock = true;
     diagnostic('audio.context.replaced', { position: this.offset });
@@ -130,7 +126,7 @@ export class GameAudio {
       if (generation !== this.generation) return false;
       const ready = await this.prepare(url);
       if (!ready || generation !== this.generation) return false;
-      await this.resume();
+      this.start(0, 0);
       return this.source !== null || this.interrupted;
     } catch (reason) {
       if (generation === this.generation && this.context.state !== 'running') {
@@ -162,7 +158,9 @@ export class GameAudio {
     this.progress();
     const prepared = await this.preparation.load(url);
     if (!prepared) return false;
-    this.normalization.gain.value = prepared.normalization;
+    const output = this.output;
+    if (!output) return false;
+    output.normalization.gain.value = prepared.normalization;
     this.buffer = prepared.buffer;
     this.progress();
     if (!(await this.unlock()) || !(await waitForAudioOutput(this.context, prepared.signal)))
@@ -171,7 +169,8 @@ export class GameAudio {
   }
   private start(delay: number, position: number) {
     this.stop();
-    if (!this.buffer || position >= this.buffer.duration) return;
+    const output = this.output;
+    if (!output || !this.buffer || position >= this.buffer.duration) return;
     if (document.hidden && !this.onRecover) {
       this.offset = position;
       this.interrupted = true;
@@ -180,7 +179,7 @@ export class GameAudio {
     }
     const source = this.context.createBufferSource();
     source.buffer = this.buffer;
-    source.connect(this.normalization);
+    source.connect(output.normalization);
     this.offset = position;
     this.startedAt = this.context.currentTime + delay;
     this.outputMonitor = new AudioOutputMonitor();
@@ -198,7 +197,7 @@ export class GameAudio {
       this.timer = null;
       this.progress();
     };
-    source.start(this.startedAt, position);
+    source.start(delay === 0 ? 0 : this.startedAt, position);
     this.timer = setInterval(() => this.progress(), 200);
     this.progress();
   }
@@ -251,7 +250,8 @@ export class GameAudio {
     await this.seek(this.position >= this.buffer.duration ? 0 : this.position);
   }
   volume(value: number) {
-    this.gain.gain.value = value;
+    this.level = value;
+    if (this.output) this.output.gain.gain.value = value;
   }
   stop() {
     this.playbackRevision++;
@@ -292,8 +292,9 @@ export class GameAudio {
     document.removeEventListener('visibilitychange', this.visibilityChanged);
     window.removeEventListener('pagehide', this.pageHidden);
     window.removeEventListener('pageshow', this.pageShown);
-    this.context.removeEventListener('statechange', this.contextChanged);
+    const context = this.output?.context;
+    context?.removeEventListener('statechange', this.contextChanged);
     this.clear();
-    await this.context.close();
+    await context?.close();
   }
 }

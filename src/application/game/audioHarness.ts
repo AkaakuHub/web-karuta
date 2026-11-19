@@ -113,7 +113,6 @@ export function setup(onRecover?: () => void) {
   const audio = new GameAudio(report, onRecover);
   return {
     audio,
-    context: Context.instances.at(-1)!,
     contexts: Context.instances,
     contextType: Context,
     page,
