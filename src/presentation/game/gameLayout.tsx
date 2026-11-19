@@ -60,7 +60,7 @@ export function GameLayout({
                   gridTemplateRows: 'minmax(0, 1fr)',
                   gridTemplateColumns: players
                     ? 'minmax(0, 1fr) minmax(0, 1fr)'
-                    : 'minmax(0, 1.16fr) minmax(0, 0.84fr)',
+                    : 'minmax(0, 1.22fr) minmax(0, 0.78fr)',
                   columnGap: '6px',
                   '& > [data-game-panel="controls"]': { gridRow: 1 },
                   '& > [data-game-panel="review"]': {
