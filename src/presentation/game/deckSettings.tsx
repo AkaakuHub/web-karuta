@@ -56,3 +56,5 @@ function DeckSelector({
     </Stack>
   );
 }
+
+export { DeckProviderTabs } from './deckProviderTabs.js';
