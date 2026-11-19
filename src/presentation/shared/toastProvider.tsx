@@ -61,11 +61,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             if (!persistent && reason !== 'clickaway') close();
           }}
           sx={{
-            top: { xs: 4, sm: 4 },
+            top: { xs: appToolbarHeight.xs / 2, sm: appToolbarHeight.sm / 2 },
             bottom: 'auto',
             left: { xs: '50%', sm: '50%' },
             right: 'auto',
-            transform: 'translateX(-50%)',
+            transform: 'translate(-50%, -50%)',
             width: 'max-content',
             maxWidth: 'calc(100% - 24px)',
             minWidth: 0,
