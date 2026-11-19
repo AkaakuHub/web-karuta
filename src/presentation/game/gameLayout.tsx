@@ -64,7 +64,10 @@ export function GameLayout({
           height: board ? '100%' : undefined,
           minHeight: 0,
           gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-          gridTemplateRows: 'min-content min-content min-content minmax(0, 1fr)',
+          gridTemplateRows:
+            board && players
+              ? 'min-content min-content min-content minmax(0, 1fr) auto'
+              : 'min-content min-content min-content minmax(0, 1fr)',
           alignContent: 'start',
           '& > *': { minWidth: 0, gridColumn: 1 },
           ...(board
@@ -92,12 +95,17 @@ export function GameLayout({
                   gridColumn: 2,
                   gridRow: { sm: '1 / span 4' },
                 },
+                '& > [data-game-panel="players"]': {
+                  gridColumn: '1 / -1',
+                  gridRow: 5,
+                },
               }
             : {}),
         }}
       >
-        {(!mobile || !board) && players}
+        {!board && players}
         {children}
+        {board && !mobile && players}
       </Stack>
     </Paper>
   );
