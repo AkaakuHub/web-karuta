@@ -1,4 +1,3 @@
-import { preparationDeadline } from '../../domain/multiplayer/preparation.js';
 import { migrateRoom, type StoredRoom } from './migrations/room.js';
 import type { Room } from '../../domain/multiplayer/room.js';
 import type { Memberships } from '../../domain/multiplayer/membership.js';
@@ -10,7 +9,6 @@ interface RoomSavedState {
   room: Room | null;
   claims: ClaimRound | null;
   expiresAt: number;
-  loadingDeadline: number;
   tokens?: Memberships;
   kickedTokens?: Record<string, string[]>;
 }
@@ -27,13 +25,12 @@ export class RoomPersistence {
   constructor(private readonly storage: RoomStorage) {}
   async load() {
     const storage = this.storage;
-    const [room, tokens, kickedTokens, expiresAt, claims, loadingDeadline] = await Promise.all([
+    const [room, tokens, kickedTokens, expiresAt, claims] = await Promise.all([
       storage.get<StoredRoom>('room'),
       storage.get<Memberships>('tokens'),
       storage.get<Record<string, string[]>>('kickedTokens'),
       storage.get<number>('expiresAt'),
       storage.get<ClaimRound>('claims'),
-      storage.get<number>('loadingDeadline'),
     ]);
     const restored = room ? migrateRoom(room) : null;
     if (room && (room.givenUp === undefined || room.incorrect === undefined))
@@ -44,21 +41,10 @@ export class RoomPersistence {
       kickedTokens: kickedTokens ?? {},
       expiresAt: expiresAt ?? 0,
       claims: claims ?? null,
-      loadingDeadline: loadingDeadline ?? 0,
     };
     for (const [key, value] of Object.entries(state)) this.previous.set(key, JSON.stringify(value));
     this.alarm = await storage.getAlarm();
-    const normalized = {
-      ...state,
-      loadingDeadline: preparationDeadline(state.room, state.loadingDeadline, Date.now()),
-    };
-    if (
-      state.room &&
-      state.expiresAt > Date.now() &&
-      normalized.loadingDeadline !== state.loadingDeadline
-    )
-      await this.save(normalized);
-    return normalized;
+    return state;
   }
 
   async save(state: RoomSavedState) {
@@ -69,11 +55,7 @@ export class RoomPersistence {
       await this.storage.put(Object.fromEntries(changed));
       for (const [key, value] of changed) this.previous.set(key, JSON.stringify(value));
     }
-    const alarm = Math.min(
-      state.expiresAt,
-      state.claims?.deadline ?? state.expiresAt,
-      state.loadingDeadline || state.expiresAt,
-    );
+    const alarm = Math.min(state.expiresAt, state.claims?.deadline ?? state.expiresAt);
     if (alarm !== this.alarm) {
       await this.storage.setAlarm(alarm);
       this.alarm = alarm;

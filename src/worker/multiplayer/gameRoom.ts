@@ -1,6 +1,5 @@
 import { submitSocketClaim } from './roomClaim.js';
 import { ClaimTimer } from './claimTimer.js';
-import { preparationDeadline } from '../../domain/multiplayer/preparation.js';
 import { configureHeartbeat } from './roomHeartbeat.js';
 import {
   canCommand,
@@ -27,13 +26,7 @@ import { broadcastRoom, readRoomMessage, rejectJoin, sendRoomError } from './roo
 import { moderateRoom } from './roomModeration.js';
 import { acknowledgeProbe, probeSocket, roundStartTime } from './roomTiming.js';
 import { settleClaims, type ClaimRound } from '../../domain/multiplayer/claims.js';
-import {
-  giveUp,
-  finishPreparation,
-  emptyRoom,
-  readyPlayer,
-  type Room,
-} from '../../domain/multiplayer/room.js';
+import { giveUp, emptyRoom, readyPlayer, type Room } from '../../domain/multiplayer/room.js';
 declare const WebSocketPair: typeof import('@cloudflare/workers-types').WebSocketPair;
 export class GameRoom {
   private readonly claimTimer: ClaimTimer;
@@ -42,7 +35,6 @@ export class GameRoom {
   private kickedTokens: Record<string, string[]> = {};
   private expiresAt = 0;
   private claims: ClaimRound | null = null;
-  private loadingDeadline = 0;
   private persistence: RoomPersistence;
   constructor(
     private readonly ctx: RoomContext,
@@ -221,11 +213,6 @@ export class GameRoom {
       this.claims = null;
       this.claimTimer.schedule(null);
       await this.persistence.clear();
-    } else if (this.room && this.loadingDeadline > 0 && now >= this.loadingDeadline) {
-      const previous = this.view(this.room);
-      this.room = finishPreparation(this.room, this.startTime(now));
-      await this.save();
-      this.broadcast(previous);
     } else if (this.claims && now >= this.claims.deadline) await this.settleClaims();
     else await this.save();
   }
@@ -273,11 +260,9 @@ export class GameRoom {
     this.claimTimer.schedule(this.claims?.deadline ?? null);
     const now = Date.now();
     if (this.expiresAt - now < roomLifetime / 2) this.expiresAt = now + roomLifetime;
-    this.loadingDeadline = preparationDeadline(this.room, this.loadingDeadline, now);
     await this.persistence.save({
       room: this.room,
       claims: this.claims,
-      loadingDeadline: this.loadingDeadline,
       expiresAt: this.expiresAt,
       ...(includeTokens ? { tokens: this.tokens, kickedTokens: this.kickedTokens } : {}),
     });

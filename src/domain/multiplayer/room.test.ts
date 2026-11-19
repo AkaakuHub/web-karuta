@@ -4,7 +4,6 @@ import {
   finishGame,
   giveUp,
   beginGame,
-  finishPreparation,
   claimCard,
   emptyRoom,
   prepareRound,
@@ -126,33 +125,6 @@ describe('オンライン対戦の取得判定', () => {
       expect(claimCard(resumed, 'a', resumed.order[2]!, 6000).winner).toBe('a');
     }
   });
-});
-
-it('準備期限後は準備できた参加者だけで開始し、遅れた参加者も後から合流する', () => {
-  const base = emptyRoom('a');
-  base.players = ['a', 'b'].map((id) => ({ id, name: id, connected: true }));
-  const loading = readyPlayer(
-    beginGame(base, ['one', 'two'], 2, () => 0.4),
-    'a',
-    0,
-  );
-  const started = finishPreparation(loading, 15000);
-  expect(started.phase).toBe('playing');
-  expect(started.ready).toEqual(['a']);
-  const joined = readyPlayer(started, 'b', 18000);
-  expect(joined.ready).toEqual(['a', 'b']);
-  expect(joined.startsAt).toBe(15000);
-});
-
-it('準備期限まで誰も準備できなければその曲を見送り次へ進める', () => {
-  const base = emptyRoom('a');
-  base.players = ['a', 'b'].map((id) => ({ id, name: id, connected: true }));
-  const finished = finishPreparation(
-    beginGame(base, ['one', 'two'], 2, () => 0.4),
-    15000,
-  );
-  expect(finished.phase).toBe('revealed');
-  expect(finished.results).toHaveLength(1);
 });
 
 describe('お手上げ', () => {

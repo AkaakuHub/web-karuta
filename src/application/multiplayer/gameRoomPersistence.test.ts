@@ -56,7 +56,7 @@ it.each(['lobby', 'loading'] as const)(
     expect(vi.getTimerCount()).toBe(0);
   },
 );
-it('準備期限を過ぎた曲を一度だけ見送り次の曲の自動取得を始めない', async () => {
+it('古い準備アラームが発火しても全員の準備を待ち続ける', async () => {
   const storage = new Storage();
   storage.values.set('room', {
     ...emptyRoom('host'),
@@ -70,8 +70,9 @@ it('準備期限を過ぎた曲を一度だけ見送り次の曲の自動取得�
   const room = await restore(storage);
   await room.alarm();
   expect(storage.values.get('room')).toMatchObject({
-    phase: 'revealed',
-    results: [{ id: 'one', owner: null }],
+    phase: 'loading',
+    startsAt: null,
+    results: [],
   });
   expect(storage.alarms).toEqual([86400000]);
   const writes = storage.writes.length;

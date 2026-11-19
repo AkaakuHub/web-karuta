@@ -1,7 +1,6 @@
 import { expect, it } from 'vite-plus/test';
 import { emptyRoom, beginGame, skipRound, readyPlayer } from '../../domain/multiplayer/room.js';
 import { joinParticipant } from '../../domain/multiplayer/participants.js';
-import { preparationDeadline } from '../../domain/multiplayer/preparation.js';
 import type { Memberships } from '../../domain/multiplayer/membership.js';
 import { joinRoom, progressRoom } from './roomProgress.js';
 
@@ -34,7 +33,6 @@ it('新旧どちらの参加者も再接続するまで曲を進めず、音声�
   expect(room.host).toBe('first');
   expect(room.phase).toBe('loading');
   expect(room.round).toBe(1);
-  expect(preparationDeadline(room, 0, 60_000)).toBe(0);
   room = readyPlayer(room, 'first', 60_000);
   expect(room.phase).toBe('loading');
   expect(readyPlayer(room, 'second', 90_000).phase).toBe('playing');

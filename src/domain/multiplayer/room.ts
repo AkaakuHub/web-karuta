@@ -169,14 +169,6 @@ export function revealBlockedRound(room: Room): Room {
     : room;
 }
 
-export function finishPreparation(room: Room, startsAt: number): Room {
-  if (room.phase !== 'loading') return room;
-  const ready = room.ready.filter((id) =>
-    room.players.some((player) => player.id === id && player.connected),
-  );
-  return ready.length ? { ...room, ready, phase: 'playing', startsAt } : skipRound(room, startsAt);
-}
-
 export function giveUp(room: Room, id: string): Room {
   if (
     room.phase !== 'playing' ||
