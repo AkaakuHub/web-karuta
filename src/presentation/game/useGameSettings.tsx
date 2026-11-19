@@ -5,11 +5,10 @@ import { z } from 'zod';
 export const gameSettingsSchema = z.object({
   autoNext: z.boolean(),
   delaySeconds: z.number().int().min(0).max(300),
-  seekSeconds: z.number().int().min(1).max(60).default(5),
 });
 
 export type GameSettings = z.output<typeof gameSettingsSchema>;
-const defaults: GameSettings = { autoNext: true, delaySeconds: 1, seekSeconds: 5 };
+const defaults: GameSettings = { autoNext: true, delaySeconds: 1 };
 const SettingsContext = createContext<{
   value: GameSettings;
   save: (value: GameSettings) => void;
