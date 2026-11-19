@@ -58,6 +58,9 @@ export function RoomPlayers({
           alignItems: 'center',
           gap: 0.5,
           overflowX: 'auto',
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
           minWidth: 0,
           flexShrink: 0,
         }}
