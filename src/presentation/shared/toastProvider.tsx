@@ -1,4 +1,4 @@
-import { Box, Snackbar } from '@mui/material';
+import { Box, Fade, Snackbar } from '@mui/material';
 import {
   createContext,
   useCallback,
@@ -13,6 +13,7 @@ import { appToolbarHeight } from './playLayout.js';
 
 interface Notice {
   id: string;
+  open: boolean;
   content: ReactElement;
   onClose?: () => void;
 }
@@ -24,17 +25,22 @@ export const ToastContext = createContext<{
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [notice, setNotice] = useState<Notice | null>(null);
   const hide = useCallback((id: string) => {
-    setNotice((current) => (current?.id === id ? null : current));
+    setNotice((current) =>
+      current?.id === id && current.open ? { ...current, open: false } : current,
+    );
   }, []);
   const show = useCallback((id: string, content: ReactElement, onClose?: () => void) => {
-    setNotice((current) => (current?.id === id ? current : { id, content, onClose }));
+    setNotice((current) =>
+      current?.id === id && current.open ? current : { id, content, onClose, open: true },
+    );
   }, []);
   const close = useCallback(() => {
-    notice?.onClose?.();
-    if (notice) hide(notice.id);
+    if (!notice?.open) return;
+    hide(notice.id);
+    notice.onClose?.();
   }, [notice, hide]);
   useEffect(() => {
-    if (!notice) return;
+    if (!notice?.open) return;
     const timer = setTimeout(close, 4000);
     return () => clearTimeout(timer);
   }, [notice, close]);
@@ -44,7 +50,13 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {createPortal(
         <Snackbar
-          open={!!notice}
+          open={notice?.open ?? false}
+          slots={{ transition: Fade }}
+          slotProps={{
+            transition: {
+              onExited: () => setNotice((current) => (current?.open ? current : null)),
+            },
+          }}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
           onClose={(_, reason) => {
             if (reason !== 'clickaway') close();
@@ -54,7 +66,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             bottom: 'auto',
             left: { xs: '50%', sm: '50%' },
             right: 'auto',
-            transform: 'translate(-50%, -50%)',
+            '&&': { transform: 'translate(-50%, -50%)' },
             width: 'max-content',
             maxWidth: 'calc(100% - 24px)',
             minWidth: 0,
