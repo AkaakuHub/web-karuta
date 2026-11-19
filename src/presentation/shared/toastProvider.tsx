@@ -17,48 +17,37 @@ interface Notice {
   onClose?: () => void;
 }
 export const ToastContext = createContext<{
-  show: (id: string, content: ReactElement, onClose?: () => void, persistent?: boolean) => void;
+  show: (id: string, content: ReactElement, onClose?: () => void) => void;
   hide: (id: string) => void;
 } | null>(null);
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [notice, setNotice] = useState<Notice | null>(null);
-  const [persistent, setPersistent] = useState<Notice | null>(null);
-  const visible = persistent ?? notice;
   const hide = useCallback((id: string) => {
     setNotice((current) => (current?.id === id ? null : current));
-    setPersistent((current) => (current?.id === id ? null : current));
   }, []);
-  const show = useCallback(
-    (id: string, content: ReactElement, onClose?: () => void, keepOpen = false) => {
-      const update = { id, content, onClose };
-      if (keepOpen) setPersistent(update);
-      else setNotice(update);
-    },
-    [],
-  );
+  const show = useCallback((id: string, content: ReactElement, onClose?: () => void) => {
+    setNotice((current) => (current?.id === id ? current : { id, content, onClose }));
+  }, []);
   const close = useCallback(() => {
-    visible?.onClose?.();
-    if (visible) hide(visible.id);
-  }, [visible, hide]);
+    notice?.onClose?.();
+    if (notice) hide(notice.id);
+  }, [notice, hide]);
   useEffect(() => {
     if (!notice) return;
-    const timer = setTimeout(() => {
-      notice.onClose?.();
-      hide(notice.id);
-    }, 4000);
+    const timer = setTimeout(close, 4000);
     return () => clearTimeout(timer);
-  }, [notice, hide]);
+  }, [notice, close]);
   const value = useMemo(() => ({ show, hide }), [show, hide]);
   return (
     <ToastContext value={value}>
       {children}
       {createPortal(
         <Snackbar
-          open={!!visible}
+          open={!!notice}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
           onClose={(_, reason) => {
-            if (!persistent && reason !== 'clickaway') close();
+            if (reason !== 'clickaway') close();
           }}
           sx={{
             top: { xs: appToolbarHeight.xs / 2, sm: appToolbarHeight.sm / 2 },
@@ -93,7 +82,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             },
           }}
         >
-          <Box>{visible?.content}</Box>
+          <Box>{notice?.content}</Box>
         </Snackbar>,
         document.body,
       )}
