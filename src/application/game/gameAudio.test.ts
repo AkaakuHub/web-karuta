@@ -150,9 +150,6 @@ it('読み込み中の中断でも展開済み音源を保持し、画面に戻�
     };
     const resume = vi
       .spyOn(contextType.prototype, 'resume')
-      .mockImplementationOnce(async () => {
-        context.state = 'running';
-      })
       .mockRejectedValueOnce(new Error('NotAllowedError'));
     await expect(audio.play('/track/one')).rejects.toThrow();
     expect(report).toHaveBeenLastCalledWith({ position: 0, duration: 0.1 }, false, true);
@@ -289,8 +286,9 @@ it('中止した音声の展開が終わるまで次の展開を重ねず、古�
 });
 
 it('参加操作と同じ呼び出しで無音出力を開始し、音声取得前に出力を初期化する', async () => {
-  const { audio, contexts } = setup();
+  const { audio, contexts, contextType } = setup();
   try {
+    const resume = vi.spyOn(contextType.prototype, 'resume');
     expect(contexts).toHaveLength(0);
     audio.volume(0.35);
     expect(contexts).toHaveLength(0);
@@ -302,6 +300,7 @@ it('参加操作と同じ呼び出しで無音出力を開始し、音声取得�
     expect(context.sources).toHaveLength(1);
     expect(context.sources[0]).toMatchObject({ when: 0, offset: 0 });
     expect(context.gains[0]!.gain.value).toBe(0.35);
+    expect(resume).toHaveBeenCalledTimes(1);
     expect(
       context.primingSources.every(
         (source) => source.buffer === null && source.onended === null && !source.connected,

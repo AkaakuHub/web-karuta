@@ -8,7 +8,7 @@ export async function resumeAudioContext(context: AudioContext, verifyClock: boo
   const resume = async () => {
     const prime =
       context.state !== 'running' || verifyClock || !context.getOutputTimestamp().performanceTime;
-    const resumed = context.resume();
+    const resumed = context.state === 'running' ? undefined : context.resume();
     if (prime) {
       const source = context.createBufferSource();
       source.buffer = context.createBuffer(1, 1, context.sampleRate);

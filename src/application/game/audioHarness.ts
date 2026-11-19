@@ -68,6 +68,9 @@ class Context extends EventTarget {
     this.gains.push(node);
     return node;
   }
+  createAnalyser() {
+    return { fftSize: 256, getFloatTimeDomainData() {}, disconnect() {} };
+  }
   createBufferSource() {
     const source = new Source();
     this.nodes.push(source);
