@@ -16,6 +16,13 @@ import { ConfirmDialog } from '../shared/confirmDialog.js';
 import { RoomNameDialog } from './roomNameDialog.js';
 import { RoomArrivalNotice } from './roomArrivalNotice.js';
 
+const participantChip = {
+  flexShrink: 0,
+  height: { xs: 24, sm: 26 },
+  '& .MuiChip-label': { px: 0.5, fontSize: { xs: 12, sm: 14 } },
+  '& .MuiChip-icon': { fontSize: { xs: 16, sm: 18 }, ml: 0.5, mr: 0 },
+};
+
 export function RoomPlayers({
   room,
   you,
@@ -52,7 +59,6 @@ export function RoomPlayers({
           gap: 0.5,
           overflowX: 'auto',
           minWidth: 0,
-          height: { xs: 32, sm: 40 },
           flexShrink: 0,
         }}
       >
@@ -115,7 +121,7 @@ export function RoomPlayers({
                       : undefined
                 }
                 label={
-                  <Box component="span" sx={{ display: 'inline-flex', gap: 0.75 }}>
+                  <Box component="span" sx={{ display: 'inline-flex', gap: 0.5 }}>
                     <span>
                       {player.rank}位 {player.name}
                     </span>
@@ -123,11 +129,8 @@ export function RoomPlayers({
                   </Box>
                 }
                 sx={{
-                  flexShrink: 0,
-                  height: { xs: 28, sm: 34 },
+                  ...participantChip,
                   opacity: player.removed ? 0.5 : 1,
-                  '& .MuiChip-label': { px: 0.75, fontSize: { xs: 12, sm: 14 } },
-                  '& .MuiChip-icon': { fontSize: { xs: 16, sm: 20 }, ml: 0.5 },
                 }}
               />
             </Tooltip>
@@ -145,11 +148,7 @@ export function RoomPlayers({
                 person.id === you ? `名前を変更：${person.name}` : `${person.name} 閲覧のみ`
               }
               onClick={person.id === you ? () => setRenaming(true) : undefined}
-              sx={{
-                flexShrink: 0,
-                height: { xs: 28, sm: 34 },
-                '& .MuiChip-label': { fontSize: { xs: 12, sm: 14 } },
-              }}
+              sx={participantChip}
             />
           ))}
       </Box>
