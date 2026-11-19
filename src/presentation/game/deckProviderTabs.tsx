@@ -14,13 +14,12 @@ export function DeckProviderTabs({
   onChange: (id: string) => void;
 }) {
   if (providers.length < 2) return null;
-  const scroll = providers.length > 2;
   return (
     <Tabs
       value={value}
-      variant={scroll ? 'scrollable' : 'fullWidth'}
-      scrollButtons={scroll ? 'auto' : false}
-      allowScrollButtonsMobile={scroll}
+      variant="scrollable"
+      scrollButtons="auto"
+      allowScrollButtonsMobile
       aria-label={label}
       onChange={(_, id: string) => onChange(id)}
     >
